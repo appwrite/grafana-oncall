@@ -126,7 +126,7 @@ func (a *App) CheckOnCallApiHealthStatus(onCallPluginSettings *OnCallPluginSetti
 
 	if healthRes.StatusCode != http.StatusOK {
 		log.DefaultLogger.Error("Error request to oncall", "error", healthRes.Status)
-		return healthRes.StatusCode, fmt.Errorf(healthRes.Status)
+		return healthRes.StatusCode, fmt.Errorf("%s", healthRes.Status)
 	}
 
 	return http.StatusOK, nil
