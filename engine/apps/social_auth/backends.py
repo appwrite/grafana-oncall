@@ -179,7 +179,7 @@ class SlackOAuth2V2(SlackOAuth2):
 
     def _update_redirect_uri_with_auth_token(self, token_string: str) -> None:
         auth_token_param = f"?{self.AUTH_TOKEN_NAME}={token_string}"
-        self.redirect_uri = urljoin(self.redirect_uri, auth_token_param)
+        self.redirect_uri = urljoin(self.redirect_uri or "", auth_token_param)
 
 
 class LoginSlackOAuth2V2(SlackOAuth2V2):

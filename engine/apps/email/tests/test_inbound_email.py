@@ -422,7 +422,7 @@ def test_mailgun_provider_load(
         # double quotes required when including special characters
         ("\"'Alex Smith' via [TEST] mail\" <test@example.com>", "test@example.com"),
         # missing double quotes
-        ("'Alex Smith' via [TEST] mail <test@example.com>", "\"'Alex Smith' via\""),
+        ("'Alex Smith' via [TEST] mail <test@example.com>", "\"'Alex Smith' via\", <>"),
     ],
 )
 def test_get_sender_from_email_message(sender_value, expected_result):

@@ -17,11 +17,7 @@ jobs:
     # this will allow us to run more backend containers and parralelize the tests)
     runs-on: ubuntu-latest
     name: "Grafana: ${{ inputs.grafana_version }}"
-    environment:
-      name: github-pages
     permissions:
-      id-token: write
-      pages: write
       contents: read
     steps:
       - name: Checkout
@@ -107,25 +103,10 @@ jobs:
           BROWSERS: ${{ inputs.browsers }}
         run: tilt ci
 
-      - name: Setup Pages
+      - name: Upload Playwright report
         if: failure()
-        uses: actions/configure-pages@v2
-
-      - name: Upload artifact
-        if: failure()
-        uses: actions/upload-pages-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
+          name: playwright-report-${{ inputs.grafana_version }}
           path: ./grafana-plugin/playwright-report/
-
-      - name: Deploy to GitHub Pages
-        if: failure()
-        id: deployment
-        uses: actions/deploy-pages@v3
-        with:
-          preview: true
-
-      - name: Linked Github Page
-        if: failure()
-        run: |
-          echo "Test report has been deployed to [GitHub Pages](https://grafana.github.io/oncall/) :rocket:" \
-          >> $GITHUB_STEP_SUMMARY
+          if-no-files-found: ignore
