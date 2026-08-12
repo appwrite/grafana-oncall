@@ -1,5 +1,5 @@
 requests==2.32.4
 pdpyras==4.5.0
-pytest==8.2.2
+pytest==9.0.3
 pytest-env==0.6.2
 kubernetes==29.0.0
