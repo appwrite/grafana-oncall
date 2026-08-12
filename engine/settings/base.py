@@ -840,6 +840,9 @@ FCM_DJANGO_SETTINGS = {
     "DELETE_INACTIVE_DEVICES": True,
     "UPDATE_ON_DUPLICATE_REG_ID": True,
     "USER_MODEL": "user_management.User",
+    # skip fcm_django's unique constraint on registration_id: OnCall allows
+    # different users to share a device token (see FCMDeviceSerializer)
+    "MYSQL_COMPATIBILITY": True,
 }
 
 MOBILE_APP_GATEWAY_ENABLED = getenv_boolean("MOBILE_APP_GATEWAY_ENABLED", default=False)

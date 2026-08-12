@@ -26,7 +26,7 @@ factory-boy<3.0
 drf-spectacular==0.28.0
 emoji==2.4.0
 grpcio==1.76.0
-fcm-django @ https://github.com/appwrite/fcm-django/releases/download/v1.0.12r1/fcm_django-1.0.12-py2.py3-none-any.whl#sha256=8a720ead181087953b5cbe069ba7ffc3fe7c30a242fd0d4fbd504100c949f9e2
+fcm-django==3.2.0
 hiredis==2.2.3
 humanize==4.10.0
 icalendar==5.0.10

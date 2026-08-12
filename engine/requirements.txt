@@ -140,9 +140,9 @@ factory-boy==2.12.0
     # via -r requirements.in
 faker==40.36.0
     # via factory-boy
-fcm-django @ https://github.com/appwrite/fcm-django/releases/download/v1.0.12r1/fcm_django-1.0.12-py2.py3-none-any.whl#sha256=8a720ead181087953b5cbe069ba7ffc3fe7c30a242fd0d4fbd504100c949f9e2
+fcm-django==3.2.0
     # via -r requirements.in
-firebase-admin==5.4.0
+firebase-admin==7.5.0
     # via fcm-django
 flask==3.1.3
     # via slack-export-viewer
@@ -154,9 +154,7 @@ google-api-core==2.34.0
     #   google-cloud-firestore
     #   google-cloud-storage
 google-api-python-client==2.122.0
-    # via
-    #   -r requirements.in
-    #   firebase-admin
+    # via -r requirements.in
 google-auth==2.56.3
     # via
     #   google-api-core
@@ -204,8 +202,12 @@ grpcio-status==1.62.3
     # via google-api-core
 h11==0.16.0
     # via httpcore
+h2==4.4.1
+    # via httpx
 hiredis==2.2.3
     # via -r requirements.in
+hpack==4.2.0
+    # via h2
 httpcore==1.0.9
     # via httpx
 httplib2==0.32.0
@@ -213,9 +215,13 @@ httplib2==0.32.0
     #   google-api-python-client
     #   google-auth-httplib2
 httpx==0.28.1
-    # via python-telegram-bot
+    # via
+    #   firebase-admin
+    #   python-telegram-bot
 humanize==4.10.0
     # via -r requirements.in
+hyperframe==6.1.0
+    # via h2
 icalendar==5.0.10
     # via
     #   -r requirements.in
@@ -356,6 +362,7 @@ pycparser==3.0
     # via cffi
 pyjwt==2.13.0
     # via
+    #   firebase-admin
     #   social-auth-core
     #   twilio
 pymdown-extensions==11.0.1
@@ -442,6 +449,8 @@ sqlparse==0.5.5
     #   django
     #   django-debug-toolbar
     #   django-silk
+swapper==1.4.0
+    # via fcm-django
 toml==0.10.2
     # via django-migration-linter
 tqdm==4.70.0
