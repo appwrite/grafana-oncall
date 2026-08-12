@@ -26,7 +26,7 @@ factory-boy<3.0
 drf-spectacular==0.28.0
 emoji==2.4.0
 grpcio==1.76.0
-fcm-django @ https://github.com/grafana/fcm-django/archive/refs/tags/v1.0.12r1.tar.gz#sha256=7ec7cd9d353fc9edf19a4acd4fa14090a31d83d02ac986c5e5e081dea29f564f
+fcm-django @ https://github.com/appwrite/fcm-django/archive/refs/tags/v1.0.12r1.tar.gz#sha256=7ec7cd9d353fc9edf19a4acd4fa14090a31d83d02ac986c5e5e081dea29f564f
 hiredis==2.2.3
 humanize==4.10.0
 icalendar==5.0.10
