@@ -85,8 +85,8 @@ export const verifyThatAlertGroupIsRoutedCorrectlyButNotEscalated = async (
   expect(await incidentTimelineContainsStep(page, ALERT_GROUP_REGISTERED_TEXT)).toBe(true);
 
   const incidentTimelineList = await getIncidentTimelineList(page);
-  expect(incidentTimelineList).toContainText(routedText);
-  expect(incidentTimelineList).not.toContainText('triggered step');
+  await expect(incidentTimelineList).toContainText(routedText);
+  await expect(incidentTimelineList).not.toContainText('triggered step');
 };
 
 export const verifyThatAlertGroupIsTriggered = async (
