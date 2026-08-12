@@ -3,7 +3,7 @@ import React, { useCallback, useEffect, useState } from 'react';
 import { css, cx } from '@emotion/css';
 import { GrafanaTheme2 } from '@grafana/data';
 import { Alert, useStyles2 } from '@grafana/ui';
-import { sanitize } from 'dompurify';
+import dompurify from 'dompurify';
 import { LocationHelper } from 'helpers/LocationHelper';
 import { isUserActionAllowed, UserActions } from 'helpers/authorization/authorization';
 import { useForceUpdate, useQueryParams } from 'helpers/hooks';
@@ -107,7 +107,7 @@ export const Alerts = observer(() => {
         >
           <div
             dangerouslySetInnerHTML={{
-              __html: sanitize(currentOrganization?.banner.body),
+              __html: dompurify.sanitize(currentOrganization?.banner.body),
             }}
           />
         </Alert>
