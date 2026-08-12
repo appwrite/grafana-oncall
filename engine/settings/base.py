@@ -845,6 +845,11 @@ FCM_DJANGO_SETTINGS = {
     "MYSQL_COMPATIBILITY": True,
 }
 
+# fcm_django's shipped migrations point the device's user FK at AUTH_USER_MODEL;
+# ours must target USER_MODEL above (grafana's fcm-django fork existed only to
+# patch this). Same migration names/content as already-applied databases expect.
+MIGRATION_MODULES = {"fcm_django": "fcm_django_migrations"}
+
 MOBILE_APP_GATEWAY_ENABLED = getenv_boolean("MOBILE_APP_GATEWAY_ENABLED", default=False)
 GRAFANA_CLOUD_AUTH_API_URL = os.environ.get("GRAFANA_CLOUD_AUTH_API_URL", None)
 GRAFANA_CLOUD_AUTH_API_SYSTEM_TOKEN = os.environ.get("GRAFANA_CLOUD_AUTH_API_SYSTEM_TOKEN", None)
