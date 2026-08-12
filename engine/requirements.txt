@@ -140,7 +140,7 @@ factory-boy==2.12.0
     # via -r requirements.in
 faker==40.36.0
     # via factory-boy
-fcm-django @ https://github.com/appwrite/fcm-django/archive/refs/tags/v1.0.12r1.tar.gz#sha256=7ec7cd9d353fc9edf19a4acd4fa14090a31d83d02ac986c5e5e081dea29f564f
+fcm-django @ https://github.com/appwrite/fcm-django/releases/download/v1.0.12r1/fcm_django-1.0.12-py2.py3-none-any.whl#sha256=8a720ead181087953b5cbe069ba7ffc3fe7c30a242fd0d4fbd504100c949f9e2
     # via -r requirements.in
 firebase-admin==5.4.0
     # via fcm-django
