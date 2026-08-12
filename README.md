@@ -1,21 +1,16 @@
-# 🚨 Archived: Grafana OnCall OSS 🚨
+# Appwrite's fork of Grafana OnCall
 
-On 2025-03-11 Grafana OnCall (OSS) entered maintenance mode and was archived on 2026-03-24.
-
-For users seeking a fully supported and actively maintained alternative,
-**Grafana Cloud IRM** offers a modern approach to incident response and on-call management.
-
-- [Grafana Cloud IRM documentation](https://grafana.com/docs/grafana-cloud/alerting-and-irm/irm/)
+Grafana archived OnCall OSS on 2026-03-24. [Appwrite](https://appwrite.io) maintains this
+fork for its own use — we keep it working for our needs, but offer no support or
+roadmap commitments. Engine images are published to
+[`ghcr.io/appwrite/grafana-oncall`](https://github.com/appwrite/grafana-oncall/pkgs/container/grafana-oncall).
 
 ## Grafana OnCall
 
 <img width="400px" src="docs/img/logo.png">
 
-[![Latest Release](https://img.shields.io/github/v/release/grafana/oncall?display_name=tag&sort=semver)](https://github.com/grafana/oncall/releases)
-[![License](https://img.shields.io/github/license/grafana/oncall)](https://github.com/grafana/oncall/blob/dev/LICENSE)
-[![Docker Pulls](https://img.shields.io/docker/pulls/grafana/oncall)](https://hub.docker.com/r/grafana/oncall/tags)
-[![Slack](https://img.shields.io/badge/join%20slack-%23grafana-%2Doncall-brightgreen.svg)](https://slack.grafana.com/)
-[![Build Status](https://github.com/grafana/oncall/actions/workflows/on-commits-to-dev.yml/badge.svg)](https://github.com/grafana/oncall/actions/workflows/on-commits-to-dev.yml)
+[![Latest Release](https://img.shields.io/github/v/tag/appwrite/grafana-oncall?display_name=tag&sort=semver)](https://github.com/appwrite/grafana-oncall/tags)
+[![License](https://img.shields.io/github/license/appwrite/grafana-oncall)](https://github.com/appwrite/grafana-oncall/blob/main/LICENSE)
 
 Developer-friendly incident response with brilliant Slack integration.
 
