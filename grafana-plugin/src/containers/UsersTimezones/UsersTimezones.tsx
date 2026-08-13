@@ -297,7 +297,7 @@ const AvatarGroup = observer((props: AvatarGroupProps) => {
                 colors={colorSchemeList}
                 width={35}
                 height={35}
-                renderAvatar={() => <Avatar src={user.avatar} size="large" />}
+                renderAvatar={() => <Avatar src={user.avatar} size="large" alt={user.username} />}
                 renderIcon={() =>
                   isOncall ? <IsOncallIcon className={styles.isOncallIcon} width={14} height={13} /> : null
                 }

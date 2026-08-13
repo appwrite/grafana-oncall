@@ -10,10 +10,12 @@ interface AvatarProps {
   src: string;
   size: 'xs' | 'small' | 'medium' | 'large';
   className?: string;
+  /** who the avatar is of; images need a text alternative */
+  alt?: string;
 }
 
 export const Avatar: FC<AvatarProps> = (props) => {
-  const { src, size, className, ...rest } = props;
+  const { src, size, className, alt = '', ...rest } = props;
 
   const styles = useStyles2(getAvatarStyles);
 
@@ -24,6 +26,7 @@ export const Avatar: FC<AvatarProps> = (props) => {
   return (
     <img
       src={src}
+      alt={alt}
       className={cx(styles.avatar, bem(styles.avatar, size), className)}
       data-testid="test__avatar"
       {...rest}
