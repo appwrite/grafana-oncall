@@ -1,0 +1,19 @@
+{{- if .Values.grafana.enabled }}
+{{/*
+  The plugin is not in the grafana.com catalog, so the bundled Grafana installs it from this fork's
+  release archive. The version is taken from the same expression as the engine image, so overriding
+  image.tag moves both halves: they are released together and are not meant to be mixed.
+
+  This is a ConfigMap because subchart values cannot be templated — grafana.envValueFrom points at
+  it, and the grafana chart runs tpl over that block so it can resolve the release-scoped name.
+*/}}
+{{- $version := .Values.image.tag | default .Chart.AppVersion }}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ .Release.Name }}-oncall-plugin
+  labels:
+    app: {{ include "oncall.name" . }}
+data:
+  GF_INSTALL_PLUGINS: https://github.com/appwrite/grafana-oncall/releases/download/{{ $version }}/grafana-oncall-app-{{ trimPrefix "v" $version }}.zip;grafana-oncall-app
+{{- end }}

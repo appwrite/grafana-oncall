@@ -396,10 +396,10 @@ helm upgrade \
     ./helm/oncall
 ```
 
-The plugin is not in the grafana.com catalog, so it does not update through the plugin page. It is
-installed from the archive in `grafana.plugins`, which has to be moved to the same version as
-`image.tag`/`appVersion` — the engine and plugin are released together and are not meant to be mixed
-across versions.
+The plugin is not in the grafana.com catalog, so it does not update through the plugin page. The
+bundled Grafana installs it from this fork's release archive, and the chart derives that version from
+`image.tag` (falling back to the chart's `appVersion`) — so bumping the engine moves the plugin with
+it, and the two cannot end up on different versions.
 
 Grafana only installs a plugin that is not already present, so with `grafana.persistence` enabled the
 old copy has to be cleared before it will reinstall:

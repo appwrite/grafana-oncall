@@ -649,11 +649,14 @@ grafana:
   # Disable psp as PodSecurityPolicy is deprecated in v1.21+, unavailable in v1.25+
   rbac:
     pspEnabled: false
-  plugins:
-    # Not the catalog build, which is grafana's archived one. Keep this version in step with
-    # image.tag/appVersion above: the plugin and engine are released together.
-    # yamllint disable-line rule:line-length
-    - https://github.com/appwrite/grafana-oncall/releases/download/v1.19.1/grafana-oncall-app-1.19.1.zip;grafana-oncall-app
+  # The plugin archive comes from the ConfigMap this chart renders, which derives the version from
+  # image.tag/appVersion — so the engine and plugin cannot end up on different versions. Setting
+  # grafana.plugins here instead would install the catalog build, which is grafana's archived one.
+  envValueFrom:
+    GF_INSTALL_PLUGINS:
+      configMapKeyRef:
+        name: '{{ .Release.Name }}-oncall-plugin'
+        key: GF_INSTALL_PLUGINS
   extraVolumes:
     - name: provisioning
       configMap:
