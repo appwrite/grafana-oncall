@@ -1885,7 +1885,7 @@ def test_filter_events_during_dst_change(
         time_zone="America/Chicago",  # UTC-6 or UTC-5 depending on DST
         schedule_class=OnCallScheduleCalendar,
     )
-    start_datetime = timezone.datetime(2024, 10, 1, 0, 0, 0, tzinfo=timezone.utc)
+    start_datetime = timezone.datetime(2024, 10, 1, 0, 0, 0, tzinfo=datetime.timezone.utc)
     duration = timezone.timedelta(seconds=60 * 60 * 24 * 7)  # 1 week
     data = {
         "start": start_datetime,
@@ -1903,24 +1903,24 @@ def test_filter_events_during_dst_change(
     schedule.refresh_ical_file()
 
     # week with DST change
-    start_date = timezone.datetime(2024, 11, 4, 0, 0, 0, tzinfo=timezone.utc)
+    start_date = timezone.datetime(2024, 11, 4, 0, 0, 0, tzinfo=datetime.timezone.utc)
     end_date = start_date + timezone.timedelta(days=1)
     events = schedule.filter_events(start_date, end_date)
     expected = {
-        "start": timezone.datetime(2024, 10, 29, 5, 0, 0, tzinfo=timezone.utc),
-        "end": timezone.datetime(2024, 11, 5, 6, 0, 0, tzinfo=timezone.utc),
+        "start": timezone.datetime(2024, 10, 29, 5, 0, 0, tzinfo=datetime.timezone.utc),
+        "end": timezone.datetime(2024, 11, 5, 6, 0, 0, tzinfo=datetime.timezone.utc),
     }
     assert len(events) == 1
     returned = {"start": events[0]["start"], "end": events[0]["end"]}
     assert returned == expected
 
     # week with DST change back
-    start_date = timezone.datetime(2025, 3, 10, 0, 0, 0, tzinfo=timezone.utc)
+    start_date = timezone.datetime(2025, 3, 10, 0, 0, 0, tzinfo=datetime.timezone.utc)
     end_date = start_date + timezone.timedelta(days=1)
     events = schedule.filter_events(start_date, end_date)
     expected = {
-        "start": timezone.datetime(2025, 3, 4, 6, 0, 0, tzinfo=timezone.utc),
-        "end": timezone.datetime(2025, 3, 11, 5, 0, 0, tzinfo=timezone.utc),
+        "start": timezone.datetime(2025, 3, 4, 6, 0, 0, tzinfo=datetime.timezone.utc),
+        "end": timezone.datetime(2025, 3, 11, 5, 0, 0, tzinfo=datetime.timezone.utc),
     }
     assert len(events) == 1
     returned = {"start": events[0]["start"], "end": events[0]["end"]}

@@ -105,7 +105,8 @@ class IntegrationAlertGroupLabelsSerializer(serializers.Serializer):
     custom = CustomLabelSerializer(many=True)
     template = serializers.CharField(allow_null=True)
 
-    def to_representation(self, instance: AlertReceiveChannel) -> IntegrationAlertGroupLabels:
+    # the precise TypedDict is more useful here than DRF's dict[str, Any]
+    def to_representation(self, instance: AlertReceiveChannel) -> IntegrationAlertGroupLabels:  # type: ignore[override]
         """
         The API representation of alert group labels is very different from the underlying model.
 

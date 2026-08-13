@@ -192,15 +192,16 @@ def test_post_or_update_resolution_note_in_thread_update_truncate_message_text(
     make_slack_message(slack_channel, alert_group=alert_group)
 
     resolution_note = make_resolution_note(alert_group=alert_group, author=user, message_text="a" * 3000)
-    make_resolution_note_slack_message(
+    # django no longer accepts the reverse one-to-one as a create() kwarg, so link it explicitly
+    resolution_note.resolution_note_slack_message = make_resolution_note_slack_message(
         alert_group=alert_group,
-        resolution_note=resolution_note,
         user=user,
         posted_by_bot=True,
         added_by_user=user,
         ts=1,
         text=resolution_note.text,
     )
+    resolution_note.save(update_fields=["resolution_note_slack_message"])
 
     UpdateResolutionNoteStep = ScenarioStep.get_step("resolution_note", "UpdateResolutionNoteStep")
     step = UpdateResolutionNoteStep(slack_team_identity)

@@ -63,7 +63,7 @@ class MobileAppCriticalBackend(MobileAppBackend):
     backend_id = "MOBILE_APP_CRITICAL"
     label = "Mobile push important"
     short_label = "Mobile push important"
-    template_fields = []
+    template_fields: list[str] = []
 
     def notify_user(self, user, alert_group, notification_policy, critical=True):
         super().notify_user(user, alert_group, notification_policy, critical)
