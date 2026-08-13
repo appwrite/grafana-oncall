@@ -1,7 +1,7 @@
 import dayjs from 'dayjs';
 
 import { test, expect, Locator } from '../fixtures';
-import { isGrafanaVersionGreaterThan, MOSCOW_TIMEZONE } from '../utils/constants';
+import { MOSCOW_TIMEZONE } from '../utils/constants';
 import { clickButton, generateRandomValue } from '../utils/forms';
 import { setTimezoneInProfile } from '../utils/grafanaProfile';
 import { createOnCallSchedule, getOverrideFormDateInputs } from '../utils/schedule';
@@ -14,9 +14,7 @@ test('Default dates in override creation modal are set to today', async ({ admin
 
   await page.clock.setFixedTime(new Date().setHours(12, 0, 0, 0));
   await page.getByTestId('timezone-select').locator('svg').click();
-  await (isGrafanaVersionGreaterThan('11.0.0') ? page.getByRole('option') : page.getByLabel('Select option'))
-    .getByText(/^GMT$/)
-    .click();
+  await page.getByRole('option').getByText(/^GMT$/).click();
 
   await clickButton({ page, buttonText: 'Add override' });
 

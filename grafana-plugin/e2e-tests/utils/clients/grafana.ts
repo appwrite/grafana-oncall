@@ -11,12 +11,6 @@ type CreateUserResponse = {
   id: number;
 };
 
-type GetSettingsResponse = {
-  buildInfo: {
-    version: string;
-  };
-};
-
 class GrafanaApiException extends Error {
   constructor(message: string) {
     super(message);
@@ -118,15 +112,6 @@ class GrafanaAPIClient {
       data: { user: userName, password },
     });
     expect(res.ok()).toBeTruthy();
-  };
-
-  // https://grafana.com/docs/grafana/latest/developers/http_api/other/#get-settings
-  getGrafanaVersion = async (request: APIRequestContext): Promise<string> => {
-    const res = await request.get(`${BASE_URL}/api/frontend/settings`);
-    expect(res.ok()).toBeTruthy();
-
-    const data: GetSettingsResponse = await res.json();
-    return data.buildInfo.version;
   };
 
   makeRequest = async (request: APIRequestContext, path: string, method: 'get' | 'post' | 'put' | 'delete' = 'post'): Promise<APIResponse> => {

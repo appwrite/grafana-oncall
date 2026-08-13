@@ -346,8 +346,9 @@ jobs:
     strategy:
       matrix:
         grafana_version:
-          - 10.3.0
           - 11.2.0
+          - 12.4.8
+          - 13.1.3
       fail-fast: false
     with:
       grafana_version: ${{ matrix.grafana_version }}

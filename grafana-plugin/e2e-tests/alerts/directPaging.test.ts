@@ -1,5 +1,4 @@
 import { test, expect } from '../fixtures';
-import { isGrafanaVersionLowerThan } from '../utils/constants';
 import { clickButton, fillInInput } from '../utils/forms';
 import { goToOnCallPage } from '../utils/navigation';
 
@@ -21,7 +20,7 @@ test('we can directly page a user', async ({ adminRolePage }) => {
 
   const addRespondersPopup = page.getByTestId('add-responders-popup');
 
-  await addRespondersPopup[isGrafanaVersionLowerThan('10.3.0') ? 'getByText' : 'getByLabel']('Users').click();
+  await addRespondersPopup.getByLabel('Users').click();
   await addRespondersPopup.getByText(adminRolePage.userName).first().click();
 
   // If user is not on call, confirm invitation

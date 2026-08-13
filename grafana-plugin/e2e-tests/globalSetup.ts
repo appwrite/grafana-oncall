@@ -20,7 +20,6 @@ import {
   IS_CLOUD,
   IS_OPEN_SOURCE,
   OrgRole,
-  isGrafanaVersionLowerThan,
 } from './utils/constants';
 import { goToOnCallPage } from './utils/navigation';
 
@@ -61,29 +60,10 @@ const idempotentlyInitializePlugin = async (page: Page) => {
   const openPluginConfigurationButton = page.getByRole('button', { name: 'Open configuration' });
   if (await openPluginConfigurationButton.isVisible()) {
     await openPluginConfigurationButton.click();
-    // Before 10.3 Admin user needs to create service account manually
-    if (isGrafanaVersionLowerThan('10.3.0')) {
-      await page.getByTestId('recreate-service-account').click();
-    }
     await page.getByTestId('connect-plugin').click();
     await page.waitForLoadState('networkidle');
     await page.getByText('Plugin is connected').waitFor();
   }
-};
-
-const determineGrafanaVersion = async (adminAuthedRequest: APIRequestContext) => {
-  /**
-   * determine the current Grafana version of the stack in question and set it such that it can be used in the tests
-   * to conditionally skip certain tests.
-   *
-   * According to the Playwright docs, the best way to set config like this on the fly, is to set values
-   * on process.env https://playwright.dev/docs/test-global-setup-teardown#example
-   *
-   * TODO: when this bug is fixed in playwright https://github.com/microsoft/playwright/issues/29608
-   * move this to the currentGrafanaVersion fixture
-   */
-  const currentGrafanaVersion = await grafanaApiClient.getGrafanaVersion(adminAuthedRequest);
-  process.env.CURRENT_GRAFANA_VERSION = currentGrafanaVersion;
 };
 
 /**
@@ -103,8 +83,6 @@ setup('Configure Grafana OnCall plugin', async ({ request }, { config }) => {
   );
   const adminPage = await adminBrowserContext.newPage();
   const { request: adminAuthedRequest } = adminBrowserContext;
-
-  await determineGrafanaVersion(adminAuthedRequest);
 
   await idempotentlyInitializePlugin(adminPage);
 

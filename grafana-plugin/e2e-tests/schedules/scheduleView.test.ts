@@ -4,16 +4,13 @@ import { scheduleViewToDaysInOneRow } from 'models/schedule/schedule.helpers';
 import { ScheduleView } from 'models/schedule/schedule.types';
 
 import { expect, Page, test } from '../fixtures';
-import { isGrafanaVersionLowerThan } from '../utils/constants';
 import { generateRandomValue } from '../utils/forms';
 import { createOnCallSchedule } from '../utils/schedule';
 
 const getNumberOfWeekdaysInFinalSchedule = async (page: Page) =>
   await page.locator(`#${HTML_ID.SCHEDULE_FINAL}`).getByTestId('schedule-weekday').count();
 const getScheduleViewRadioButtonLocator = (page: Page, view: ScheduleView) =>
-  page
-    .getByTestId('schedule-view-picker')
-    [isGrafanaVersionLowerThan('10.2.0') ? 'getByText' : 'getByLabel'](view, { exact: true });
+  page.getByTestId('schedule-view-picker').getByLabel(view, { exact: true });
 
 test('schedule view (week/2 weeks/month) toggler works', async ({ adminRolePage }) => {
   const { page, userName } = adminRolePage;
