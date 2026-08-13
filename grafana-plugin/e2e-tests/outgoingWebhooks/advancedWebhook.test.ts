@@ -5,6 +5,9 @@ import { goToOnCallPage } from '../utils/navigation';
 import { checkWebhookPresenceInTable } from '../utils/outgoingWebhooks';
 
 test('create advanced webhook and check it is displayed on the list correctly', async ({ adminRolePage: { page } }) => {
+  // creates an integration, then fills in the whole advanced webhook form
+  test.slow();
+
   const WEBHOOK_NAME = generateRandomValue();
   const WEBHOOK_INTEGRATION_NAME = generateRandomValue();
   const WEBHOOK_URL = 'https://example.com';

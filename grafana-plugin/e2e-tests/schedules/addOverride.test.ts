@@ -48,7 +48,7 @@ test('Fills in override time and reacts to timezone change', async ({ adminRoleP
   await page.getByRole('dialog').click(); // clear focus
 
   await page.getByTestId('timezone-select').locator('svg').click();
-  await page.getByText('GMT', { exact: true }).click();
+  await page.getByRole('option', { name: 'GMT', exact: true }).first().click();
 
   // expect times to go back by -3
   await expect(getTimeInput(overrideStartEl)).toHaveValue('23:00');

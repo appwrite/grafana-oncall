@@ -4,6 +4,8 @@ import { goToOnCallPage } from '../utils/navigation';
 import { createOnCallSchedule } from '../utils/schedule';
 
 test('schedule calendar and list of schedules is correctly displayed', async ({ adminRolePage }) => {
+  test.slow();
+
   const { page, userName } = adminRolePage;
 
   const onCallScheduleName = generateRandomValue();

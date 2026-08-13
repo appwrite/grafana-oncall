@@ -80,12 +80,17 @@ export const setTime = async (element: Locator, hour: string) => {
 };
 
 /**
- * fill() sets the value without keystrokes, which leaves grafana 13's combobox unfiltered and
- * makes Enter pick whatever was already highlighted, so type it out instead.
+ * Grafana 12 takes a typed time; 13 renders a combobox that only commits a value picked from its
+ * list, so type first and correct it from the list when the typing did not stick.
  */
 export const typeTime = async (input: Locator, value: string) => {
   await input.click();
   await input.fill('');
   await input.pressSequentially(value);
   await input.press('Enter');
+
+  if ((await input.inputValue()) !== value) {
+    await input.click();
+    await input.page().getByRole('option', { name: value, exact: true }).first().click();
+  }
 };
