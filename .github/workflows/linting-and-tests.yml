@@ -187,7 +187,15 @@ jobs:
         with:
           version: v3.8.0
       - name: Install helm unittest plugin
-        run: helm plugin install https://github.com/helm-unittest/helm-unittest.git --version=v0.3.3
+        # the plugin downloads a release archive on install, which intermittently fails
+        run: |
+          for attempt in 1 2 3; do
+            helm plugin install https://github.com/helm-unittest/helm-unittest.git --version=v0.3.3 && exit 0
+            echo "attempt $attempt failed, retrying in 10s"
+            helm plugin uninstall unittest || true
+            sleep 10
+          done
+          exit 1
       - name: Run tests
         run: helm unittest ./helm/oncall
 

@@ -7,7 +7,10 @@ test.describe('Plugin configuration', () => {
   test('Admin user can see currently applied URL', async ({ adminRolePage: { page } }) => {
     await goToGrafanaPage(page, PLUGIN_CONFIG);
 
-    await expect(page.getByTestId('oncall-api-url-input')).toHaveValue('http://oncall-dev-engine:8080');
+    // the plugin config page takes a while to hydrate on grafana 13
+    await expect(page.getByTestId('oncall-api-url-input')).toHaveValue('http://oncall-dev-engine:8080', {
+      timeout: 15_000,
+    });
   });
 
   test('Admin user can see error when invalid OnCall API URL is entered and plugin is reconnected', async ({
@@ -17,7 +20,7 @@ test.describe('Plugin configuration', () => {
 
     // the input is populated once the plugin settings load
     const urlInput = page.getByTestId('oncall-api-url-input');
-    await expect(urlInput).not.toHaveValue('');
+    await expect(urlInput).not.toHaveValue('', { timeout: 15_000 });
     const correctURLAppliedByDefault = await urlInput.inputValue();
 
     // show client-side validation errors
