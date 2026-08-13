@@ -66,5 +66,5 @@ google-auth-oauthlib==1.2.0
 # requests==2.32.3 is installing idna==3.6 but supports idna>=2.5,<4
 # https://github.com/psf/requests/blob/v2.32.3/setup.py#L63
 idna==3.18
-# setuptools<81 keeps pkg_resources, still imported by django-stubs 4.2 mypy plugin
-setuptools<81
+# setuptools<84 keeps pkg_resources, still imported by django-stubs 4.2 mypy plugin
+setuptools<84
