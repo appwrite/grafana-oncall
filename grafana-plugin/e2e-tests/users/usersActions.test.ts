@@ -26,10 +26,10 @@ test.describe('Users screen actions', () => {
     await page.getByTestId('users-email').and(page.getByText('editor')).waitFor();
 
     await expect(page.getByTestId('users-email').and(page.getByText('editor'))).toHaveCount(1);
-    const maskedEmailsCount = await page.getByTestId('users-email').and(page.getByText('******')).count();
-    expect(maskedEmailsCount).toBeGreaterThan(1);
-    const maskedPhoneNumbersCount = await page.getByTestId('users-phone-number').and(page.getByText('******')).count();
-    expect(maskedPhoneNumbersCount).toBeGreaterThan(1);
+    const maskedEmails = page.getByTestId('users-email').and(page.getByText('******'));
+    const maskedPhoneNumbers = page.getByTestId('users-phone-number').and(page.getByText('******'));
+    await expect.poll(() => maskedEmails.count()).toBeGreaterThan(1);
+    await expect.poll(() => maskedPhoneNumbers.count()).toBeGreaterThan(1);
   });
 
   test('Editor can access tabs from View My Profile', async ({ editorRolePage }) => {
@@ -42,19 +42,14 @@ test.describe('Users screen actions', () => {
   test("Editor is not allowed to edit other users' profile", async ({ editorRolePage: { page } }) => {
     await goToOnCallPage(page, 'users');
     await expect(page.getByTestId('users-table').getByRole('button', { name: 'Edit', disabled: false })).toHaveCount(1);
-    const usersCountWithDisabledEdit = await page
-      .getByTestId('users-table')
-      .getByRole('button', { name: 'Edit', disabled: true })
-      .count();
-    expect(usersCountWithDisabledEdit).toBeGreaterThan(1);
+    const usersWithDisabledEdit = page.getByTestId('users-table').getByRole('button', { name: 'Edit', disabled: true });
+    await expect.poll(() => usersWithDisabledEdit.count()).toBeGreaterThan(1);
   });
 
   test("Admin is allowed to edit other users' profile", async ({ adminRolePage: { page } }) => {
     await goToOnCallPage(page, 'users');
     const editableUsers = page.getByTestId('users-table').getByRole('button', { name: 'Edit', disabled: false });
-    await editableUsers.first().waitFor();
-    const editableUsersCount = await editableUsers.count();
-    expect(editableUsersCount).toBeGreaterThan(1);
+    await expect.poll(() => editableUsers.count()).toBeGreaterThan(1);
   });
 
   test('Admin is allowed to view the list of users', async ({ adminRolePage: { page } }) => {
@@ -74,10 +69,8 @@ test.describe('Users screen actions', () => {
       .click();
     await page.keyboard.insertText(userName);
     await page.keyboard.press('Enter');
-    await page.waitForTimeout(2000);
 
-    const result = page.locator(`[data-testid="users-username"]`);
-
-    expect(await result.count()).toBe(1);
+    // polls until the search has filtered the table, rather than sleeping and reading once
+    await expect(page.locator(`[data-testid="users-username"]`)).toHaveCount(1);
   });
 });
