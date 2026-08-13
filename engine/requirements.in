@@ -1,8 +1,8 @@
 babel==2.12.1
 beautifulsoup4==4.12.2
 celery[redis]==5.3.6
-cryptography==44.0.1
-django==4.2.27
+cryptography==50.0.0
+django==4.2.30
 django-add-default-value==0.10.0
 django-anymail[amazon-ses]==12.0
 django-cors-headers==3.7.0
@@ -15,7 +15,7 @@ django-log-request-id==1.6.0
 django-migration-linter==4.1.0
 django-mirage-field==1.3.0
 django-mysql==4.16.0
-django-polymorphic==3.1.0
+django-polymorphic==4.0.0
 django-ratelimit==2.0.0
 django-redis==5.4.0
 django-rest-polymorphic==0.1.10
@@ -26,37 +26,37 @@ factory-boy<3.0
 drf-spectacular==0.28.0
 emoji==2.4.0
 grpcio==1.76.0
-fcm-django @ https://github.com/grafana/fcm-django/archive/refs/tags/v1.0.12r1.tar.gz#sha256=7ec7cd9d353fc9edf19a4acd4fa14090a31d83d02ac986c5e5e081dea29f564f
+fcm-django==3.2.0
 hiredis==2.2.3
 humanize==4.10.0
 icalendar==5.0.10
 jinja2==3.1.6
-lxml==5.2.2
+lxml==6.1.1
 markdown2==2.4.10
 nest-asyncio==1.6.0
-opentelemetry-sdk==1.26.0
-opentelemetry-api==1.26.0
-opentelemetry-exporter-otlp-proto-grpc==1.26.0
-opentelemetry-instrumentation-logging==0.47b0
-opentelemetry-instrumentation-wsgi==0.47b0
-opentelemetry-instrumentation-requests==0.47b0
-opentelemetry-instrumentation-django==0.47b0
+opentelemetry-sdk==1.44.0
+opentelemetry-api==1.44.0
+opentelemetry-exporter-otlp-proto-grpc==1.44.0
+opentelemetry-instrumentation-logging==0.65b0
+opentelemetry-instrumentation-wsgi==0.65b0
+opentelemetry-instrumentation-requests==0.65b0
+opentelemetry-instrumentation-django==0.65b0
 phonenumbers==8.10.0
 prometheus_client==0.16.0
 psutil==5.9.4
 psycopg2==2.9.11
-pymdown-extensions==10.0
+pymdown-extensions==11.0.1
 PyMySQL==1.1.1
 python-telegram-bot==22.5
 recurring-ical-events==2.1.0
 redis==5.0.1
 regex==2024.7.24
-requests==2.32.4
+requests==2.34.2
 slack-export-viewer==1.1.4
 slack_sdk==3.21.3
 social-auth-app-django==5.4.1
 twilio~=6.37.0
-urllib3==2.6.3
+urllib3==2.7.0
 uwsgi==2.0.31
 whitenoise==5.3.0
 google-api-python-client==2.122.0
@@ -65,4 +65,6 @@ google-auth-oauthlib==1.2.0
 # we are manually pinning idna to 3.7 to fix CVE-2024-3651
 # requests==2.32.3 is installing idna==3.6 but supports idna>=2.5,<4
 # https://github.com/psf/requests/blob/v2.32.3/setup.py#L63
-idna==3.7
+idna==3.18
+# setuptools<81 keeps pkg_resources, still imported by django-stubs 4.2 mypy plugin
+setuptools<81

@@ -418,11 +418,12 @@ def test_mailgun_provider_load(
 @pytest.mark.parametrize(
     "sender_value,expected_result",
     [
-        ("'Alex Smith' <test@example.com>", "test@example.com"),
+        ("'Alex Smith' <test@example.com>", ("test@example.com",)),
         # double quotes required when including special characters
-        ("\"'Alex Smith' via [TEST] mail\" <test@example.com>", "test@example.com"),
-        # missing double quotes
-        ("'Alex Smith' via [TEST] mail <test@example.com>", "\"'Alex Smith' via\""),
+        ("\"'Alex Smith' via [TEST] mail\" <test@example.com>", ("test@example.com",)),
+        # missing double quotes: falls back to the raw From header, whose
+        # normalization differs between Python stdlib builds
+        ("'Alex Smith' via [TEST] mail <test@example.com>", ("\"'Alex Smith' via\"", "\"'Alex Smith' via\", <>")),
     ],
 )
 def test_get_sender_from_email_message(sender_value, expected_result):
@@ -430,7 +431,7 @@ def test_get_sender_from_email_message(sender_value, expected_result):
     email["From"] = sender_value
     view = InboundEmailWebhookView()
     result = view.get_sender_from_email_message(email)
-    assert result == expected_result
+    assert result in expected_result
 
 
 @patch.object(create_alert, "delay")

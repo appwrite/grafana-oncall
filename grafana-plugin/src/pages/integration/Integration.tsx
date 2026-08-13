@@ -14,7 +14,7 @@ import {
   Themeable2,
   useStyles2,
 } from '@grafana/ui';
-import { sanitize } from 'dompurify';
+import dompurify from 'dompurify';
 import { LocationHelper } from 'helpers/LocationHelper';
 import { UserActions } from 'helpers/authorization/authorization';
 import { INTEGRATION_SERVICENOW, StackSize, PLUGIN_ROOT } from 'helpers/consts';
@@ -259,7 +259,7 @@ class _IntegrationPage extends React.Component<IntegrationProps, IntegrationStat
                   <Alert
                     title={
                       (
-                        <div dangerouslySetInnerHTML={{ __html: sanitize(alertReceiveChannel.description) }}></div>
+                        <div dangerouslySetInnerHTML={{ __html: dompurify.sanitize(alertReceiveChannel.description) }}></div>
                       ) as any
                     }
                     severity="info"

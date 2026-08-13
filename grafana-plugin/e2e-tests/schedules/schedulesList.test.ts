@@ -13,8 +13,7 @@ test('schedule calendar and list of schedules is correctly displayed', async ({ 
   await page.waitForLoadState('networkidle');
 
   // schedule slots are present in calendar
-  const nbOfSlotsInCalendar = await page.getByTestId('schedule-slot').count();
-  await expect(nbOfSlotsInCalendar).toBeGreaterThan(0);
+  await expect(page.getByTestId('schedule-slot')).not.toHaveCount(0);
 
   // filter table to show only created schedule
   await page
