@@ -90,6 +90,7 @@ jobs:
         uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7.0.0
         with:
           go-version-file: grafana-plugin/go.mod
+          cache-dependency-path: grafana-plugin/go.sum
 
       - name: Install Mage
         run: go install github.com/magefile/mage@v1.15.0
