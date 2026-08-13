@@ -9,7 +9,7 @@ runs:
   using: composite
   steps:
     - name: Install pnpm
-      uses: pnpm/action-setup@a7487c7e89a18df4991f7f222e4898a00d66ddda # v4.1.0
+      uses: pnpm/action-setup@0977fd99725f1db4007ccb2928dbb4e90d06cc86 # v6.0.10
       with:
         version: 9.1.4
     - name: Determine grafana-plugin directory location
@@ -24,7 +24,7 @@ runs:
       # yamllint disable rule:line-length
       run: echo "pnpm-lock-location=${{ steps.grafana-plugin-directory.outputs.grafana-plugin-directory }}/pnpm-lock.yaml" >> $GITHUB_OUTPUT
       # yamllint enable rule:line-length
-    - uses: actions/setup-node@v4
+    - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
       with:
         node-version: 20.15.1
         cache: pnpm

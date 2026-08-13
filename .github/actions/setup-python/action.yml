@@ -14,7 +14,7 @@ runs:
   steps:
     - name: Setup Python
       id: setup-python
-      uses: actions/setup-python@v5.1.0
+      uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
       env:
         PYTHON_REQUIREMENTS_PATHS: ${{ inputs.python-requirements-paths }}
       with:
