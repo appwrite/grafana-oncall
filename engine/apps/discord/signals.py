@@ -1,0 +1,5 @@
+from apps.alerts.signals import alert_create_signal, alert_group_action_triggered_signal
+from apps.discord.alert_group_representative import AlertGroupDiscordRepresentative
+
+alert_create_signal.connect(AlertGroupDiscordRepresentative.on_create_alert)
+alert_group_action_triggered_signal.connect(AlertGroupDiscordRepresentative.on_alert_group_action_triggered)
