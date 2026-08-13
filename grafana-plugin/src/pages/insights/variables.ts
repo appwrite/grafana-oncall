@@ -84,8 +84,14 @@ const getVariables = ({ isOpenSource, datasource, stack }: InsightsConfig) => ({
       query: 'metrics(alert_groups_total)',
       refId: 'PrometheusVariableQueryEditor-VariableQuery',
     },
-    text: ['oncall_alert_groups_total', 'grafanacloud_oncall_instance_alert_groups_total'],
-    value: ['oncall_alert_groups_total', 'grafanacloud_oncall_instance_alert_groups_total'],
+    // panels interpolate this straight into PromQL as the metric name, so it has to resolve to a
+    // single value; the query above repopulates it for the environment in play. A hidden variable
+    // has no business round-tripping through the URL either — a restored multi-value seed makes
+    // every Insights panel query invalid.
+    isMulti: false,
+    skipUrlSync: true,
+    text: 'oncall_alert_groups_total',
+    value: 'oncall_alert_groups_total',
     definition: 'metrics(alert_groups_total)',
     hide: 2,
   }),

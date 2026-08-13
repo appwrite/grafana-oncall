@@ -1279,8 +1279,8 @@
       {
         "current": {
           "selected": true,
-          "text": ["oncall_alert_groups_total", "grafanacloud_oncall_instance_alert_groups_total"],
-          "value": ["oncall_alert_groups_total", "grafanacloud_oncall_instance_alert_groups_total"]
+          "text": "oncall_alert_groups_total",
+          "value": "oncall_alert_groups_total"
         },
         "datasource": {
           "type": "prometheus",
@@ -1290,7 +1290,7 @@
         "hide": 2,
         "includeAll": false,
         "label": "alert_groups_total",
-        "multi": true,
+        "multi": false,
         "name": "alert_groups_total",
         "options": [],
         "query": {
@@ -1299,7 +1299,7 @@
         },
         "refresh": 1,
         "regex": "",
-        "skipUrlSync": false,
+        "skipUrlSync": true,
         "sort": 0,
         "type": "query"
       },
