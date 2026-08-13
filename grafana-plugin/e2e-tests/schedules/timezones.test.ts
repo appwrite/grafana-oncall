@@ -7,7 +7,7 @@ import { test } from '../fixtures';
 import { MOSCOW_TIMEZONE } from '../utils/constants';
 import { clickButton, generateRandomValue } from '../utils/forms';
 import { setTimezoneInProfile } from '../utils/grafanaProfile';
-import { createOnCallSchedule, getTimeInput } from '../utils/schedule';
+import { createOnCallSchedule, getTimeInput, getSelectMenu } from '../utils/schedule';
 
 dayjs.extend(utc);
 dayjs.extend(isoWeek);
@@ -51,7 +51,7 @@ test.skip('dates in schedule are correct according to selected current timezone'
 
   // Change timezone to GMT
   await page.getByTestId('timezone-select').locator('div').filter({ hasText: 'GMT+' }).nth(1).click();
-  await page.getByRole('option', { name: 'GMT', exact: true }).first().click();
+  await getSelectMenu(page).getByText('GMT', { exact: true }).click();
 
   // Selected timezone and local time is correctly displayed
   await expect(page.getByText(`Current timezone: GMT, local time: ${currentUtcTimeHour}`)).toBeVisible();

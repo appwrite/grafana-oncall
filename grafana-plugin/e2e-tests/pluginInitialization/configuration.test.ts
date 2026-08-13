@@ -6,7 +6,6 @@ import { goToGrafanaPage } from '../utils/navigation';
 test.describe('Plugin configuration', () => {
   test('Admin user can see currently applied URL', async ({ adminRolePage: { page } }) => {
     await goToGrafanaPage(page, PLUGIN_CONFIG);
-    await page.waitForLoadState('networkidle');
     const currentlyAppliedURL = await page.getByTestId('oncall-api-url-input').inputValue();
 
     expect(currentlyAppliedURL).toBe('http://oncall-dev-engine:8080');
@@ -16,7 +15,6 @@ test.describe('Plugin configuration', () => {
     adminRolePage: { page },
   }) => {
     await goToGrafanaPage(page, PLUGIN_CONFIG);
-    await page.waitForLoadState('networkidle');
     const correctURLAppliedByDefault = await page.getByTestId('oncall-api-url-input').inputValue();
 
     // show client-side validation errors
@@ -28,9 +26,12 @@ test.describe('Plugin configuration', () => {
 
     // apply back correct url and verify plugin connected again
     await urlInput.fill(correctURLAppliedByDefault);
-    await page.waitForTimeout(500);
-    await page.getByTestId('connect-plugin').click();
-    await page.waitForLoadState('networkidle');
+
+    // the button stays disabled until the form revalidates
+    const connectPlugin = page.getByTestId('connect-plugin');
+    await expect(connectPlugin).toBeEnabled();
+    await connectPlugin.click();
+
     await page.getByText('Plugin is connected').waitFor();
   });
 });

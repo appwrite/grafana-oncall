@@ -2,7 +2,7 @@ import { test, expect } from '../fixtures';
 import { MOSCOW_TIMEZONE } from '../utils/constants';
 import { clickButton, generateRandomValue } from '../utils/forms';
 import { setTimezoneInProfile } from '../utils/grafanaProfile';
-import { createOnCallSchedule, getTimeInput, setTime } from '../utils/schedule';
+import { createOnCallSchedule, getTimeInput, setTime, getSelectMenu } from '../utils/schedule';
 
 test('Fills in Rotation time and  reacts to timezone change', async ({ adminRolePage }) => {
   const { page, userName } = adminRolePage;
@@ -28,7 +28,7 @@ test('Fills in Rotation time and  reacts to timezone change', async ({ adminRole
   await page.getByRole('dialog').click(); // clear focus
 
   await page.getByTestId('timezone-select').locator('svg').click();
-  await page.getByRole('option', { name: 'GMT', exact: true }).first().click();
+  await getSelectMenu(page).getByText('GMT', { exact: true }).click();
 
   // expect times to go back by -3
   await expect(getTimeInput(startEl)).toHaveValue('23:00');

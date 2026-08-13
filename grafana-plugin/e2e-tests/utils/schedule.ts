@@ -87,10 +87,18 @@ export const typeTime = async (input: Locator, value: string) => {
   await input.click();
   await input.fill('');
   await input.pressSequentially(value);
-  await input.press('Enter');
 
-  if ((await input.inputValue()) !== value) {
-    await input.click();
-    await input.page().getByRole('option', { name: value, exact: true }).first().click();
+  // grafana 13 renders a combobox that only commits a value picked from its list; 12 takes the
+  // typed value on Enter. Don't click the input again here — that would close the open list.
+  const option = input.page().getByRole('option', { name: value, exact: true }).first();
+
+  try {
+    await option.waitFor({ state: 'visible', timeout: 1_000 });
+    await option.click();
+  } catch {
+    await input.press('Enter');
   }
 };
+
+/** the open menu of a grafana Select, which is portalled out of its container */
+export const getSelectMenu = (page: Page) => page.locator('div[id^="react-select-"][id$="-listbox"]');
