@@ -65,7 +65,7 @@ test('Connects a personal notification webhook', async ({ adminRolePage: { page 
 
   // Check connection on User Info tab
   await page.getByRole('tab', { name: 'User info' }).click();
-  await expect(page.getByText(WEBHOOK_NAME)).toBeVisible();
+  await expect(page.getByDisplayValue(WEBHOOK_NAME)).toBeVisible();
 
   // Disconnect 
   await page.getByRole('tab', { name: 'Webhook connection' }).click();
@@ -74,5 +74,5 @@ test('Connects a personal notification webhook', async ({ adminRolePage: { page 
 
   // Check connection is no longer shown
   await page.getByRole('tab', { name: 'User info' }).click();
-  await expect(page.getByText(WEBHOOK_NAME)).not.toBeVisible();
+  await expect(page.getByDisplayValue(WEBHOOK_NAME)).not.toBeVisible();
 })
