@@ -102,7 +102,7 @@ detached_integrations.enabled=true -> should create integrations deployment:
           value: ""
         - name: ROOT_URLCONF
           value: engine.integrations_urls
-      image: grafana/oncall:v1.3.39
+      image: ghcr.io/appwrite/grafana-oncall:v1.3.39
       imagePullPolicy: Always
       livenessProbe:
         httpGet:

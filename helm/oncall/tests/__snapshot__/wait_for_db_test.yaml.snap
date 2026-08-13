@@ -76,7 +76,7 @@ database.type=mysql -> should create initContainer for MySQL database (default):
           value: amqp
         - name: RABBITMQ_VHOST
           value: ""
-      image: grafana/oncall:v1.2.36
+      image: ghcr.io/appwrite/grafana-oncall:v1.2.36
       imagePullPolicy: Always
       name: wait-for-db
       resources:
@@ -164,7 +164,7 @@ database.type=mysql -> should create initContainer for MySQL database (default):
           value: amqp
         - name: RABBITMQ_VHOST
           value: ""
-      image: grafana/oncall:v1.2.36
+      image: ghcr.io/appwrite/grafana-oncall:v1.2.36
       imagePullPolicy: Always
       name: wait-for-db
       resources:
@@ -252,7 +252,7 @@ database.type=mysql -> should create initContainer for MySQL database (default):
           value: amqp
         - name: RABBITMQ_VHOST
           value: ""
-      image: grafana/oncall:v1.2.36
+      image: ghcr.io/appwrite/grafana-oncall:v1.2.36
       imagePullPolicy: Always
       name: wait-for-db
       resources:
@@ -343,7 +343,7 @@ database.type=postgresql -> should create initContainer for PostgreSQL database:
           value: amqp
         - name: RABBITMQ_VHOST
           value: ""
-      image: grafana/oncall:v1.2.36
+      image: ghcr.io/appwrite/grafana-oncall:v1.2.36
       imagePullPolicy: Always
       name: wait-for-db
       resources:
@@ -433,7 +433,7 @@ database.type=postgresql -> should create initContainer for PostgreSQL database:
           value: amqp
         - name: RABBITMQ_VHOST
           value: ""
-      image: grafana/oncall:v1.2.36
+      image: ghcr.io/appwrite/grafana-oncall:v1.2.36
       imagePullPolicy: Always
       name: wait-for-db
       resources:
@@ -523,7 +523,7 @@ database.type=postgresql -> should create initContainer for PostgreSQL database:
           value: amqp
         - name: RABBITMQ_VHOST
           value: ""
-      image: grafana/oncall:v1.2.36
+      image: ghcr.io/appwrite/grafana-oncall:v1.2.36
       imagePullPolicy: Always
       name: wait-for-db
       resources:

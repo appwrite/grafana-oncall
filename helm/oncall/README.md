@@ -5,7 +5,7 @@ It will deploy Grafana OnCall engine and celery workers, along with RabbitMQ clu
 It will also deploy cert manager and nginx ingress controller, as Grafana OnCall backend might need to be externally available
 to receive alerts from other monitoring systems. Grafana OnCall engine acts as a backend and can be connected to the
 Grafana frontend plugin named Grafana OnCall.
-Architecture diagram can be found [here](https://raw.githubusercontent.com/grafana/oncall/dev/docs/img/architecture_diagram.png)
+Architecture diagram can be found [here](https://raw.githubusercontent.com/appwrite/grafana-oncall/main/docs/img/architecture_diagram.png)
 
 ## Production usage
 
@@ -23,12 +23,13 @@ Here are the instructions on how to set up your own [ingress](#set-up-external-a
 
 ## Install
 
-### Prepare the repo
+### Prepare the chart
+
+This chart is not published to a helm repository, so install it from a checkout:
 
 ```bash
-# Add the repository
-helm repo add grafana https://grafana.github.io/helm-charts
-helm repo update
+git clone https://github.com/appwrite/grafana-oncall.git
+cd grafana-oncall
 ```
 
 ### Installing the helm chart
@@ -40,7 +41,7 @@ helm install \
     --set base_url=example.com \
     --set grafana."grafana\.ini".server.domain=example.com \
     release-oncall \
-    grafana/oncall
+    ./helm/oncall
 ```
 
 Follow the `helm install` output to finish setting up Grafana OnCall backend and Grafana OnCall frontend plugin e.g.
@@ -83,7 +84,7 @@ helm upgrade \
     --set base_url=example.com \
     --set grafana."grafana\.ini".server.domain=example.com \
     release-oncall \
-    grafana/oncall
+    ./helm/oncall
 ```
 
 ### Passwords and external secrets
@@ -382,9 +383,8 @@ externalRedis:
 ## Update
 
 ```bash
-# Add & upgrade the repository
-helm repo add grafana https://grafana.github.io/helm-charts
-helm repo update
+# Pull the latest chart
+git pull
 
 # Re-deploy
 helm upgrade \
@@ -393,12 +393,21 @@ helm upgrade \
     --set base_url=example.com \
     --set grafana."grafana\.ini".server.domain=example.com \
     release-oncall \
-    grafana/oncall
+    ./helm/oncall
 ```
 
-After re-deploying, please also update the Grafana OnCall plugin on the plugin version page.
-See [Grafana docs](https://grafana.com/docs/grafana/latest/administration/plugin-management/#update-a-plugin) for
-more info on updating Grafana plugins.
+The plugin is not in the grafana.com catalog, so it does not update through the plugin page. The
+bundled Grafana installs it from this fork's release archive, and the chart derives that version from
+`image.tag` (falling back to the chart's `appVersion`) — so bumping the engine moves the plugin with
+it, and the two cannot end up on different versions.
+
+Grafana only installs a plugin that is not already present, so with `grafana.persistence` enabled the
+old copy has to be cleared before it will reinstall:
+
+```bash
+kubectl exec deploy/release-oncall-grafana -- rm -rf /var/lib/grafana/plugins/grafana-oncall-app
+kubectl rollout restart deploy/release-oncall-grafana
+```
 
 ## Uninstall
 
