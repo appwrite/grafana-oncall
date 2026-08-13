@@ -7,7 +7,7 @@ import { test } from '../fixtures';
 import { MOSCOW_TIMEZONE } from '../utils/constants';
 import { clickButton, generateRandomValue } from '../utils/forms';
 import { setTimezoneInProfile } from '../utils/grafanaProfile';
-import { createOnCallSchedule } from '../utils/schedule';
+import { createOnCallSchedule, getTimeInput } from '../utils/schedule';
 
 dayjs.extend(utc);
 dayjs.extend(isoWeek);
@@ -86,7 +86,7 @@ test.skip('dates in schedule are correct according to selected current timezone'
   await expect(page.getByTestId('rotation-form').getByPlaceholder('Date')).toHaveValue(
     firstDayOfTheWeek.format('MM/DD/YYYY')
   );
-  await expect(page.getByTestId('rotation-form').getByTestId('date-time-picker').getByRole('textbox')).toHaveValue(
+  await expect(getTimeInput(page.getByTestId('rotation-form'))).toHaveValue(
     '00:00'
   );
 });

@@ -1,4 +1,4 @@
-import { Page } from '@playwright/test';
+import { Locator, Page } from '@playwright/test';
 import dayjs from 'dayjs';
 
 import { clickButton, selectDropdownValue } from './forms';
@@ -66,4 +66,19 @@ export const getOverrideFormDateInputs = async (page: Page): Promise<OverrideFor
     start: startDateTime,
     end: endDateTime,
   };
+};
+
+/**
+ * Grafana renders the time picker differently per major version — a typeable input in 12,
+ * a combobox in 13 — so target the input itself rather than a role, and type instead of
+ * clicking through the panel.
+ */
+export const getTimeInput = (element: Locator) => element.getByTestId('date-time-picker').locator('input');
+
+export const setTime = async (element: Locator, hour: string) => {
+  const input = getTimeInput(element);
+
+  await input.click();
+  await input.fill(`${hour}:00`);
+  await input.press('Enter');
 };

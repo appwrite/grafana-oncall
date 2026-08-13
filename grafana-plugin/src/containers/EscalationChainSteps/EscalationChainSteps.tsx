@@ -71,7 +71,7 @@ export const EscalationChainSteps = observer((props: EscalationChainStepsProps) 
   const { bgColor: successBgColor, textColor: successTextColor } = getLabelBackgroundTextColorObject('green', theme);
 
   return (
-    <SortableList useDragHandle axis="y" lockAxis="y" onSortEnd={handleSortEnd}>
+    <SortableList items={escalationPolicyIds || []} onSortEnd={handleSortEnd}>
       {addonBefore}
       {escalationPolicyIds ? (
         escalationPolicyIds.map((escalationPolicyId, index) => {
@@ -94,7 +94,7 @@ export const EscalationChainSteps = observer((props: EscalationChainStepsProps) 
 
           return (
             <EscalationPolicy
-              index={index} // This in here is a MUST for the SortableElement
+              id={escalationPolicy.id}
               key={`item-${escalationPolicy.id}`}
               data={escalationPolicy}
               number={index + offset + 1}

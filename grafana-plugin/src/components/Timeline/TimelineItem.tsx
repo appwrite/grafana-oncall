@@ -3,6 +3,8 @@ import React from 'react';
 import { cx } from '@emotion/css';
 import { useStyles2 } from '@grafana/ui';
 
+import { useSortableNode } from 'components/SortableList/SortableNode';
+
 import { getTimelineStyles } from './Timeline.styles';
 
 export interface TimelineItemProps {
@@ -28,9 +30,10 @@ export const TimelineItem: React.FC<TimelineItemProps> = ({
   number,
 }) => {
   const styles = useStyles2(getTimelineStyles);
+  const { setNodeRef, style } = useSortableNode();
 
   return (
-    <li className={cx(styles.item, className)}>
+    <li ref={setNodeRef} style={style} className={cx(styles.item, className)}>
       {!isDisabled && (
         <div
           className={cx(styles.dot, backgroundClassName || '')}

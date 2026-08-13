@@ -30,14 +30,9 @@ test('from_time and to_time for "Continue escalation if current UTC time is in r
   const _getToTimeInput = () => page.locator('[data-testid="time-range-to"] >> input');
 
   const clickAndInputValue = async (locator: Locator, value: string) => {
-    // the first click opens up dropdown which contains the time selector scrollable lists
     await locator.click();
-
-    // the second click focuses on the input where we can actually type the time instead, much easier
-    const actualInput = page.locator('input[class="rc-time-picker-panel-input"]');
-    await actualInput.click();
-    await actualInput.selectText();
-    await actualInput.fill(value);
+    await locator.fill(value);
+    await locator.press('Enter');
 
     // click anywhere to close the dropdown
     await page.click('body');
