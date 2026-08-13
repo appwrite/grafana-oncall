@@ -77,19 +77,12 @@ jobs:
         uses: actions/checkout@v4
       - name: Setup Python
         uses: ./.github/actions/setup-python
-      - name: Wait for MySQL to be ready
-        working-directory: engine
-        run: ./wait_for_test_mysql_start.sh
       - name: Lint migrations
         working-directory: engine
         # makemigrations --check = Exit with a non-zero status if model changes are missing migrations
         # and don't actually write them.
-        #
-        # the linter runs sqlmigrate per migration, which on mysql introspects the live schema to
-        # resolve constraint names, so the database has to be migrated first
         run: |
           python manage.py makemigrations --check
-          python manage.py migrate
           python manage.py lintmigrations
 
   # the following CI check is to prevent developers from dropping columns in a way that could cause downtime
