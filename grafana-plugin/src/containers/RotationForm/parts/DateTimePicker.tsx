@@ -79,7 +79,14 @@ export const DateTimePicker = observer(
             className={cx({ [styles.controlError]: Boolean(error) })}
             data-testid="date-time-picker"
           >
-            <TimeOfDayPicker disabled={disabled} value={getTimeValueInSelectedTimezone()} onChange={handleTimeChange} />
+            {/* keyed on the offset because grafana 13's TimeOfDayPicker keeps the displayed time in
+                state it only ever initialises, so it would keep showing the old timezone's time */}
+            <TimeOfDayPicker
+              key={utcOffset}
+              disabled={disabled}
+              value={getTimeValueInSelectedTimezone()}
+              onChange={handleTimeChange}
+            />
           </div>
         </div>
         {error && <Text type="danger">{error}</Text>}

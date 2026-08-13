@@ -7,7 +7,6 @@ import dayjs from 'dayjs';
 import { HTML_ID } from 'helpers/DOM';
 import { UserActions } from 'helpers/authorization/authorization';
 import { observer } from 'mobx-react';
-import { CSSTransition, TransitionGroup } from 'react-transition-group';
 
 import { ScheduleFiltersType } from 'components/ScheduleFilters/ScheduleFilters.types';
 import { Tag } from 'components/Tag/Tag';
@@ -23,7 +22,6 @@ import { WithStoreProps } from 'state/types';
 import { withMobXProviderContext } from 'state/withStore';
 
 import { getAnimationClasses } from './Animations.styles';
-import { DEFAULT_TRANSITION_TIMEOUT } from './Rotations.config';
 import { findColor, getCalendarStartDateInTimezone } from './Rotations.helpers';
 import { getRotationsStyles } from './Rotations.styles';
 
@@ -157,10 +155,13 @@ class _Rotations extends Component<RotationsProps, RotationsState> {
           </div>
           <div className={styles.rotationsPlusTitle}>
             {layers && layers.length ? (
-              <TransitionGroup
-                className={css`
-                  position: relative;
-                `}
+              <div
+                className={cx(
+                  css`
+                    position: relative;
+                  `,
+                  getAnimationClasses().fadeInChildren
+                )}
               >
                 <TimelineMarks />
                 {!currentTimeHidden && (
@@ -172,59 +173,52 @@ class _Rotations extends Component<RotationsProps, RotationsState> {
                   />
                 )}
                 {layers.map((layer, layerIndex) => (
-                  <CSSTransition
+                  <div
                     key={layerIndex}
-                    timeout={DEFAULT_TRANSITION_TIMEOUT}
-                    classNames={{ ...getAnimationClasses() }}
+                    id={`layer${layer.priority}`}
+                    className={cx(styles.layer, { [styles.layerFirst]: layerIndex === 0 })}
                   >
+                    <Tag className={styles.layerTitle}>
+                      <Text size="small" type="primary">
+                        Layer {layer.priority}
+                      </Text>
+                    </Tag>
                     <div
-                      id={`layer${layer.priority}`}
-                      className={cx(styles.layer, { [styles.layerFirst]: layerIndex === 0 })}
+                      className={css`
+                        position: relative;
+                      `}
                     >
-                      <Tag className={styles.layerTitle}>
-                        <Text size="small" type="primary">
-                          Layer {layer.priority}
-                        </Text>
-                      </Tag>
                       <div
-                        className={css`
-                          position: relative;
-                        `}
-                      >
-                        <TransitionGroup
-                          className={css`
+                        className={cx(
+                          css`
                             position: relative;
-                          `}
-                        >
-                          {layer.shifts.map(({ shiftId, isPreview, events }, rotationIndex) => (
-                            <CSSTransition
-                              key={rotationIndex}
-                              timeout={DEFAULT_TRANSITION_TIMEOUT}
-                              classNames={{ ...getAnimationClasses() }}
-                            >
-                              <Rotation
-                                onClick={(shiftStart, shiftEnd) => {
-                                  this.onRotationClick(shiftId, shiftStart, shiftEnd);
-                                }}
-                                handleAddOverride={this.handleShowOverrideForm}
-                                handleAddShiftSwap={onShowShiftSwapForm}
-                                onShiftSwapClick={onShowShiftSwapForm}
-                                color={getColor(layerIndex, rotationIndex)}
-                                events={events}
-                                layerIndex={layerIndex}
-                                rotationIndex={rotationIndex}
-                                transparent={isPreview}
-                                filters={filters}
-                                onSlotClick={onSlotClick}
-                              />
-                            </CSSTransition>
-                          ))}
-                        </TransitionGroup>
+                          `,
+                          getAnimationClasses().fadeInChildren
+                        )}
+                      >
+                        {layer.shifts.map(({ shiftId, isPreview, events }, rotationIndex) => (
+                          <Rotation
+                            key={rotationIndex}
+                            onClick={(shiftStart, shiftEnd) => {
+                              this.onRotationClick(shiftId, shiftStart, shiftEnd);
+                            }}
+                            handleAddOverride={this.handleShowOverrideForm}
+                            handleAddShiftSwap={onShowShiftSwapForm}
+                            onShiftSwapClick={onShowShiftSwapForm}
+                            color={getColor(layerIndex, rotationIndex)}
+                            events={events}
+                            layerIndex={layerIndex}
+                            rotationIndex={rotationIndex}
+                            transparent={isPreview}
+                            filters={filters}
+                            onSlotClick={onSlotClick}
+                          />
+                        ))}
                       </div>
                     </div>
-                  </CSSTransition>
+                  </div>
                 ))}
-              </TransitionGroup>
+              </div>
             ) : (
               <div
                 className={css`

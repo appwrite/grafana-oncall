@@ -24,6 +24,6 @@ export const goToGrafanaPage = async (page: Page, url = '') => _goToPage(page, u
 export const goToOnCallPage = async (page: Page, onCallPage: OnCallPage, queryParams?: KeyValue) => {
   const queryParamsString = queryParams ? `?${qs.stringify(queryParams)}` : '';
   await _goToPage(page, `/a/${getPluginId()}/${onCallPage}${queryParamsString}`);
-  await page.waitForLoadState('networkidle');
+  // no networkidle wait: grafana 13 keeps connections open, so it never settles
   await page.waitForTimeout(1000);
 };

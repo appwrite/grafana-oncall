@@ -1,12 +1,27 @@
 import React, { useCallback, useEffect, useMemo, useRef } from 'react';
 
+import {
+  closestCenter,
+  DndContext,
+  DragEndEvent,
+  KeyboardSensor,
+  PointerSensor,
+  useSensor,
+  useSensors,
+} from '@dnd-kit/core';
+import { restrictToVerticalAxis } from '@dnd-kit/modifiers';
+import {
+  arrayMove,
+  SortableContext,
+  sortableKeyboardCoordinates,
+  verticalListSortingStrategy,
+} from '@dnd-kit/sortable';
 import { cx } from '@emotion/css';
 import { Stack, IconButton, useStyles2 } from '@grafana/ui';
-import { arrayMoveImmutable } from 'array-move';
 import { UserActions } from 'helpers/authorization/authorization';
-import { SortableContainer, SortableElement, SortableHandle } from 'react-sortable-hoc';
 import { bem } from 'styles/utils.styles';
 
+import { SortableNodeProvider, useSortableNode } from 'components/SortableList/SortableNode';
 import { Text } from 'components/Text/Text';
 import { RemoteSelect } from 'containers/RemoteSelect/RemoteSelect';
 import { ApiSchemas } from 'network/oncall-api/api.types';
@@ -24,9 +39,22 @@ interface UserGroupsProps {
   disabled?: boolean;
 }
 
-const DragHandle = () => <IconButton aria-label="Drag" className={cx('icon')} name="draggabledots" />;
+const DragHandle = () => {
+  const { handleProps } = useSortableNode();
 
-const SortableHandleHoc = SortableHandle(DragHandle);
+  return <IconButton {...handleProps} aria-label="Drag" className={cx('icon')} name="draggabledots" />;
+};
+
+/** the row that moves while dragging; picks its sortable wiring up from context */
+const SortableRow = ({ className, onClick, children }: React.PropsWithChildren<{ className: string; onClick?: () => void }>) => {
+  const { setNodeRef, style } = useSortableNode();
+
+  return (
+    <li ref={setNodeRef} style={style} className={className} onClick={onClick}>
+      {children}
+    </li>
+  );
+};
 
 export const UserGroups = (props: UserGroupsProps) => {
   const styles = useStyles2(getUserGroupStyles);
@@ -80,8 +108,8 @@ export const UserGroups = (props: UserGroupsProps) => {
   const items = useMemo(() => toPlainArray(value), [value]);
 
   const onSortEnd = useCallback(
-    ({ oldIndex, newIndex }) => {
-      const newPlainArray = arrayMoveImmutable(items, oldIndex, newIndex);
+    ({ oldIndex, newIndex }: { oldIndex: number; newIndex: number }) => {
+      const newPlainArray = arrayMove(items, oldIndex, newIndex);
 
       onChange(fromPlainArray(newPlainArray, newIndex > items.length));
     },
@@ -95,7 +123,7 @@ export const UserGroups = (props: UserGroupsProps) => {
   };
 
   const renderItem = (item: Item, index: number) => (
-    <li className={styles.user}>
+    <SortableRow className={styles.user}>
       {renderUser(item.data)}
       {!disabled && (
         <div className={styles.userButtons}>
@@ -106,11 +134,11 @@ export const UserGroups = (props: UserGroupsProps) => {
               name="trash-alt"
               onClick={getDeleteItemHandler(index)}
             />
-            <SortableHandleHoc />
+            <DragHandle />
           </Stack>
         </div>
       )}
-    </li>
+    </SortableRow>
   );
 
   return (
@@ -131,15 +159,10 @@ export const UserGroups = (props: UserGroupsProps) => {
         )}
         <SortableList
           renderItem={renderItem}
-          axis="y"
-          lockAxis="y"
-          helperClass={styles.sortable}
           items={items}
           onSortEnd={onSortEnd}
           handleAddGroup={handleAddUserGroup}
-          handleDeleteItem={handleDeleteUser}
           isMultipleGroups={isMultipleGroups}
-          useDragHandle
           allowCreate={!disabled}
         />
       </Stack>
@@ -147,62 +170,82 @@ export const UserGroups = (props: UserGroupsProps) => {
   );
 };
 
-interface SortableItemProps {
-  children: React.ReactElement;
-}
-
-const SortableItem = SortableElement<SortableItemProps>(({ children }) => children);
-
 interface SortableListProps {
   items: Item[];
   handleAddGroup: () => void;
-  handleDeleteItem: (index: number) => void;
   isMultipleGroups: boolean;
   renderItem: (item: Item, index: number) => React.ReactElement;
+  onSortEnd: (indexes: { oldIndex: number; newIndex: number }) => void;
   allowCreate?: boolean;
 }
 
-export const SortableList = SortableContainer<SortableListProps>(
-  ({ items, handleAddGroup, isMultipleGroups, renderItem, allowCreate }) => {
-    const listRef = useRef<HTMLUListElement>();
-    const styles = useStyles2(getUserGroupStyles);
+export const SortableList = ({
+  items,
+  handleAddGroup,
+  isMultipleGroups,
+  renderItem,
+  onSortEnd,
+  allowCreate,
+}: SortableListProps) => {
+  const listRef = useRef<HTMLUListElement>();
+  const styles = useStyles2(getUserGroupStyles);
 
-    useEffect(() => {
-      const container = listRef.current;
+  const sensors = useSensors(
+    useSensor(PointerSensor),
+    useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates })
+  );
 
-      container.scroll({
-        left: 0,
-        top: container.scrollHeight,
-        behavior: 'smooth',
-      });
-    }, [items]);
+  useEffect(() => {
+    const container = listRef.current;
 
-    return (
-      <ul className={styles.groups} ref={listRef}>
-        {items.map((item, index) =>
-          item.type === 'item' ? (
-            <SortableItem key={item.key} index={index}>
-              {renderItem(item, index)}
-            </SortableItem>
-          ) : isMultipleGroups ? (
-            <SortableItem key={item.key} index={index}>
-              <li className={styles.separator}>
-                <Text type="secondary">{item.data.name}</Text>
-              </li>
-            </SortableItem>
-          ) : null
-        )}
-        {allowCreate && isMultipleGroups && items[items.length - 1]?.type === 'item' && (
-          <SortableItem disabled key="New Group" index={items.length + 1}>
+    container.scroll({
+      left: 0,
+      top: container.scrollHeight,
+      behavior: 'smooth',
+    });
+  }, [items]);
+
+  const handleDragEnd = ({ active, over }: DragEndEvent) => {
+    if (!over || active.id === over.id) {
+      return;
+    }
+
+    const keys = items.map((item) => item.key);
+    onSortEnd({ oldIndex: keys.indexOf(String(active.id)), newIndex: keys.indexOf(String(over.id)) });
+  };
+
+  return (
+    <DndContext
+      sensors={sensors}
+      collisionDetection={closestCenter}
+      modifiers={[restrictToVerticalAxis]}
+      onDragEnd={handleDragEnd}
+    >
+      <SortableContext items={items.map((item) => item.key)} strategy={verticalListSortingStrategy}>
+        <ul className={styles.groups} ref={listRef}>
+          {items.map((item, index) =>
+            item.type === 'item' ? (
+              <SortableNodeProvider key={item.key} id={item.key}>
+                {renderItem(item, index)}
+              </SortableNodeProvider>
+            ) : isMultipleGroups ? (
+              <SortableNodeProvider key={item.key} id={item.key}>
+                <SortableRow className={styles.separator}>
+                  <Text type="secondary">{item.data.name}</Text>
+                </SortableRow>
+              </SortableNodeProvider>
+            ) : null
+          )}
+          {allowCreate && isMultipleGroups && items[items.length - 1]?.type === 'item' && (
             <li
               onClick={handleAddGroup}
               className={cx(styles.separator, { [bem(styles.separator, 'clickable')]: true })}
             >
               <Text type="primary">+ Add user group</Text>
             </li>
-          </SortableItem>
-        )}
-      </ul>
-    );
-  }
-);
+          )}
+        </ul>
+      </SortableContext>
+    </DndContext>
+  );
+};

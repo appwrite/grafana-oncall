@@ -117,23 +117,20 @@ export const PersonalNotificationSettings = observer((props: PersonalNotificatio
     <div className={styles.root}>
       {title}
       <SortableList
-        helperClass={styles.sortableHelper}
         className={styles.steps}
-        axis="y"
-        lockAxis="y"
+        items={notificationPolicies.map((notificationPolicy: NotificationPolicyType) => notificationPolicy.id)}
         onSortEnd={getNotificationPolicySortEndHandler(offset)}
-        useDragHandle
       >
         {notificationPolicies.map((notificationPolicy: NotificationPolicyType, index: number) => (
           <NotificationPolicy
             // @ts-ignore
             userAction={userAction}
             key={notificationPolicy.id}
-            index={index}
+            id={notificationPolicy.id}
             number={index + 1}
             telegramVerified={Boolean(user.telegram_configuration)}
             phoneStatus={getPhoneStatus()}
-            isMobileAppConnected={isMobileAppConnected}
+            isMobileAppConnected={Boolean(isMobileAppConnected)}
             showCloudConnectionWarning={showCloudConnectionWarning}
             slackTeamIdentity={store.organizationStore.currentOrganization?.slack_team_identity}
             slackUserIdentity={user.slack_user_identity}
@@ -178,10 +175,6 @@ const getStyles = () => {
 
     steps: css`
       margin: 15px 0 0 15px;
-    `,
-
-    sortableHelper: css`
-      z-index: 1062;
     `,
   };
 };

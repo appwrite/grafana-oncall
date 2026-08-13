@@ -7,7 +7,6 @@ import dayjs from 'dayjs';
 import { HTML_ID } from 'helpers/DOM';
 import { UserActions } from 'helpers/authorization/authorization';
 import { observer } from 'mobx-react';
-import { CSSTransition, TransitionGroup } from 'react-transition-group';
 
 import { ScheduleFiltersType } from 'components/ScheduleFilters/ScheduleFilters.types';
 import { Tag } from 'components/Tag/Tag';
@@ -29,7 +28,6 @@ import { WithStoreProps } from 'state/types';
 import { withMobXProviderContext } from 'state/withStore';
 
 import { getAnimationClasses } from './Animations.styles';
-import { DEFAULT_TRANSITION_TIMEOUT } from './Rotations.config';
 import { findColor } from './Rotations.helpers';
 import { getRotationsStyles } from './Rotations.styles';
 
@@ -143,66 +141,66 @@ class _ScheduleOverrides extends Component<ScheduleOverridesProps, ScheduleOverr
             {!currentTimeHidden && <div className={styles.currentTime} style={{ left: `${currentTimeX * 100}%` }} />}
             <TimelineMarks />
             {shiftSwaps && shiftSwaps.length ? (
-              <TransitionGroup className={cx(styles.layer, styles.layerFirst)}>
+              <div className={cx(styles.layer, styles.layerFirst, animationStyles.fadeInChildren)}>
                 <Tag className={styles.layerTitle}>
                   <Text type="primary" size="small">
                     Swaps
                   </Text>
                 </Tag>
                 {shiftSwaps.map(({ isPreview, events }, index) => (
-                  <CSSTransition key={index} timeout={DEFAULT_TRANSITION_TIMEOUT} classNames={{ ...animationStyles }}>
-                    <Rotation
-                      events={events}
-                      color={SHIFT_SWAP_COLOR}
-                      onSlotClick={(event) => {
-                        if (event.is_gap) {
-                          return;
-                        }
-                        onShowShiftSwapForm(event.shiftSwapId);
-                      }}
-                      transparent={isPreview}
-                      filters={filters}
-                    />
-                  </CSSTransition>
+                  <Rotation
+                    key={index}
+                    events={events}
+                    color={SHIFT_SWAP_COLOR}
+                    onSlotClick={(event) => {
+                      if (event.is_gap) {
+                        return;
+                      }
+                      onShowShiftSwapForm(event.shiftSwapId);
+                    }}
+                    transparent={isPreview}
+                    filters={filters}
+                  />
                 ))}
-              </TransitionGroup>
+              </div>
             ) : null}
-            <TransitionGroup className={cx(styles.layer, { [styles.layerFirst]: !shiftSwaps || !shiftSwaps.length })}>
+            <div
+              className={cx(
+                styles.layer,
+                { [styles.layerFirst]: !shiftSwaps || !shiftSwaps.length },
+                animationStyles.fadeInChildren
+              )}
+            >
               {shifts && shifts.length ? (
-                <CSSTransition key={-1} timeout={DEFAULT_TRANSITION_TIMEOUT} classNames={{ ...animationStyles }}>
-                  <Tag className={styles.layerTitle}>
-                    <Text type="primary" size="small">
-                      Overrides
-                    </Text>
-                  </Tag>
-                </CSSTransition>
+                <Tag key={-1} className={styles.layerTitle}>
+                  <Text type="primary" size="small">
+                    Overrides
+                  </Text>
+                </Tag>
               ) : null}
               {shifts && shifts.length ? (
                 shifts.map(({ shiftId, isPreview, events }, index) => (
-                  <CSSTransition key={index} timeout={DEFAULT_TRANSITION_TIMEOUT} classNames={{ ...animationStyles }}>
-                    <Rotation
-                      events={events}
-                      color={getOverrideColor(index)}
-                      onClick={(shiftStart, shiftEnd) => {
-                        this.onRotationClick(shiftId, shiftStart, shiftEnd);
-                      }}
-                      transparent={isPreview}
-                      filters={filters}
-                    />
-                  </CSSTransition>
+                  <Rotation
+                    key={index}
+                    events={events}
+                    color={getOverrideColor(index)}
+                    onClick={(shiftStart, shiftEnd) => {
+                      this.onRotationClick(shiftId, shiftStart, shiftEnd);
+                    }}
+                    transparent={isPreview}
+                    filters={filters}
+                  />
                 ))
               ) : (
-                <CSSTransition key={0} timeout={DEFAULT_TRANSITION_TIMEOUT} classNames={{ ...animationStyles }}>
-                  <Rotation
-                    key={0}
-                    events={[]}
-                    onClick={(shiftStart, shiftEnd) => {
-                      this.onRotationClick('new', shiftStart, shiftEnd);
-                    }}
-                  />
-                </CSSTransition>
+                <Rotation
+                  key={0}
+                  events={[]}
+                  onClick={(shiftStart, shiftEnd) => {
+                    this.onRotationClick('new', shiftStart, shiftEnd);
+                  }}
+                />
               )}
-            </TransitionGroup>
+            </div>
           </div>
         </div>
         {shiftIdToShowRotationForm && (

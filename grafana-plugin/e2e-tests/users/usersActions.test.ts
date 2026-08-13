@@ -1,5 +1,4 @@
 import { test, expect } from '../fixtures';
-import { isGrafanaVersionLowerThan } from '../utils/constants';
 import { goToOnCallPage } from '../utils/navigation';
 import { verifyThatUserCanViewOtherUsers, accessProfileTabs } from '../utils/users';
 
@@ -10,12 +9,8 @@ test.describe('Users screen actions', () => {
 
   test('Viewer cannot access restricted tabs from View My Profile', async ({ viewerRolePage }) => {
     const { page } = viewerRolePage;
+    // tab-mobile-app lives in the global user profile, not here
     const tabsToCheck = ['tab-phone-verification', 'tab-slack', 'tab-telegram'];
-
-    // After 10.3 it's been moved to global user profile
-    if (isGrafanaVersionLowerThan('10.3.0')) {
-      tabsToCheck.unshift('tab-mobile-app');
-    }
 
     await accessProfileTabs(page, tabsToCheck, false);
   });

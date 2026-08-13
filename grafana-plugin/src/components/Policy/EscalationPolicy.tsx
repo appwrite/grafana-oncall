@@ -8,11 +8,11 @@ import { openWarningNotification } from 'helpers/helpers';
 import { isNumber } from 'lodash-es';
 import { observer } from 'mobx-react';
 import moment from 'moment-timezone';
-import { SortableElement } from 'react-sortable-hoc';
 import reactStringReplace from 'react-string-replace';
 import { getLabelBackgroundTextColorObject } from 'styles/utils.styles';
 
 import { PluginLink } from 'components/PluginLink/PluginLink';
+import { withSortable } from 'components/SortableList/SortableNode';
 import { Text } from 'components/Text/Text';
 import { TimeRange } from 'components/TimeRange/TimeRange';
 import { Timeline } from 'components/Timeline/Timeline';
@@ -39,7 +39,7 @@ import { POLICY_DURATION_LIST_MINUTES } from './Policy.consts';
 import { PolicyNote } from './PolicyNote';
 
 interface ElementSortableProps extends WithStoreProps {
-  index: number;
+  id: string;
 }
 
 interface EscalationPolicyBaseProps {
@@ -627,5 +627,5 @@ class _EscalationPolicy extends React.Component<EscalationPolicyProps, any> {
 }
 
 export const EscalationPolicy = withMobXProviderContext(
-  SortableElement(withTheme2(_EscalationPolicy))
-) as unknown as React.ComponentClass<EscalationPolicyBaseProps>;
+  withSortable(withTheme2(_EscalationPolicy))
+) as unknown as React.ComponentClass<EscalationPolicyBaseProps & { id: string }>;

@@ -1,4 +1,4 @@
-import { Page } from '@playwright/test';
+import { Locator, Page } from '@playwright/test';
 import dayjs from 'dayjs';
 
 import { clickButton, selectDropdownValue } from './forms';
@@ -67,3 +67,38 @@ export const getOverrideFormDateInputs = async (page: Page): Promise<OverrideFor
     end: endDateTime,
   };
 };
+
+/**
+ * Grafana renders the time picker differently per major version — a typeable input in 12,
+ * a combobox in 13 — so target the input itself rather than a role, and type instead of
+ * clicking through the panel.
+ */
+export const getTimeInput = (element: Locator) => element.getByTestId('date-time-picker').locator('input');
+
+export const setTime = async (element: Locator, hour: string) => {
+  await typeTime(getTimeInput(element), `${hour}:00`);
+};
+
+/**
+ * Grafana 12 takes a typed time; 13 renders a combobox that only commits a value picked from its
+ * list, so type first and correct it from the list when the typing did not stick.
+ */
+export const typeTime = async (input: Locator, value: string) => {
+  await input.click();
+  await input.fill('');
+  await input.pressSequentially(value);
+
+  // grafana 13 renders a combobox that only commits a value picked from its list; 12 takes the
+  // typed value on Enter. Don't click the input again here — that would close the open list.
+  const option = input.page().getByRole('option', { name: value, exact: true }).first();
+
+  try {
+    await option.waitFor({ state: 'visible', timeout: 1_000 });
+    await option.click();
+  } catch {
+    await input.press('Enter');
+  }
+};
+
+/** the open menu of a grafana Select, which is portalled out of its container */
+export const getSelectMenu = (page: Page) => page.locator('div[id^="react-select-"][id$="-listbox"]');

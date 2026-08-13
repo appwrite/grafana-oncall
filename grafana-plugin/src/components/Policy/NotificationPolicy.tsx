@@ -6,13 +6,13 @@ import { Button, IconButton, Select, withTheme2 } from '@grafana/ui';
 import { UserAction } from 'helpers/authorization/authorization';
 import { openWarningNotification } from 'helpers/helpers';
 import { isNumber } from 'lodash';
-import { SortableElement } from 'react-sortable-hoc';
 
 import { PluginLink } from 'components/PluginLink/PluginLink';
+import { withSortable } from 'components/SortableList/SortableNode';
 import { Timeline } from 'components/Timeline/Timeline';
 import { WithPermissionControlTooltip } from 'containers/WithPermissionControl/WithPermissionControlTooltip';
-import { Channel } from 'models/channel/channel';
 import { NotificationPolicyType, prepareNotificationPolicy } from 'models/notification_policy/notification_policy';
+import { Organization } from 'models/organization/organization.types';
 import { ApiSchemas } from 'network/oncall-api/api.types';
 import { AppFeature } from 'state/features';
 import { RootStore } from 'state/rootStore';
@@ -23,11 +23,10 @@ import { POLICY_DURATION_LIST_MINUTES, POLICY_DURATION_LIST_SECONDS } from './Po
 import { PolicyNote } from './PolicyNote';
 
 export interface NotificationPolicyProps {
+  id: string;
   theme: GrafanaTheme2;
   data: NotificationPolicyType;
-  slackTeamIdentity?: {
-    general_log_channel_pk: Channel['id'];
-  };
+  slackTeamIdentity?: Organization['slack_team_identity'];
   slackUserIdentity?: ApiSchemas['User']['slack_user_identity'];
   onChange: (id: NotificationPolicyType['id'], value: NotificationPolicyType) => void;
   onDelete: (id: string) => void;
@@ -43,7 +42,7 @@ export interface NotificationPolicyProps {
   number: number;
   userAction: UserAction;
   store: RootStore;
-  isDisabled: boolean;
+  isDisabled?: boolean;
 }
 
 export class _NotificationPolicy extends React.Component<NotificationPolicyProps, any> {
@@ -336,4 +335,4 @@ const getStyles = (_theme: GrafanaTheme2) => {
   };
 };
 
-export const NotificationPolicy = SortableElement(withTheme2(_NotificationPolicy));
+export const NotificationPolicy = withSortable(withTheme2(_NotificationPolicy));
