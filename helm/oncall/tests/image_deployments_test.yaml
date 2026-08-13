@@ -15,7 +15,7 @@ tests:
     asserts:
       - equal:
           path: spec.template.spec.containers[0].image
-          value: grafana/oncall:1.2.36
+          value: ghcr.io/appwrite/grafana-oncall:1.2.36
       - equal:
           path: spec.template.spec.containers[0].imagePullPolicy
           value: Always

@@ -15,7 +15,7 @@ imagePullSecrets: []
 
 image:
   # Grafana OnCall docker image repository
-  repository: grafana/oncall
+  repository: ghcr.io/appwrite/grafana-oncall
   tag:
   pullPolicy: Always
 

@@ -1,9 +1,33 @@
 # Appwrite's fork of Grafana OnCall
 
-Grafana archived OnCall OSS on 2026-03-24. [Appwrite](https://appwrite.io) maintains this
-fork for its own use — we keep it working for our needs, but offer no support or
-roadmap commitments. Engine images are published to
-[`ghcr.io/appwrite/grafana-oncall`](https://github.com/appwrite/grafana-oncall/pkgs/container/grafana-oncall).
+Grafana archived [OnCall OSS](https://github.com/grafana/oncall) on 2026-03-24 at v1.16.11.
+[Appwrite](https://appwrite.io) maintains this fork for its own use.
+
+## What's different from upstream
+
+- **It runs on current Grafana.** Grafana 13 ships React 19, which removed `ReactDOM.findDOMNode`.
+  Upstream's plugin reaches it through three libraries, so escalation chains, notification policies
+  and the rotation modals crash on mount. Fixed by moving drag-and-drop to `@dnd-kit`, passing
+  `nodeRef` to `react-draggable`, and replacing `react-transition-group` with a CSS animation.
+- **Insights renders.** Its `alert_groups_total` variable was seeded multi-valued and URL-synced, so
+  a restored value interpolated a regex where PromQL wants a metric name, breaking every panel.
+- **End-to-end tests run against Grafana 12 and 13**, where upstream tested 10 and 11.
+- **~290 security patches.** Dependabot alerts went from 309 to 18.
+- **Django 5.2 LTS**, where upstream is on 4.2 — its extended support ended in April 2026.
+- **`fcm-django` from PyPI** rather than a tarball of a now-archived fork.
+- **Releases ship both halves**: multi-arch engine images to
+  [`ghcr.io/appwrite/grafana-oncall`](https://github.com/appwrite/grafana-oncall/pkgs/container/grafana-oncall)
+  and a plugin archive attached to each
+  [release](https://github.com/appwrite/grafana-oncall/releases). Upstream's catalog build is frozen
+  at 1.16.11.
+
+## What it does not offer
+
+- No support and no roadmap commitments. We keep it working for our needs.
+- The plugin is unsigned, since signing needs a grafana.com access policy, so it needs
+  `GF_PLUGINS_ALLOW_LOADING_UNSIGNED_PLUGINS=grafana-oncall-app`.
+- The helm chart is not published to a helm repository; install it from a checkout.
+- The mobile app relied on Grafana Cloud's push relay, which went away with the archival.
 
 ## Grafana OnCall
 
@@ -46,7 +70,7 @@ We prepared multiple environments:
 1. Download [`docker-compose.yml`](docker-compose.yml):
 
    ```bash
-   curl -fsSL https://raw.githubusercontent.com/grafana/oncall/dev/docker-compose.yml -o docker-compose.yml
+   curl -fsSL https://raw.githubusercontent.com/appwrite/grafana-oncall/main/docker-compose.yml -o docker-compose.yml
    ```
 
 2. Set variables:
@@ -138,26 +162,22 @@ docker-compose pull engine
 docker-compose up -d
 ```
 
-After updating the engine, you'll also need to click the "Update" button on the [plugin version page](http://localhost:3000/plugins/grafana-oncall-app?page=version-history).
-See [Grafana docs](https://grafana.com/docs/grafana/latest/administration/plugin-management/#update-a-plugin) for more
-info on updating Grafana plugins.
+The plugin is not published to grafana.com, so it does not update through the plugin catalog. Point
+`GF_INSTALL_PLUGINS` at the archive from the [release](https://github.com/appwrite/grafana-oncall/releases)
+matching the engine tag and recreate the Grafana container.
 
 ## Join community
 
 [<img width="200px" src="docs/img/slack.png">](https://slack.grafana.com/)
 [<img width="200px" src="docs/img/GH_discussions.png">](https://community.grafana.com/)
 
-Have a question, comment or feedback? Don't be afraid to [open an issue](https://github.com/grafana/oncall/issues/new/choose)!
-
-## Stargazers over time
-
-[![Stargazers over time](https://starchart.cc/grafana/oncall.svg)](https://starchart.cc/grafana/oncall)
+Have a question, comment or feedback? Don't be afraid to [open an issue](https://github.com/appwrite/grafana-oncall/issues/new/choose)!
 
 ## Further Reading
 
-- _Automated migration from other on-call tools_ - [Migrator](https://github.com/grafana/oncall/tree/dev/tools/migrators)
+- _Automated migration from other on-call tools_ - [Migrator](https://github.com/appwrite/grafana-oncall/tree/main/tools/migrators)
 - _Documentation_ - [Grafana OnCall](https://grafana.com/docs/oncall/latest/)
 - _Overview Webinar_ - [YouTube](https://www.youtube.com/watch?v=7uSe1pulgs8)
-- _How To Add Integration_ - [How to Add Integration](https://github.com/grafana/oncall/tree/dev/engine/config_integrations/README.md)
+- _How To Add Integration_ - [How to Add Integration](https://github.com/appwrite/grafana-oncall/tree/main/engine/config_integrations/README.md)
 - _Blog Post_ - [Announcing Grafana OnCall, the easiest way to do on-call management](https://grafana.com/blog/2021/11/09/announcing-grafana-oncall/)
 - _Presentation_ - [Deep dive into the Grafana, Prometheus, and Alertmanager stack for alerting and on-call management](https://grafana.com/go/observabilitycon/2021/alerting/?pg=blog)
