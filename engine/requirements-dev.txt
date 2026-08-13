@@ -137,6 +137,8 @@ types-pymysql==1.0.19.7
     # via -r requirements-dev.in
 types-python-dateutil==2.8.19.13
     # via -r requirements-dev.in
+types-pytz==2026.3.1.20260727
+    # via -r requirements-dev.in
 types-pyyaml==6.0.12.20260724
     # via
     #   django-stubs
