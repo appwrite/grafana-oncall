@@ -152,19 +152,25 @@ Here are some API calls that can be made to help if you are having difficulty co
 
 ## Update version
 
-To update your Grafana OnCall hobby environment:
+The engine and plugin are released together and are not meant to be mixed across versions, so one
+variable moves both. Set it to the [release](https://github.com/appwrite/grafana-oncall/releases) you
+want in `.env`:
 
 ```shell
-# Update Docker image
-docker-compose pull engine
+echo "ONCALL_VERSION=1.19.1" >> .env
 
-# Re-deploy
+docker-compose pull
 docker-compose up -d
 ```
 
-The plugin is not published to grafana.com, so it does not update through the plugin catalog. Point
-`GF_INSTALL_PLUGINS` at the archive from the [release](https://github.com/appwrite/grafana-oncall/releases)
-matching the engine tag and recreate the Grafana container.
+The plugin is not in the grafana.com catalog, so it does not update through the plugin page. Grafana
+only installs a plugin that is not already present, so to move the plugin you also have to clear the
+old copy from its volume:
+
+```shell
+docker-compose exec grafana rm -rf /var/lib/grafana/plugins/grafana-oncall-app
+docker-compose restart grafana
+```
 
 ## Join community
 

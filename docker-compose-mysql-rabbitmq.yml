@@ -22,7 +22,7 @@ x-environment: &oncall-environment
 
 services:
   engine:
-    image: ghcr.io/appwrite/grafana-oncall:latest
+    image: ghcr.io/appwrite/grafana-oncall:v${ONCALL_VERSION:-1.19.1}
     restart: always
     ports:
       - "8080:8080"
@@ -39,7 +39,7 @@ services:
         condition: service_started
 
   celery:
-    image: ghcr.io/appwrite/grafana-oncall:latest
+    image: ghcr.io/appwrite/grafana-oncall:v${ONCALL_VERSION:-1.19.1}
     restart: always
     command: sh -c "./celery_with_exporter.sh"
     environment: *oncall-environment
@@ -54,7 +54,7 @@ services:
         condition: service_started
 
   oncall_db_migration:
-    image: ghcr.io/appwrite/grafana-oncall:latest
+    image: ghcr.io/appwrite/grafana-oncall:v${ONCALL_VERSION:-1.19.1}
     command: python manage.py migrate --noinput
     environment: *oncall-environment
     depends_on:
@@ -143,9 +143,11 @@ services:
       GF_SECURITY_ADMIN_USER: ${GRAFANA_USER:-admin}
       GF_SECURITY_ADMIN_PASSWORD: ${GRAFANA_PASSWORD:-admin}
       GF_PLUGINS_ALLOW_LOADING_UNSIGNED_PLUGINS: grafana-oncall-app
-      # the catalog build is grafana's archived one, so install this fork's plugin archive
+      # The catalog build is grafana's archived one, so install this fork's plugin archive.
+      # ONCALL_VERSION pins the engine too: the plugin and engine are released together
+      # and are not meant to be mixed across versions.
       # yamllint disable-line rule:line-length
-      GF_INSTALL_PLUGINS: ${ONCALL_PLUGIN_URL:-https://github.com/appwrite/grafana-oncall/releases/download/v1.19.1/grafana-oncall-app-1.19.1.zip};grafana-oncall-app
+      GF_INSTALL_PLUGINS: https://github.com/appwrite/grafana-oncall/releases/download/v${ONCALL_VERSION:-1.19.1}/grafana-oncall-app-${ONCALL_VERSION:-1.19.1}.zip;grafana-oncall-app
       GF_AUTH_MANAGED_SERVICE_ACCOUNTS_ENABLED: true
     deploy:
       resources:

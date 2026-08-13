@@ -642,13 +642,18 @@ grafana:
       accessControlOnCall: false
   env:
     GF_AUTH_MANAGED_SERVICE_ACCOUNTS_ENABLED: true
+    # this fork's plugin carries no grafana.com signature
+    GF_PLUGINS_ALLOW_LOADING_UNSIGNED_PLUGINS: grafana-oncall-app
   persistence:
     enabled: true
   # Disable psp as PodSecurityPolicy is deprecated in v1.21+, unavailable in v1.25+
   rbac:
     pspEnabled: false
   plugins:
-    - grafana-oncall-app
+    # Not the catalog build, which is grafana's archived one. Keep this version in step with
+    # image.tag/appVersion above: the plugin and engine are released together.
+    # yamllint disable-line rule:line-length
+    - https://github.com/appwrite/grafana-oncall/releases/download/v1.19.1/grafana-oncall-app-1.19.1.zip;grafana-oncall-app
   extraVolumes:
     - name: provisioning
       configMap:

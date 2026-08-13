@@ -396,9 +396,18 @@ helm upgrade \
     ./helm/oncall
 ```
 
-After re-deploying, please also update the Grafana OnCall plugin on the plugin version page.
-See [Grafana docs](https://grafana.com/docs/grafana/latest/administration/plugin-management/#update-a-plugin) for
-more info on updating Grafana plugins.
+The plugin is not in the grafana.com catalog, so it does not update through the plugin page. It is
+installed from the archive in `grafana.plugins`, which has to be moved to the same version as
+`image.tag`/`appVersion` — the engine and plugin are released together and are not meant to be mixed
+across versions.
+
+Grafana only installs a plugin that is not already present, so with `grafana.persistence` enabled the
+old copy has to be cleared before it will reinstall:
+
+```bash
+kubectl exec deploy/release-oncall-grafana -- rm -rf /var/lib/grafana/plugins/grafana-oncall-app
+kubectl rollout restart deploy/release-oncall-grafana
+```
 
 ## Uninstall
 
