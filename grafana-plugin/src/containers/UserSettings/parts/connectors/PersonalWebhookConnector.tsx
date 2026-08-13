@@ -36,7 +36,11 @@ export const PersonalWebhookConnector = observer((props: PersonalWebhookConnecto
       {storeUser.messaging_backends.WEBHOOK ? (
         <InlineField label="Webhook" labelWidth={12} disabled={!isCurrentUser}>
           <Stack gap={StackSize.xs}>
-            <Input disabled={true} value={(storeUser.messaging_backends.WEBHOOK?.name as string) || '—'} />
+            <Input
+              disabled={true}
+              data-testid="personal-webhook-name"
+              value={(storeUser.messaging_backends.WEBHOOK?.name as string) || '—'}
+            />
             <WithConfirm title="Are you sure you want to disconnect your personal webhook?" confirmText="Disconnect">
               <Button
                 disabled={!isCurrentUser}
