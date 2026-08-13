@@ -76,9 +76,16 @@ export const getOverrideFormDateInputs = async (page: Page): Promise<OverrideFor
 export const getTimeInput = (element: Locator) => element.getByTestId('date-time-picker').locator('input');
 
 export const setTime = async (element: Locator, hour: string) => {
-  const input = getTimeInput(element);
+  await typeTime(getTimeInput(element), `${hour}:00`);
+};
 
+/**
+ * fill() sets the value without keystrokes, which leaves grafana 13's combobox unfiltered and
+ * makes Enter pick whatever was already highlighted, so type it out instead.
+ */
+export const typeTime = async (input: Locator, value: string) => {
   await input.click();
-  await input.fill(`${hour}:00`);
+  await input.fill('');
+  await input.pressSequentially(value);
   await input.press('Enter');
 };

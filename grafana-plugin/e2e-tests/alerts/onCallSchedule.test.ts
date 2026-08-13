@@ -6,6 +6,9 @@ import { createIntegrationAndSendDemoAlert } from '../utils/integrations';
 import { createOnCallSchedule } from '../utils/schedule';
 
 test('we can create an oncall schedule + receive an alert', async ({ adminRolePage }) => {
+  // builds a schedule, chain and integration, then waits for the workers to escalate
+  test.slow();
+
   const { page, userName } = adminRolePage;
   const escalationChainName = generateRandomValue();
   const integrationName = generateRandomValue();

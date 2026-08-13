@@ -14,7 +14,8 @@ test('Fills in Rotation time and  reacts to timezone change', async ({ adminRole
 
   await clickButton({ page, buttonText: 'Add rotation' });
   // enable Rotation End
-  await page.getByTestId('rotation-end').getByRole('switch').click();
+  // grafana renders the switch as an input covered by its own <label>, which intercepts clicks
+  await page.getByTestId('rotation-end').getByRole('switch').check({ force: true });
 
   const startEl = page.getByTestId('rotation-start');
   await setTime(startEl, '02');

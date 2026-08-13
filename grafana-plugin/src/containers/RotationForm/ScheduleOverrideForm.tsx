@@ -1,4 +1,4 @@
-import React, { FC, useCallback, useEffect, useMemo, useState } from 'react';
+import React, { FC, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import { cx } from '@emotion/css';
 import { IconButton, Stack, Field, Button, useTheme2, useStyles2 } from '@grafana/ui';
@@ -55,6 +55,7 @@ export const ScheduleOverrideForm: FC<RotationFormProps> = (props) => {
 
   const [rotationName, setRotationName] = useState<string>(shiftId === 'new' ? 'Override' : 'Update override');
 
+  const draggableRef = useRef<HTMLDivElement>(null);
   const [draggablePosition, setDraggablePosition] = useState<{ x: number; y: number }>(undefined);
   const [bounds, setDraggableBounds] = useState<{ left: number; right: number; top: number; bottom: number }>(
     undefined
@@ -213,6 +214,7 @@ export const ScheduleOverrideForm: FC<RotationFormProps> = (props) => {
       onDismiss={onHide}
       contentElement={(props, children) => (
         <Draggable
+          nodeRef={draggableRef}
           handle=".drag-handler"
           defaultClassName="draggable"
           positionOffset={{ x: 0, y: offsetTop }}
@@ -221,7 +223,9 @@ export const ScheduleOverrideForm: FC<RotationFormProps> = (props) => {
           onStart={onDraggableInit}
           onStop={(_e, data) => setDraggablePosition({ x: data.x, y: data.y })}
         >
-          <div {...props}>{children}</div>
+          <div ref={draggableRef} {...props}>
+            {children}
+          </div>
         </Draggable>
       )}
     >

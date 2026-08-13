@@ -1,14 +1,14 @@
 import { Page, expect } from '@playwright/test';
 
-import { goToGrafanaPage } from './navigation';
+import { BASE_URL } from './constants';
 
+/**
+ * Set through the API rather than the profile page: the timezone is a precondition for the
+ * schedule tests, not the thing under test, and grafana keeps rewriting the picker (each major
+ * labels its options differently). page.request shares the browser's session cookies.
+ */
 export const setTimezoneInProfile = async (page: Page, timezone: string) => {
-  await goToGrafanaPage(page, '/profile');
-  await expect(page.getByLabel('Time zone picker')).toBeVisible();
+  const response = await page.request.patch(`${BASE_URL}/api/user/preferences`, { data: { timezone } });
 
-  await page.getByLabel('Time zone picker').click();
-  await page.getByLabel('Select options menu').getByText(timezone).click();
-  await page.getByTestId('data-testid-shared-prefs-save').click();
-  await page.waitForLoadState('networkidle');
-  await page.waitForTimeout(3000); // wait for reload
+  expect(response.ok()).toBeTruthy();
 };

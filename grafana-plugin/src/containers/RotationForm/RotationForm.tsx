@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import { cx } from '@emotion/css';
 import {
@@ -127,6 +127,7 @@ export const RotationForm = observer((props: RotationFormProps) => {
   const [rotationName, setRotationName] = useState(`[L${layerPriority}] Rotation`);
   const [isOpen, setIsOpen] = useState(false);
   const [offsetTop, setOffsetTop] = useState(GRAFANA_HEADER_HEIGHT + 10);
+  const draggableRef = useRef<HTMLDivElement>(null);
   const [draggablePosition, setDraggablePosition] = useState<{ x: number; y: number }>(undefined);
 
   const [shiftStart, setShiftStart] = useState<dayjs.Dayjs>(
@@ -542,6 +543,7 @@ export const RotationForm = observer((props: RotationFormProps) => {
         onDismiss={onHide}
         contentElement={(props, children) => (
           <Draggable
+            nodeRef={draggableRef}
             handle=".drag-handler"
             defaultClassName={'draggable'}
             positionOffset={{ x: 0, y: offsetTop }}
@@ -550,7 +552,9 @@ export const RotationForm = observer((props: RotationFormProps) => {
             onStart={onDraggableInit}
             onStop={(_e, data) => setDraggablePosition({ x: data.x, y: data.y })}
           >
-            <div {...props}>{children}</div>
+            <div ref={draggableRef} {...props}>
+              {children}
+            </div>
           </Draggable>
         )}
       >

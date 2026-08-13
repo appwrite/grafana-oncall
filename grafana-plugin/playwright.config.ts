@@ -20,7 +20,7 @@ export default defineConfig({
   testDir: './e2e-tests',
 
   /* Maximum time all the tests can run for. */
-  globalTimeout: 20 * 60 * 1_000, // 20 minutes
+  globalTimeout: 15 * 60 * 1_000, // 15 minutes
 
   reporter: [
     [
@@ -33,14 +33,14 @@ export default defineConfig({
     ['list', { printSteps: true }],
   ],
 
-  /* Maximum time one test can run for. */
-  timeout: 60_000,
+  /* Maximum time one test can run for. Genuinely slow tests opt out with test.slow(). */
+  timeout: 30_000,
   expect: {
     /**
      * Maximum time expect() should wait for the condition to be met.
      * For example in `await expect(locator).toHaveText();`
      */
-    timeout: 10_000,
+    timeout: 5_000,
   },
   /* Run tests in files in parallel */
   fullyParallel: false,
@@ -56,8 +56,12 @@ export default defineConfig({
   workers: 4,
   /* Shared settings for all the projects below. See https://playwright.dev/docs/api/class-testoptions. */
   use: {
-    /* Maximum time each action such as `click()` can take. Defaults to 0 (no limit). */
-    actionTimeout: 0,
+    /**
+     * Maximum time each action such as `click()` can take. Without a limit, an element that
+     * never becomes actionable burns the whole test timeout instead of failing where it broke.
+     */
+    actionTimeout: 10_000,
+    navigationTimeout: 15_000,
     /* Base URL to use in actions like `await page.goto('/')`. */
     // baseURL: 'http://localhost:3000',
 

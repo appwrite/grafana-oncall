@@ -1,6 +1,7 @@
 import { Locator, expect, test } from '../fixtures';
 import { createEscalationChain, EscalationStep } from '../utils/escalationChain';
 import { generateRandomValue } from '../utils/forms';
+import { typeTime } from '../utils/schedule';
 
 test('escalation policy does not go back to "Default" after adding users to notify', async ({ adminRolePage }) => {
   const { page, userName } = adminRolePage;
@@ -30,9 +31,7 @@ test('from_time and to_time for "Continue escalation if current UTC time is in r
   const _getToTimeInput = () => page.locator('[data-testid="time-range-to"] >> input');
 
   const clickAndInputValue = async (locator: Locator, value: string) => {
-    await locator.click();
-    await locator.fill(value);
-    await locator.press('Enter');
+    await typeTime(locator, value);
 
     // click anywhere to close the dropdown
     await page.click('body');
