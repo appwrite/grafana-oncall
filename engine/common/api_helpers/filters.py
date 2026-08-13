@@ -1,4 +1,5 @@
 from datetime import datetime
+from datetime import timezone as dt_timezone
 
 from django.conf import settings
 from django.db.models import Q
@@ -18,7 +19,7 @@ def _handle_timezone(value):
     if settings.USE_TZ and timezone.is_naive(value):
         return timezone.make_aware(value, timezone.get_current_timezone())
     elif not settings.USE_TZ and timezone.is_aware(value):
-        return timezone.make_naive(value, timezone.utc)
+        return timezone.make_naive(value, dt_timezone.utc)
     return value
 
 

@@ -5,7 +5,7 @@ import typing
 from uuid import uuid4
 
 from django.conf import settings
-from django.db.models import Model, QuerySet
+from django.db.models import Manager, Model, QuerySet
 from rest_framework.response import Response
 
 from apps.alerts.models import AlertReceiveChannel
@@ -105,9 +105,7 @@ def reset_items(payload: EventPayload) -> EventPayload:
 T = typing.TypeVar("T", bound=Model)
 
 
-def get_current_items(
-    payload: EventPayload, key: DataKey, qs: "RelatedManager['T']"
-) -> typing.List[typing.Tuple[T, Policy]]:
+def get_current_items(payload: EventPayload, key: DataKey, qs: "Manager[T]") -> typing.List[typing.Tuple[T, Policy]]:
     metadata = json.loads(payload["view"]["private_metadata"])
     items: typing.List[typing.Tuple[T, Policy]] = []
     for u, p in metadata[key].items():

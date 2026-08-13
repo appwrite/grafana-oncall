@@ -172,7 +172,7 @@ class OnCallSchedule(PolymorphicModel):
     team: typing.Optional["Team"]
     user_group: typing.Optional["SlackUserGroup"]
 
-    objects: models.Manager["OnCallSchedule"] = PolymorphicManager.from_queryset(OnCallScheduleQuerySet)()
+    objects = PolymorphicManager.from_queryset(OnCallScheduleQuerySet)()
 
     # type of calendars in schedule
     TYPE_ICAL_PRIMARY, TYPE_ICAL_OVERRIDES, TYPE_CALENDAR = range(

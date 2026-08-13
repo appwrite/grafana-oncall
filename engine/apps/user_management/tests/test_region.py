@@ -2,6 +2,7 @@ from unittest.mock import patch
 
 import pytest
 from django.http import HttpResponse
+from django.test import RequestFactory
 from django.urls import reverse
 from rest_framework import status
 from rest_framework.test import APIClient
@@ -51,7 +52,7 @@ def test_integration_does_not_raise_exception_organization_moved(
     )
 
     try:
-        integration_view.dispatch(alert_channel_key=alert_receive_channel.token)
+        integration_view.dispatch(RequestFactory().post("/"), alert_channel_key=alert_receive_channel.token)
         raise AssertionError()
     except OrganizationMovedException:
         raise AssertionError()
@@ -82,7 +83,7 @@ def test_integration_raises_exception_organization_moved(
     )
 
     try:
-        integration_view.dispatch(alert_channel_key=alert_receive_channel.token)
+        integration_view.dispatch(RequestFactory().post("/"), alert_channel_key=alert_receive_channel.token)
         raise AssertionError()
     except OrganizationMovedException as e:
         assert e.organization == organization
