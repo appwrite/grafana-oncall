@@ -286,8 +286,6 @@ const AvatarGroup = observer((props: AvatarGroupProps) => {
             <div
               className={styles.avatar}
               data-testid="user-avatar-in-schedule"
-              // lets a test hover a particular user's avatar rather than whichever renders first
-              data-username={user.username}
               style={{
                 left: active ? `${index * (AVATAR_WIDTH + AVATAR_GAP)}px` : `${index * 10}px`,
                 opacity: active ? 1 : Math.max(1 - index * 0.25, 0.25),
@@ -299,7 +297,7 @@ const AvatarGroup = observer((props: AvatarGroupProps) => {
                 colors={colorSchemeList}
                 width={35}
                 height={35}
-                renderAvatar={() => <Avatar src={user.avatar} size="large" />}
+                renderAvatar={() => <Avatar src={user.avatar} size="large" alt={user.username} />}
                 renderIcon={() =>
                   isOncall ? <IsOncallIcon className={styles.isOncallIcon} width={14} height={13} /> : null
                 }
