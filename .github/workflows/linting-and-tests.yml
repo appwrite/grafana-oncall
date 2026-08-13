@@ -16,21 +16,21 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout project
-        uses: actions/checkout@v4
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       - name: Setup Python
         uses: ./.github/actions/setup-python
         with:
           install-dependencies: "false"
       - name: Install frontend dependencies
         uses: ./.github/actions/install-frontend-dependencies
-      - uses: pre-commit/action@2c7b3805fd2a0fd8c1884dcaebf91fc102a13ecd #v3.0.1
+      - uses: pre-commit/action@2c7b3805fd2a0fd8c1884dcaebf91fc102a13ecd # v3.0.1
 
   lint-test-and-build-frontend:
     name: "Lint, test, and build frontend"
     runs-on: ubuntu-latest
     steps:
       - name: Checkout project
-        uses: actions/checkout@v4
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       - name: Install frontend dependencies
         uses: ./.github/actions/install-frontend-dependencies
       - name: Build, lint and test frontend
@@ -42,7 +42,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: "Check out code"
-        uses: "actions/checkout@v4"
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       - name: "Build website"
         # -e HUGO_REFLINKSERRORLEVEL=ERROR prevents merging broken refs with the downside
         # that no refs to external content can be used as these refs will not resolve in the
@@ -74,7 +74,7 @@ jobs:
           - 3306:3306
     steps:
       - name: Checkout project
-        uses: actions/checkout@v4
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       - name: Setup Python
         uses: ./.github/actions/setup-python
       - name: Lint migrations
@@ -94,7 +94,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout PR code
-        uses: actions/checkout@v3
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           # Fetch all history so we can compare with the base branch
           fetch-depth: 0
@@ -182,8 +182,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout project
-        uses: actions/checkout@v4
-      - uses: azure/setup-helm@fe7b79cd5ee1e45176fcad797de68ecaf3ca4814 #v4.2.0
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: azure/setup-helm@9bc31f4ebc9c6b171d7bfbaa5d006ae7abdb4310 # v5.0.1
         with:
           version: v3.8.0
       - name: Install helm unittest plugin
@@ -203,10 +203,11 @@ jobs:
     name: "Backend Tests: Plugin"
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
-      - uses: actions/setup-go@v4
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7.0.0
         with:
-          go-version: "1.21.5"
+          go-version-file: grafana-plugin/go.mod
+          cache-dependency-path: grafana-plugin/go.sum
       - run: cd grafana-plugin && go test ./pkg/...
 
   unit-test-backend-mysql-rabbitmq:
@@ -234,7 +235,7 @@ jobs:
           - 3306:3306
     steps:
       - name: Checkout project
-        uses: actions/checkout@v4
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       - name: Setup Python
         uses: ./.github/actions/setup-python
       - name: Wait for MySQL to be ready
@@ -279,7 +280,7 @@ jobs:
           --health-retries 5
     steps:
       - name: Checkout project
-        uses: actions/checkout@v4
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       - name: Setup Python
         uses: ./.github/actions/setup-python
       - name: Test Django migrations work from blank slate
@@ -312,7 +313,7 @@ jobs:
           --health-retries 5
     steps:
       - name: Checkout project
-        uses: actions/checkout@v4
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       - name: Setup Python
         uses: ./.github/actions/setup-python
       - name: Test Django migrations work from blank slate
@@ -327,7 +328,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout project
-        uses: actions/checkout@v4
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       - name: Setup Python
         uses: ./.github/actions/setup-python
         with:
@@ -341,7 +342,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout project
-        uses: actions/checkout@v4
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       - name: Setup Python
         uses: ./.github/actions/setup-python
       - name: mypy Static Type Checking
