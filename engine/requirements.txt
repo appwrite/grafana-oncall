@@ -30,7 +30,7 @@ botocore==1.43.70
     #   s3transfer
 cachecontrol==0.14.4
     # via firebase-admin
-celery==5.3.6
+celery[redis]==5.3.6
     # via -r requirements.in
 certifi==2026.7.22
     # via
@@ -69,7 +69,7 @@ defusedxml==0.7.1
     # via
     #   python3-openid
     #   social-auth-core
-django==4.2.30
+django==5.2.16
     # via
     #   -r requirements.in
     #   django-add-default-value
@@ -91,7 +91,7 @@ django==4.2.30
     #   social-auth-app-django
 django-add-default-value==0.10.0
     # via -r requirements.in
-django-anymail==12.0
+django-anymail[amazon-ses]==12.0
     # via -r requirements.in
 django-cors-headers==3.7.0
     # via -r requirements.in
@@ -146,7 +146,7 @@ firebase-admin==7.5.0
     # via fcm-django
 flask==3.1.3
     # via slack-export-viewer
-google-api-core==2.34.0
+google-api-core[grpc]==2.34.0
     # via
     #   firebase-admin
     #   google-api-python-client
@@ -198,7 +198,7 @@ grpcio==1.76.0
     #   google-cloud-firestore
     #   grpcio-status
     #   opentelemetry-exporter-otlp-proto-grpc
-grpcio-status==1.62.3
+grpcio-status==1.76.0
     # via google-api-core
 h11==0.16.0
     # via httpcore
@@ -214,7 +214,7 @@ httplib2==0.32.0
     # via
     #   google-api-python-client
     #   google-auth-httplib2
-httpx==0.28.1
+httpx[http2]==0.28.1
     # via
     #   firebase-admin
     #   python-telegram-bot
@@ -340,7 +340,7 @@ proto-plus==1.28.3
     # via
     #   google-api-core
     #   google-cloud-firestore
-protobuf==7.35.1
+protobuf==6.33.6
     # via
     #   google-api-core
     #   google-cloud-firestore
@@ -360,7 +360,7 @@ pycodestyle==2.14.0
     # via autopep8
 pycparser==3.0
     # via cffi
-pyjwt==2.13.0
+pyjwt[crypto]==2.13.0
     # via
     #   firebase-admin
     #   social-auth-core
@@ -427,8 +427,6 @@ rpds-py==2026.6.3
     #   referencing
 s3transfer==0.19.2
     # via boto3
-setuptools==80.10.2
-    # via -r requirements.in
 six==1.17.0
     # via
     #   django-rest-polymorphic
