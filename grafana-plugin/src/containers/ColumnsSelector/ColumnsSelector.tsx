@@ -23,7 +23,6 @@ import { UserActions } from 'helpers/authorization/authorization';
 import { openErrorNotification } from 'helpers/helpers';
 import { useIsLoading } from 'helpers/hooks';
 import { observer } from 'mobx-react';
-import { CSSTransition, TransitionGroup } from 'react-transition-group';
 
 import { RenderConditionally } from 'components/RenderConditionally/RenderConditionally';
 import { Text } from 'components/Text/Text';
@@ -34,7 +33,6 @@ import { useStore } from 'state/useStore';
 
 import { getColumnsSelectorStyles } from './ColumnsSelector.styles';
 
-const TRANSITION_MS = 500;
 const KEY_DELIMITATOR = '/-/';
 
 interface ColumnRowProps {
@@ -154,23 +152,14 @@ export const ColumnsSelector: React.FC<ColumnsSelectorProps> = observer(
             modifiers={[restrictToVerticalAxis, restrictToFirstScrollableAncestor]}
           >
             <SortableContext items={mapColumnsToDndItems(visibleColumns)} strategy={verticalListSortingStrategy}>
-              <TransitionGroup>
-                {visibleColumns.map((column) => (
-                  <CSSTransition
-                    key={getColumnCombinedID(column)}
-                    timeout={TRANSITION_MS}
-                    unmountOnExit
-                    classNames="fade"
-                  >
-                    <ColumnRow
-                      key={getColumnCombinedID(column)}
-                      column={column}
-                      onItemChange={onItemChange}
-                      onColumnRemoval={onConfirmRemovalModalOpen}
-                    />
-                  </CSSTransition>
-                ))}
-              </TransitionGroup>
+              {visibleColumns.map((column) => (
+                <ColumnRow
+                  key={getColumnCombinedID(column)}
+                  column={column}
+                  onItemChange={onItemChange}
+                  onColumnRemoval={onConfirmRemovalModalOpen}
+                />
+              ))}
             </SortableContext>
           </DndContext>
         </div>
@@ -187,18 +176,14 @@ export const ColumnsSelector: React.FC<ColumnsSelectorProps> = observer(
             onDragEnd={(ev) => handleDragEnd(ev, false)}
           >
             <SortableContext items={mapColumnsToDndItems(hiddenColumns)} strategy={verticalListSortingStrategy}>
-              <TransitionGroup>
-                {hiddenColumns.map((column) => (
-                  <CSSTransition key={getColumnCombinedID(column)} timeout={TRANSITION_MS} classNames="fade">
-                    <ColumnRow
-                      key={getColumnCombinedID(column)}
-                      column={column}
-                      onItemChange={onItemChange}
-                      onColumnRemoval={onConfirmRemovalModalOpen}
-                    />
-                  </CSSTransition>
-                ))}
-              </TransitionGroup>
+              {hiddenColumns.map((column) => (
+                <ColumnRow
+                  key={getColumnCombinedID(column)}
+                  column={column}
+                  onItemChange={onItemChange}
+                  onColumnRemoval={onConfirmRemovalModalOpen}
+                />
+              ))}
             </SortableContext>
           </DndContext>
         </div>

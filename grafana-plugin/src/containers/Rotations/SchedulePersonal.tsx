@@ -8,7 +8,6 @@ import { PLUGIN_ROOT, StackSize } from 'helpers/consts';
 import { useIsLoading } from 'helpers/hooks';
 import { observer } from 'mobx-react';
 import { useNavigate } from 'react-router-dom-v5-compat';
-import { CSSTransition, TransitionGroup } from 'react-transition-group';
 
 import { Avatar } from 'components/Avatar/Avatar';
 import { RenderConditionally } from 'components/RenderConditionally/RenderConditionally';
@@ -28,7 +27,6 @@ import { getCurrentTimeX, getStartOfWeekBasedOnCurrentDate } from 'pages/schedul
 import { useStore } from 'state/useStore';
 
 import { getAnimationClasses } from './Animations.styles';
-import { DEFAULT_TRANSITION_TIMEOUT } from './Rotations.config';
 import { getRotationsStyles } from './Rotations.styles';
 
 const animationStyles = getAnimationClasses();
@@ -150,30 +148,26 @@ const _SchedulePersonal: FC<SchedulePersonalProps> = observer(({ userPk, onSlotC
       >
         {!currentTimeHidden && <div className={styles.currentTime} style={{ left: `${currentTimeX * 100}%` }} />}
         <TimelineMarks scheduleView={ScheduleView.OneWeek} />
-        <TransitionGroup className={cx(styles.layer, styles.layerFirst)}>
+        <div className={cx(styles.layer, styles.layerFirst, animationStyles.fadeInChildren)}>
           {shifts?.length ? (
             shifts.map(({ events }, index) => {
               return (
-                <CSSTransition key={index} timeout={DEFAULT_TRANSITION_TIMEOUT} classNames={{ ...animationStyles }}>
-                  <Rotation
-                    scheduleView={ScheduleView.OneWeek}
-                    simplified
-                    key={index}
-                    events={events}
-                    getColor={getColor}
-                    onSlotClick={onSlotClick}
-                    handleOpenSchedule={openSchedule}
-                    showScheduleNameAsSlotTitle
-                  />
-                </CSSTransition>
+                <Rotation
+                  scheduleView={ScheduleView.OneWeek}
+                  simplified
+                  key={index}
+                  events={events}
+                  getColor={getColor}
+                  onSlotClick={onSlotClick}
+                  handleOpenSchedule={openSchedule}
+                  showScheduleNameAsSlotTitle
+                />
               );
             })
           ) : (
-            <CSSTransition key={0} timeout={DEFAULT_TRANSITION_TIMEOUT} classNames={{ ...animationStyles }}>
-              <Rotation events={[]} emptyText={emptyRotationsText} />
-            </CSSTransition>
+            <Rotation key={0} events={[]} emptyText={emptyRotationsText} />
           )}
-        </TransitionGroup>
+        </div>
       </div>
     </div>
   );

@@ -6,7 +6,6 @@ import { Stack, useStyles2, withTheme2 } from '@grafana/ui';
 import dayjs from 'dayjs';
 import { HTML_ID } from 'helpers/DOM';
 import { observer } from 'mobx-react';
-import { CSSTransition, TransitionGroup } from 'react-transition-group';
 import { bem } from 'styles/utils.styles';
 
 import { ScheduleFiltersType } from 'components/ScheduleFilters/ScheduleFilters.types';
@@ -27,7 +26,6 @@ import { WithStoreProps } from 'state/types';
 import { withMobXProviderContext } from 'state/withStore';
 
 import { getAnimationClasses } from './Animations.styles';
-import { DEFAULT_TRANSITION_TIMEOUT } from './Rotations.config';
 import { findColor } from './Rotations.helpers';
 import { getRotationsStyles } from './Rotations.styles';
 
@@ -106,14 +104,15 @@ const _ScheduleFinal: FC<ScheduleFinalProps> = observer(
           `}
         >
           {rows.map(({ startDate }, index) => (
-            <TransitionGroup
+            <div
               key={index}
               className={cx(
                 css`
                   position: relative;
                 `,
                 styles.layer,
-                styles.layerFirst
+                styles.layerFirst,
+                getAnimationClasses().fadeInChildren
               )}
             >
               <TimelineMarks
@@ -136,33 +135,25 @@ const _ScheduleFinal: FC<ScheduleFinalProps> = observer(
               {shifts?.length ? (
                 shifts.map(({ events }, index) => {
                   return (
-                    <CSSTransition
+                    <Rotation
+                      scheduleView={scheduleView}
+                      startDate={startDate}
                       key={index}
-                      timeout={DEFAULT_TRANSITION_TIMEOUT}
-                      classNames={{ ...getAnimationClasses() }}
-                    >
-                      <Rotation
-                        scheduleView={scheduleView}
-                        startDate={startDate}
-                        key={index}
-                        events={events}
-                        handleAddOverride={handleShowOverrideForm}
-                        handleAddShiftSwap={onShowShiftSwapForm}
-                        onShiftSwapClick={onShowShiftSwapForm}
-                        simplified={simplified}
-                        filters={filters}
-                        getColor={getColor}
-                        onSlotClick={onSlotClick}
-                      />
-                    </CSSTransition>
+                      events={events}
+                      handleAddOverride={handleShowOverrideForm}
+                      handleAddShiftSwap={onShowShiftSwapForm}
+                      onShiftSwapClick={onShowShiftSwapForm}
+                      simplified={simplified}
+                      filters={filters}
+                      getColor={getColor}
+                      onSlotClick={onSlotClick}
+                    />
                   );
                 })
               ) : (
-                <CSSTransition key={0} timeout={DEFAULT_TRANSITION_TIMEOUT} classNames={{ ...getAnimationClasses() }}>
-                  <Rotation scheduleView={scheduleView} startDate={calendarStartDate} events={[]} />
-                </CSSTransition>
+                <Rotation key={0} scheduleView={scheduleView} startDate={calendarStartDate} events={[]} />
               )}
-            </TransitionGroup>
+            </div>
           ))}
         </div>
       </div>
