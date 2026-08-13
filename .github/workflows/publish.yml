@@ -73,3 +73,64 @@ jobs:
             --tag ${{ env.IMAGE }}:latest \
             ${{ env.IMAGE }}:${{ github.ref_name }}-amd64 \
             ${{ env.IMAGE }}:${{ github.ref_name }}-arm64
+
+  plugin:
+    name: Package Grafana plugin
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Checkout project
+        uses: actions/checkout@v4
+
+      - name: Install frontend dependencies
+        uses: ./.github/actions/install-frontend-dependencies
+
+      - name: Install Go
+        uses: actions/setup-go@v5
+        with:
+          go-version-file: grafana-plugin/go.mod
+
+      - name: Install Mage
+        run: go install github.com/magefile/mage@v1.15.0
+
+      - name: Build and package plugin
+        working-directory: grafana-plugin
+        env:
+          TAG: ${{ github.ref_name }}
+        run: |
+          set -euo pipefail
+
+          # a version without the leading "v" is what tells the plugin it is an OSS build, and it
+          # has to be stamped before either build: webpack substitutes it into plugin.json and the
+          # backend bakes it into the binary
+          version="${TAG#v}"
+          jq --arg v "$version" '.version=$v' package.json > package.tmp && mv package.tmp package.json
+
+          pnpm build
+          mage -v build:linux build:linuxARM64
+
+          # the plugin declares a backend, so a frontend-only archive would not load
+          test -f dist/gpx_grafana_oncall_app_linux_amd64
+          test -f dist/gpx_grafana_oncall_app_linux_arm64
+
+          # grafana expects the archive's directory to be named after the plugin id. The build is
+          # unsigned — we have no grafana.com access policy to sign under — so installs need the
+          # plugin allow-listed via GF_PLUGINS_ALLOW_LOADING_UNSIGNED_PLUGINS.
+          mv dist grafana-oncall-app
+          zip -qr "grafana-oncall-app-${version}.zip" ./grafana-oncall-app
+          sha256sum "grafana-oncall-app-${version}.zip" > "grafana-oncall-app-${version}.zip.sha256"
+
+      - name: Attach plugin to release
+        working-directory: grafana-plugin
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TAG: ${{ github.ref_name }}
+        run: |
+          set -euo pipefail
+          version="${TAG#v}"
+          gh release view "$TAG" >/dev/null 2>&1 || gh release create "$TAG" --generate-notes --title "$TAG"
+          gh release upload "$TAG" \
+            "grafana-oncall-app-${version}.zip" \
+            "grafana-oncall-app-${version}.zip.sha256" \
+            --clobber
