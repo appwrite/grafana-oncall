@@ -53,6 +53,15 @@ FIRING, ACKNOWLEDGED, SILENCED, RESOLVED = "firing", "acknowledged", "silenced",
 CRITICAL, WARNING, INFO = "critical", "warning", "info"
 SEVERITIES = (CRITICAL, WARNING, INFO)
 
+# The emoji for a status, used where a line names the status itself — the timeline, and the tag a post carries.
+# Firing has no entry in CARD_STYLE because a firing card reads by its severity instead.
+STATUS_EMOJI = {
+    FIRING: "🔥",
+    ACKNOWLEDGED: "🟡",
+    SILENCED: "🔕",
+    RESOLVED: "✅",
+}
+
 # How a card reads: the emoji leads the title so a channel list shows where a group stands without opening anything,
 # and the colour is the embed's left border. A firing group reads by its severity, any other status by itself.
 CARD_STYLE = {
@@ -62,9 +71,11 @@ CARD_STYLE = {
     # letter to Unicode, so "ℹ️ Info" reads as a word that is not "info". Keeping the card and the tag on
     # the same emoji keeps that trap out of a forum owner's way.
     INFO: ("📘", 0x3274D9),
-    ACKNOWLEDGED: ("🟡", 0xDAA038),
-    SILENCED: ("🔕", 0xDDDDDD),
-    RESOLVED: ("✅", 0x2EB886),
+    # The status half takes its emoji from STATUS_EMOJI rather than repeating it, so a card and the timeline line
+    # for the same status cannot end up saying different things.
+    ACKNOWLEDGED: (STATUS_EMOJI[ACKNOWLEDGED], 0xDAA038),
+    SILENCED: (STATUS_EMOJI[SILENCED], 0xDDDDDD),
+    RESOLVED: (STATUS_EMOJI[RESOLVED], 0x2EB886),
 }
 
 
@@ -223,18 +234,20 @@ class AlertGroupDiscordRenderer(AlertGroupBaseRenderer):
         sees how long the alert has been open without subtracting timestamps by hand.
         """
         alert_group = self.alert_group
-        lines = [f"{CARD_STYLE[route_severity(alert_group)][0]} Fired {stamp(alert_group.started_at)}"]
+        # Every line names a status, so every line reads by its status — including this one. The severity is the
+        # card's title, not an event in its history.
+        lines = [f"{STATUS_EMOJI[FIRING]} Fired {stamp(alert_group.started_at)}"]
 
         if alert_group.acknowledged and alert_group.acknowledged_at:
             lines.append(
-                f"{CARD_STYLE[ACKNOWLEDGED][0]} {alert_group.get_acknowledge_text()} "
+                f"{STATUS_EMOJI[ACKNOWLEDGED]} {alert_group.get_acknowledge_text()} "
                 f"{stamp(alert_group.acknowledged_at)}"
             )
         if alert_group.silenced and alert_group.silenced_at:
             until = f" until {stamp(alert_group.silenced_until)}" if alert_group.silenced_until else ""
-            lines.append(f"{CARD_STYLE[SILENCED][0]} Silenced {stamp(alert_group.silenced_at)}{until}")
+            lines.append(f"{STATUS_EMOJI[SILENCED]} Silenced {stamp(alert_group.silenced_at)}{until}")
         if alert_group.resolved and alert_group.resolved_at:
-            lines.append(f"{CARD_STYLE[RESOLVED][0]} {alert_group.get_resolve_text()} {stamp(alert_group.resolved_at)}")
+            lines.append(f"{STATUS_EMOJI[RESOLVED]} {alert_group.get_resolve_text()} {stamp(alert_group.resolved_at)}")
         return "\n".join(lines)
 
     def _components(self) -> list:
