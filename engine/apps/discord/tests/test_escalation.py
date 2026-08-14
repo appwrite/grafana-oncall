@@ -123,3 +123,39 @@ def test_an_already_acknowledged_alert_group_is_not_escalated(escalate):
         representative.get_handler()(alert_group)
 
     create_message.assert_not_called()
+
+
+@pytest.mark.django_db
+def test_the_public_api_accepts_notify_whole_channel_for_a_discord_organization(
+    make_organization_and_user_with_token,
+    make_discord_channel,
+):
+    """A connected forum is something that can be notified, so the step can be provisioned.
+
+    The reconciler that owns the escalation chain writes it through the public API, which used to refuse
+    this step to anyone without Slack — leaving a chain that pages on-call and then stops.
+    """
+    from django.urls import reverse
+    from rest_framework import status
+    from rest_framework.test import APIClient
+
+    organization, _, token = make_organization_and_user_with_token()
+    escalation_chain = organization.escalation_chains.create(name="test_chain")
+    assert organization.slack_team_identity is None
+    make_discord_channel(organization=organization, is_default_channel=True)
+
+    response = APIClient().post(
+        reverse("api-public:escalation_policies-list"),
+        data={
+            "escalation_chain_id": escalation_chain.public_primary_key,
+            "type": EscalationPolicy.PUBLIC_STEP_CHOICES_MAP[EscalationPolicy.STEP_FINAL_NOTIFYALL],
+            "position": 0,
+        },
+        format="json",
+        HTTP_AUTHORIZATION=token,
+    )
+
+    assert response.status_code == status.HTTP_201_CREATED
+    assert EscalationPolicy.objects.get(public_primary_key=response.json()["id"]).step == (
+        EscalationPolicy.STEP_FINAL_NOTIFYALL
+    )

@@ -134,8 +134,13 @@ class EscalationPolicySerializer(EagerLoadingMixin, OrderedModelSerializer):
     def validate_type(self, step_type):
         organization = self.context["request"].auth.organization
 
-        if step_type == EscalationPolicy.STEP_FINAL_NOTIFYALL and organization.slack_team_identity is None:
-            raise BadRequest(detail="Invalid escalation step type: step is Slack-specific")
+        if step_type == EscalationPolicy.STEP_FINAL_NOTIFYALL and not EscalationPolicy.chatops_broadcast_available(
+            organization
+        ):
+            raise BadRequest(
+                detail="Invalid escalation step type: step notifies a whole channel, "
+                "and no chat integration is connected that can"
+            )
 
         if step_type == EscalationPolicy.STEP_DECLARE_INCIDENT and not is_declare_incident_step_enabled(organization):
             raise BadRequest("Invalid escalation step type: step is not enabled")

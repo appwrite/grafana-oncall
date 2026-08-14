@@ -209,11 +209,27 @@ class EscalationPolicy(OrderedModel):
         STEP_NOTIFY_USERS_QUEUE_IMPORTANT,
     }
 
+    # Steps that address a whole channel rather than a person. Named for Slack because Slack was the only
+    # thing that could serve them when they were added; `chatops_broadcast_available` is the question to ask
+    # rather than whether Slack in particular is connected.
     SLACK_INTEGRATION_REQUIRED_STEPS = [
         STEP_NOTIFY_GROUP,
         STEP_NOTIFY_GROUP_IMPORTANT,
         STEP_FINAL_NOTIFYALL,
     ]
+
+    @staticmethod
+    def chatops_broadcast_available(organization) -> bool:
+        """Whether any connected chat integration can act on a step that addresses a whole channel.
+
+        A step nothing can serve is worse than an absent one: it is accepted, sits in the chain, and does
+        nothing when the alert nobody answered reaches it.
+        """
+        if organization.slack_team_identity is not None:
+            return True
+        if settings.FEATURE_DISCORD_INTEGRATION_ENABLED:
+            return organization.discord_channels.exists()
+        return False
 
     PUBLIC_STEP_CHOICES = [
         STEP_WAIT,
