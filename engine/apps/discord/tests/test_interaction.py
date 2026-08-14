@@ -7,7 +7,7 @@ from rest_framework import status
 from rest_framework.test import APIClient
 
 from apps.alerts.models import AlertReceiveChannel
-from apps.discord.views import CHANNEL_MESSAGE_WITH_SOURCE, DEFERRED_UPDATE_MESSAGE, PONG
+from apps.discord.views import CHANNEL_MESSAGE_WITH_SOURCE, DEFERRED_UPDATE_MESSAGE, MODAL, PONG
 
 
 def interaction_url():
@@ -192,3 +192,134 @@ def test_button_for_another_organization_does_nothing(
     assert response.status_code == status.HTTP_200_OK
     other_alert_group.refresh_from_db()
     assert not other_alert_group.acknowledged
+
+
+def select(custom_id, values, discord_user_id):
+    return {
+        "type": 3,
+        "data": {"custom_id": custom_id, "component_type": 3, "values": values},
+        "member": {"user": {"id": discord_user_id, "username": "responder"}},
+    }
+
+
+@pytest.mark.django_db
+def test_silence_select_silences_for_the_chosen_duration(
+    make_alert_group_with_discord_message, sign_discord_interaction
+):
+    alert_group, user, discord_user = make_alert_group_with_discord_message()
+    body, headers = sign_discord_interaction(
+        select(f"oncall:silence:{alert_group.public_primary_key}", ["3600"], discord_user.discord_user_id)
+    )
+
+    with patch("apps.discord.tasks.on_alert_group_action_triggered_async.apply_async"):
+        response = APIClient().post(interaction_url(), data=body, content_type="application/json", **headers)
+
+    assert response.json() == {"type": DEFERRED_UPDATE_MESSAGE}
+    alert_group.refresh_from_db()
+    assert alert_group.silenced
+    assert alert_group.silenced_by_user == user
+
+
+@pytest.mark.django_db
+def test_paging_a_responder_adds_them_to_the_escalation(
+    make_alert_group_with_discord_message, make_user_for_organization, sign_discord_interaction
+):
+    alert_group, user, discord_user = make_alert_group_with_discord_message()
+    responder = make_user_for_organization(user.organization, username="eldad")
+    body, headers = sign_discord_interaction(
+        select(
+            f"oncall:page:{alert_group.public_primary_key}",
+            [responder.public_primary_key],
+            discord_user.discord_user_id,
+        )
+    )
+
+    with patch("apps.alerts.paging.direct_paging") as direct_paging:
+        APIClient().post(interaction_url(), data=body, content_type="application/json", **headers)
+
+    _, kwargs = direct_paging.call_args
+    assert kwargs["users"] == [(responder, False)]
+    assert kwargs["alert_group"] == alert_group
+    assert kwargs["from_user"] == user
+
+
+@pytest.mark.django_db
+def test_paging_a_user_from_another_organization_does_nothing(
+    make_alert_group_with_discord_message, make_organization_and_user, sign_discord_interaction
+):
+    alert_group, _, discord_user = make_alert_group_with_discord_message()
+    _, outsider = make_organization_and_user()
+    body, headers = sign_discord_interaction(
+        select(
+            f"oncall:page:{alert_group.public_primary_key}",
+            [outsider.public_primary_key],
+            discord_user.discord_user_id,
+        )
+    )
+
+    with patch("apps.alerts.paging.direct_paging") as direct_paging:
+        APIClient().post(interaction_url(), data=body, content_type="application/json", **headers)
+
+    direct_paging.assert_not_called()
+
+
+@pytest.mark.django_db
+def test_resolution_note_button_opens_a_modal(make_alert_group_with_discord_message, sign_discord_interaction):
+    alert_group, _, discord_user = make_alert_group_with_discord_message()
+    body, headers = sign_discord_interaction(
+        message_component(f"oncall:note:{alert_group.public_primary_key}", discord_user.discord_user_id)
+    )
+
+    response = APIClient().post(interaction_url(), data=body, content_type="application/json", **headers)
+
+    modal = response.json()
+    assert modal["type"] == MODAL
+    assert modal["data"]["custom_id"] == f"oncall:note-submit:{alert_group.public_primary_key}"
+    assert modal["data"]["components"][0]["components"][0]["custom_id"] == "text"
+
+
+@pytest.mark.django_db
+def test_submitting_the_modal_saves_a_resolution_note(make_alert_group_with_discord_message, sign_discord_interaction):
+    from apps.alerts.models import ResolutionNote
+
+    alert_group, user, discord_user = make_alert_group_with_discord_message()
+    body, headers = sign_discord_interaction(
+        {
+            "type": 5,
+            "data": {
+                "custom_id": f"oncall:note-submit:{alert_group.public_primary_key}",
+                "components": [
+                    {"type": 1, "components": [{"type": 4, "custom_id": "text", "value": "restarted the pooler"}]}
+                ],
+            },
+            "member": {"user": {"id": discord_user.discord_user_id, "username": "responder"}},
+        }
+    )
+
+    response = APIClient().post(interaction_url(), data=body, content_type="application/json", **headers)
+
+    assert response.json()["data"]["flags"] == 64
+    note = alert_group.resolution_notes.get()
+    assert note.message_text == "restarted the pooler"
+    assert note.author == user
+    assert note.source == ResolutionNote.Source.DISCORD
+
+
+@pytest.mark.django_db
+def test_an_empty_resolution_note_is_refused(make_alert_group_with_discord_message, sign_discord_interaction):
+    alert_group, _, discord_user = make_alert_group_with_discord_message()
+    body, headers = sign_discord_interaction(
+        {
+            "type": 5,
+            "data": {
+                "custom_id": f"oncall:note-submit:{alert_group.public_primary_key}",
+                "components": [{"type": 1, "components": [{"type": 4, "custom_id": "text", "value": "   "}]}],
+            },
+            "member": {"user": {"id": discord_user.discord_user_id, "username": "responder"}},
+        }
+    )
+
+    response = APIClient().post(interaction_url(), data=body, content_type="application/json", **headers)
+
+    assert "needs some text" in response.json()["data"]["content"]
+    assert not alert_group.resolution_notes.exists()

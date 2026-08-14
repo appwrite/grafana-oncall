@@ -10,7 +10,14 @@ from apps.api.permissions import RBACPermission, user_is_authorized
 from apps.auth_token.auth import PluginAuthentication
 from apps.discord.auth import get_user, verify_signature
 from apps.discord.commands import LINK_COMMAND_NAME
-from apps.discord.events import process_interaction
+from apps.discord.events import (
+    CUSTOM_ID_PREFIX,
+    EventAction,
+    add_resolution_note,
+    get_alert_group,
+    parse_custom_id,
+    process_interaction,
+)
 from apps.discord.models import DiscordChannel
 from apps.discord.serializers import DiscordChannelSerializer
 from apps.discord.utils import link_user
@@ -20,9 +27,14 @@ from common.insight_log.chatops_insight_logs import ChatOpsEvent, ChatOpsTypePlu
 logger = logging.getLogger(__name__)
 
 # https://discord.com/developers/docs/interactions/receiving-and-responding
-PING, APPLICATION_COMMAND, MESSAGE_COMPONENT = 1, 2, 3
-PONG, CHANNEL_MESSAGE_WITH_SOURCE, DEFERRED_UPDATE_MESSAGE = 1, 4, 6
+PING, APPLICATION_COMMAND, MESSAGE_COMPONENT, MODAL_SUBMIT = 1, 2, 3, 5
+PONG, CHANNEL_MESSAGE_WITH_SOURCE, DEFERRED_UPDATE_MESSAGE, MODAL = 1, 4, 6, 9
 EPHEMERAL = 1 << 6
+
+# https://discord.com/developers/docs/components/reference#text-input
+TEXT_INPUT, PARAGRAPH = 4, 2
+RESOLUTION_NOTE_INPUT = "text"
+RESOLUTION_NOTE_LIMIT = 3000
 
 
 class DiscordChannelViewSet(
@@ -95,7 +107,7 @@ class DiscordInteractionView(APIView):
         if interaction.get("type") == APPLICATION_COMMAND:
             return self._link_account(interaction)
 
-        if interaction.get("type") != MESSAGE_COMPONENT:
+        if interaction.get("type") not in (MESSAGE_COMPONENT, MODAL_SUBMIT):
             return Response(status=status.HTTP_204_NO_CONTENT)
 
         user = get_user(interaction)
@@ -104,11 +116,69 @@ class DiscordInteractionView(APIView):
         if not user_is_authorized(user, [RBACPermission.Permissions.ALERT_GROUPS_WRITE]):
             return _ephemeral("You do not have permission to update alert groups.")
 
-        process_interaction(interaction.get("data", {}).get("custom_id", ""), user)
+        data = interaction.get("data", {})
+        parsed = parse_custom_id(data.get("custom_id", ""))
+        action = parsed[0] if parsed else None
+
+        # A resolution note needs text, and text needs somewhere to type it, so this one control answers with a modal
+        # and comes back as a second interaction.
+        if action == EventAction.RESOLUTION_NOTE:
+            return self._resolution_note_modal(parsed[1], user)
+        if action == EventAction.RESOLUTION_NOTE_SUBMIT:
+            return self._save_resolution_note(parsed[1], user, data)
+
+        process_interaction(data.get("custom_id", ""), user, data.get("values"))
 
         # The card is edited by the alert group representative once OnCall records the action, so the press itself
         # needs no reply beyond acknowledging it.
         return Response({"type": DEFERRED_UPDATE_MESSAGE})
+
+    def _resolution_note_modal(self, public_primary_key, user) -> Response:
+        alert_group = get_alert_group(public_primary_key, user)
+        if alert_group is None:
+            return _ephemeral("That alert group no longer exists.")
+
+        return Response(
+            {
+                "type": MODAL,
+                "data": {
+                    "custom_id": f"{CUSTOM_ID_PREFIX}:{EventAction.RESOLUTION_NOTE_SUBMIT}:{public_primary_key}",
+                    "title": "Add a resolution note",
+                    "components": [
+                        {
+                            "type": 1,
+                            "components": [
+                                {
+                                    "type": TEXT_INPUT,
+                                    "custom_id": RESOLUTION_NOTE_INPUT,
+                                    "label": "What should the next responder know?",
+                                    "style": PARAGRAPH,
+                                    "max_length": RESOLUTION_NOTE_LIMIT,
+                                    "required": True,
+                                }
+                            ],
+                        }
+                    ],
+                },
+            }
+        )
+
+    def _save_resolution_note(self, public_primary_key, user, data) -> Response:
+        alert_group = get_alert_group(public_primary_key, user)
+        if alert_group is None:
+            return _ephemeral("That alert group no longer exists.")
+
+        text = ""
+        for row in data.get("components", []):
+            for component in row.get("components", []):
+                if component.get("custom_id") == RESOLUTION_NOTE_INPUT:
+                    text = component.get("value", "")
+
+        if not text.strip():
+            return _ephemeral("A resolution note needs some text.")
+
+        add_resolution_note(alert_group, user, text)
+        return _ephemeral("Resolution note added.")
 
     def _link_account(self, interaction) -> Response:
         """`/oncall-link code:<code>`, the Discord half of linking an account to an OnCall user.

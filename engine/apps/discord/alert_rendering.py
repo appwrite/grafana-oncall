@@ -12,11 +12,21 @@ from common.utils import is_string_with_visible_characters, str_or_backup
 EMBED_TITLE_LIMIT = 256
 EMBED_DESCRIPTION_LIMIT = 4096
 EMBED_FIELD_VALUE_LIMIT = 1024
+EMBED_FOOTER_LIMIT = 2048
 
-# Discord button style ids, https://discord.com/developers/docs/components/reference#button
+# https://discord.com/developers/docs/components/reference
+ACTION_ROW = 1
+BUTTON = 2
+STRING_SELECT = 3
 BUTTON_PRIMARY = 1
 BUTTON_SECONDARY = 2
 BUTTON_LINK = 5
+SELECT_LABEL_LIMIT = 100
+# A select carries at most 25 options, with no way to group them the way Slack does. Everything offered in one is
+# therefore capped, and the cap is named here so the copy that explains it stays next to the number.
+SELECT_OPTION_LIMIT = 25
+
+TRIMMED_NOTICE = "… Message has been trimmed, open it in OnCall to read the whole thing."
 
 # How a card reads for each state an alert group can be in: the emoji leads the title so a channel list shows the
 # current state without opening anything, and the colour is the embed's left border.
@@ -35,8 +45,11 @@ CARD_STYLE = {
 SEVERITIES = (ALERT, WARNING)
 
 
-def truncate(value: str, limit: int) -> str:
-    return value if len(value) <= limit else value[: limit - 1].rstrip() + "…"
+def truncate(value: str, limit: int, notice: str = "…") -> str:
+    """Cut `value` to `limit`, ending with `notice` so a reader knows something is missing rather than guessing."""
+    if len(value) <= limit:
+        return value
+    return value[: limit - len(notice)].rstrip() + notice
 
 
 def route_severity(alert_group: AlertGroup) -> str:
@@ -106,7 +119,7 @@ class AlertDiscordRenderer(AlertBaseRenderer):
         if self.templated_alert.source_link:
             embed["url"] = self.templated_alert.source_link
         if is_string_with_visible_characters(self.templated_alert.message):
-            embed["description"] = truncate(self.templated_alert.message, EMBED_DESCRIPTION_LIMIT)
+            embed["description"] = truncate(self.templated_alert.message, EMBED_DESCRIPTION_LIMIT, TRIMMED_NOTICE)
         if self.templated_alert.image_url:
             embed["image"] = {"url": self.templated_alert.image_url}
         return embed
@@ -137,7 +150,23 @@ class AlertGroupDiscordRenderer(AlertGroupBaseRenderer):
                 {"name": "Status", "value": truncate(status, EMBED_FIELD_VALUE_LIMIT), "inline": False}
             )
 
-        return {"embeds": [embed], "components": [{"type": 1, "components": self._buttons()}]}
+        embed["footer"] = {"text": truncate(self._footer(), EMBED_FOOTER_LIMIT)}
+
+        return {"embeds": [embed], "components": self._components()}
+
+    def _footer(self) -> str:
+        """Where the alert came from and which group it is — the context Slack puts in its title line and a
+        context block, in the one place a Discord embed has for it."""
+        alert_group = self.alert_group
+        parts = [
+            f"via {alert_group.channel.get_integration_display()}",
+            f"#{alert_group.inside_organization_number}",
+        ]
+
+        alerts_count = alert_group.alerts.count()
+        if alerts_count > 1:
+            parts.append(f"showing the last of {alerts_count} alerts")
+        return " · ".join(parts)
 
     def _status_text(self, state: str) -> str:
         if state == RESOLVED:
@@ -146,12 +175,50 @@ class AlertGroupDiscordRenderer(AlertGroupBaseRenderer):
             return self.alert_group.get_acknowledge_text()
         return ""
 
+    def _components(self) -> list:
+        """Rows of controls. A select has to occupy a row of its own, which is why these are not all one row."""
+        rows = [{"type": ACTION_ROW, "components": self._buttons()}]
+        if not self.alert_group.resolved:
+            if not self.alert_group.silenced:
+                rows.append({"type": ACTION_ROW, "components": [self._silence_select()]})
+            rows.append({"type": ACTION_ROW, "components": [self._responders_select()]})
+        return rows
+
+    def _silence_select(self) -> dict:
+        from apps.discord.events import EventAction, custom_id
+
+        return {
+            "type": STRING_SELECT,
+            "custom_id": custom_id(EventAction.SILENCE, self.alert_group),
+            "placeholder": "Silence",
+            "options": [
+                {"label": text, "value": str(value)}
+                for value, text in AlertGroup.SILENCE_DELAY_OPTIONS[:SELECT_OPTION_LIMIT]
+            ],
+        }
+
+    def _responders_select(self) -> dict:
+        from apps.discord.events import EventAction, custom_id
+
+        users = self.alert_group.channel.organization.users.order_by("username")[:SELECT_OPTION_LIMIT]
+        options = [
+            {"label": truncate(user.username, SELECT_LABEL_LIMIT), "value": user.public_primary_key} for user in users
+        ]
+        return {
+            "type": STRING_SELECT,
+            "custom_id": custom_id(EventAction.PAGE_RESPONDER, self.alert_group),
+            "placeholder": "Page a responder" if options else "No users to page",
+            "disabled": not options,
+            # Discord rejects a select with no options, so a disabled one still needs a placeholder option.
+            "options": options or [{"label": "No users to page", "value": "none"}],
+        }
+
     def _buttons(self) -> list:
         from apps.discord.events import EventAction, custom_id
 
         def button(action: EventAction, label: str) -> dict:
             return {
-                "type": 2,
+                "type": BUTTON,
                 "style": BUTTON_PRIMARY
                 if action in (EventAction.ACKNOWLEDGE, EventAction.RESOLVE)
                 else BUTTON_SECONDARY,
@@ -166,10 +233,16 @@ class AlertGroupDiscordRenderer(AlertGroupBaseRenderer):
             else:
                 buttons.append(button(EventAction.ACKNOWLEDGE, "Acknowledge"))
             buttons.append(button(EventAction.RESOLVE, "Resolve"))
+            if self.alert_group.silenced:
+                buttons.append(button(EventAction.UNSILENCE, "Unsilence"))
         else:
             buttons.append(button(EventAction.UNRESOLVE, "Unresolve"))
 
-        buttons.append({"type": 2, "style": BUTTON_LINK, "label": "OnCall", "url": self.alert_group.web_link})
+        notes_count = self.alert_group.resolution_notes.count()
+        buttons.append(
+            button(EventAction.RESOLUTION_NOTE, f"Resolution notes [{notes_count}]" if notes_count else "Add note")
+        )
+        buttons.append({"type": BUTTON, "style": BUTTON_LINK, "label": "OnCall", "url": self.alert_group.web_link})
         return buttons
 
 

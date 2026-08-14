@@ -21,6 +21,10 @@ At the moment, this integration is only available for OSS installations.
 
 ![An alert group posted to Discord, with Acknowledge, Resolve and OnCall buttons](img/alert-firing.png)
 
+The card carries the same controls Slack's does: acknowledge and resolve, a **Silence** menu of durations, a
+**Page a responder** menu that adds somebody to the escalation, and **Add note** for a resolution note. The footer
+says which integration the alert came from, which alert group it is, and how many alerts the group holds.
+
 Acknowledging or resolving — from Discord or anywhere else — edits the same message in place:
 
 ![The same alert group after being acknowledged, showing who acknowledged it](img/alert-acknowledged.png)
@@ -97,6 +101,12 @@ mentions that account. To link one:
 
 Until an account is linked, a button press gets an ephemeral reply saying so, and a Discord notification step is
 recorded as failed with "has not linked a Discord account".
+
+## What the card cannot do
+
+A Discord menu holds 25 options and, unlike Slack's, cannot group them. **Page a responder** therefore lists the
+first 25 users of the organization by username; page anybody else from the OnCall UI. **Silence** has eleven
+durations, so it is unaffected.
 
 ## Shift announcements
 
