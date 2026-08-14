@@ -75,9 +75,14 @@ Connect a **forum channel** and each alert group becomes its own post rather tha
 discussion lands beside the card, and the channel list becomes a list of open alerts. Nothing extra to configure —
 OnCall reads the channel's type when you connect it and behaves accordingly.
 
-If the forum has tags named **Alert**, **Warning**, **Acknowledged**, **Silenced** or **Resolved**, OnCall applies
-the matching one and keeps it current, which turns the sidebar into a triage view you can filter. Tags you do not
-create are simply not applied. Create them with the same names to opt in; rename them and OnCall stops.
+If the forum has tags named after a status — **Firing**, **Acknowledged**, **Silenced**, **Resolved** — or after a
+severity — **Critical**, **Warning**, **Info** — OnCall applies the matching ones and keeps them current, which turns
+the sidebar into a triage view you can filter. Tags you do not create are simply not applied. Create them with the
+same names to opt in; rename them and OnCall stops.
+
+Decoration around the name is ignored, so tags can read the way you want them to in Discord: **🔥 Firing**,
+**Resolved ✅** and **Status: 🔥 Firing** all match the firing status, and **Severity: 🚨 Critical** matches a
+critical one.
 
 OnCall reads the forum's tags when you connect the channel, so re-connect it after adding or renaming any. Deleting
 a tag that OnCall still has in that list leaves posts untagged rather than erroring — Discord accepts an unknown tag
@@ -102,10 +107,10 @@ This is deliberately only the loud part. Reaching the right people is still the 
 their own notification policies, so that who gets woken respects who is actually on call. Nothing is posted if the
 alert group has already been acknowledged, silenced or resolved by the time the step runs.
 
-## Split alerts from warnings
+## Split critical alerts from the rest
 
-A route also chooses how loud its alert groups read. Set it to **⚠️ Warning** and a still-open group from that route
-is amber rather than red:
+A route also chooses how loud its alert groups read: **🚨 Critical**, **⚠️ Warning** or **ℹ️ Info**. Set it to
+warning and a still-open group from that route is amber rather than red:
 
 ![A warning alert group, amber rather than red](img/alert-warning.png)
 

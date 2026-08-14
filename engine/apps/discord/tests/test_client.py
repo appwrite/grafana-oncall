@@ -106,7 +106,7 @@ def test_get_channel_reads_a_forum_and_its_tags():
             "guild_id": "789",
             "name": "incidents",
             "type": FORUM_CHANNEL,
-            "available_tags": [{"id": "111", "name": "Alert"}, {"id": "222", "name": "Resolved"}],
+            "available_tags": [{"id": "111", "name": "Firing"}, {"id": "222", "name": "Resolved"}],
         },
         status=200,
     )
@@ -114,7 +114,7 @@ def test_get_channel_reads_a_forum_and_its_tags():
     channel = DiscordClient().get_channel(channel_id="123")
 
     assert channel.is_forum
-    assert channel.available_tags == {"Alert": "111", "Resolved": "222"}
+    assert channel.available_tags == {"Firing": "111", "Resolved": "222"}
 
 
 @pytest.mark.django_db

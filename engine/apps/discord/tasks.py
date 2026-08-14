@@ -85,7 +85,7 @@ def on_create_alert_async(self, alert_pk):
                             channel_id=discord_channel.channel_id,
                             name=name,
                             data=payload,
-                            applied_tags=discord_channel.tag_ids_for(renderer.state_tag_name()),
+                            applied_tags=discord_channel.tag_ids_for(renderer.tag_names()),
                         ).message_id
                     discord_message = DiscordAPIMessage(message_id=thread_id, channel_id=discord_channel.channel_id)
                 else:
