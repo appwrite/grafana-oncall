@@ -709,3 +709,30 @@ def test_a_legacy_payloads_dashboard_link_still_gets_a_button(
     }
 
     assert buttons["Dashboard"] == "https://grafana.example/d/nodes"
+
+
+@pytest.mark.parametrize("integration", ["alertmanager", "grafana_alerting"])
+def test_a_value_cannot_break_the_bullet_it_sits_in(integration):
+    """A value is the sender's text. A newline in one would split its bullet, and a backtick would close the
+    code span early, leaving the rest of the card formatted as code."""
+    rendered = apply_jinja_template(
+        import_module(f"config_integrations.{integration}").discord_message,
+        payload={
+            "groupLabels": {"alertname": "Weird"},
+            "commonLabels": {"multiline": "first line\nsecond line", "ticked": "a `b` c", "plain": "fine"},
+            "commonAnnotations": {"summary": "Something broke", "note": "line one\nline two"},
+        },
+        source_link="",
+        integration_name="Alertmanager",
+    )
+
+    lines = rendered.splitlines()
+    # Whitespace is collapsed, so one entry stays one bullet.
+    assert "- multiline: `first line second line`" in lines
+    assert "- note: `line one line two`" in lines
+    # A value carrying a backtick is left unwrapped rather than altered.
+    assert "- ticked: a `b` c" in lines
+    assert "- plain: `fine`" in lines
+    # Every bullet is still a bullet.
+    for line in lines:
+        assert not line.startswith("second line"), rendered

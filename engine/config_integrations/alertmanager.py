@@ -207,6 +207,14 @@ web_image_url = None
 discord_title = web_title
 
 discord_message = """\
+{% macro bullet(key, value) -%}
+{% set flat = (value | string).split() | join(" ") -%}
+{% if "`" in flat -%}
+- {{ key }}: {{ flat }}
+{%- else -%}
+- {{ key }}: `{{ flat }}`
+{%- endif -%}
+{% endmacro -%}
 {% set groupLabels = payload.get("groupLabels", {}) -%}
 {% set commonLabels = payload.get("commonLabels", {}) -%}
 {# The legacy alertmanager integration puts labels and annotations at the top level instead. -#}
@@ -222,7 +230,7 @@ discord_message = """\
    and not key.startswith("__")
    and said.get(key) != value -%}
 {% set _ = said.update({key: value}) -%}
-{% set _ = labels.append("- " ~ key ~ ": `" ~ value ~ "`") -%}
+{% set _ = labels.append(bullet(key, value)) -%}
 {% endfor -%}
 {% endfor -%}
 
@@ -235,7 +243,7 @@ discord_message = """\
    if key not in spoken
    and not key.startswith("__")
    and said.get(key) != value -%}
-{% set _ = notes.append("- " ~ key ~ ": `" ~ value ~ "`") -%}
+{% set _ = notes.append(bullet(key, value)) -%}
 {% endfor -%}
 
 {% set summary = annotations.get("summary") -%}
