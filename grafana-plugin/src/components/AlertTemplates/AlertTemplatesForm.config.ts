@@ -12,6 +12,9 @@ export const getTemplatesForEdit = (features: Record<string, boolean>) => {
   if (features?.[AppFeature.Mattermost]) {
     merge(templatesForEdit, mattermostTemplateForEdit)
   }
+  if (features?.[AppFeature.Discord]) {
+    merge(templatesForEdit, discordTemplateForEdit)
+  }
   return templatesForEdit;
 };
 
@@ -76,6 +79,39 @@ const mattermostTemplateForEdit: { [id: string]: TemplateForEdit } = {
     additionalData: {
       chatOpsName: 'mattermost',
       chatOpsDisplayName: 'Mattermost',
+    },
+    type: 'plain',
+  },
+};
+
+const discordTemplateForEdit: { [id: string]: TemplateForEdit } = {
+  discord_title_template: {
+    name: 'discord_title_template',
+    displayName: 'Discord title',
+    description: '',
+    additionalData: {
+      chatOpsName: 'discord',
+      chatOpsDisplayName: 'Discord',
+    },
+    type: 'plain',
+  },
+  discord_message_template: {
+    name: 'discord_message_template',
+    displayName: 'Discord message',
+    description: '',
+    additionalData: {
+      chatOpsName: 'discord',
+      chatOpsDisplayName: 'Discord',
+    },
+    type: 'plain',
+  },
+  discord_image_url_template: {
+    name: 'discord_image_url_template',
+    displayName: 'Discord image url',
+    description: '',
+    additionalData: {
+      chatOpsName: 'discord',
+      chatOpsDisplayName: 'Discord',
     },
     type: 'plain',
   },

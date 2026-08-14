@@ -11,6 +11,7 @@ import { MobileAppConnectionTab } from 'containers/MobileAppConnection/MobileApp
 import { UserSettingsTab } from 'containers/UserSettings/UserSettings.types';
 import { SlackTab } from 'containers/UserSettings/parts/tabs//SlackTab/SlackTab';
 import { CloudPhoneSettings } from 'containers/UserSettings/parts/tabs/CloudPhoneSettings/CloudPhoneSettings';
+import { DiscordInfo } from 'containers/UserSettings/parts/tabs/DiscordInfo/DiscordInfo';
 import { GoogleCalendar } from 'containers/UserSettings/parts/tabs/GoogleCalendar/GoogleCalendar';
 import { MSTeamsInfo } from 'containers/UserSettings/parts/tabs/MSTeamsInfo/MSTeamsInfo';
 import { MattermostInfo } from 'containers/UserSettings/parts/tabs/MattermostInfo/MattermostInfo';
@@ -34,6 +35,7 @@ interface TabsProps {
   showPersonalWebhookConnectionTab: boolean;
   showMsTeamsConnectionTab: boolean;
   showMattermostConnectionTab: boolean;
+  showDiscordConnectionTab: boolean;
 }
 
 export const Tabs = ({
@@ -47,6 +49,7 @@ export const Tabs = ({
   showPersonalWebhookConnectionTab,
   showMsTeamsConnectionTab,
   showMattermostConnectionTab,
+  showDiscordConnectionTab,
 }: TabsProps) => {
   const getTabClickHandler = useCallback(
     (tab: UserSettingsTab) => {
@@ -145,6 +148,15 @@ export const Tabs = ({
           data-testid="tab-mattermost"
         />
       )}
+      {showDiscordConnectionTab && (
+        <Tab
+          active={activeTab === UserSettingsTab.DiscordInfo}
+          label="Discord Connection"
+          key={UserSettingsTab.DiscordInfo}
+          onChangeTab={getTabClickHandler(UserSettingsTab.DiscordInfo)}
+          data-testid="tab-discord"
+        />
+      )}
     </TabsBar>
   );
 };
@@ -193,6 +205,7 @@ export const TabsContent = observer(({ id, activeTab, onTabChange, isDesktopOrLa
       {activeTab === UserSettingsTab.PersonalWebhookInfo && <PersonalWebhookInfo />}
       {activeTab === UserSettingsTab.MSTeamsInfo && <MSTeamsInfo />}
       {activeTab === UserSettingsTab.MattermostInfo && <MattermostInfo />}
+      {activeTab === UserSettingsTab.DiscordInfo && <DiscordInfo />}
     </TabContent>
   );
 

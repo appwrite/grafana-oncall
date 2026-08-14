@@ -69,8 +69,9 @@ export const IntegrationHelper = {
       store.hasFeature(AppFeature.Telegram) && store.telegramChannelStore.currentTeamToTelegramChannel?.length > 0;
     const isMSTeamsInstalled = Boolean(store.msteamsChannelStore.currentTeamToMSTeamsChannel?.length > 0);
     const isMattermostInstalled = Object.keys(store.mattermostChannelStore.items).length > 0;
+    const isDiscordInstalled = Object.keys(store.discordChannelStore.items).length > 0;
 
-    return hasSlack || hasTelegram || isMSTeamsInstalled || isMattermostInstalled;
+    return hasSlack || hasTelegram || isMSTeamsInstalled || isMattermostInstalled || isDiscordInstalled;
   },
 
   getChatOpsChannels(channelFilter: ChannelFilter, store: RootStore): Array<{ name: string; icon: IconName }> {

@@ -30,5 +30,6 @@ export interface Organization {
       verification_sms: boolean;
     };
     mattermost_configured: boolean;
+    discord_configured: boolean;
   };
 }

@@ -29,6 +29,7 @@ class Feature(enum.StrEnum):
     SERVICE_DEPENDENCIES = "service_dependencies"
     PERSONAL_WEBHOOK = "personal_webhook"
     MATTERMOST = "mattermost"
+    DISCORD = "discord"
 
 
 class FeaturesAPIView(APIView):
@@ -83,5 +84,8 @@ class FeaturesAPIView(APIView):
 
         if settings.FEATURE_MATTERMOST_INTEGRATION_ENABLED:
             enabled_features.append(Feature.MATTERMOST)
+
+        if settings.FEATURE_DISCORD_INTEGRATION_ENABLED:
+            enabled_features.append(Feature.DISCORD)
 
         return enabled_features

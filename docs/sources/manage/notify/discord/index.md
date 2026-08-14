@@ -49,17 +49,11 @@ that are not signed by your application are rejected with a 401.
 ## Connect a Discord channel
 
 Turn on Developer Mode in Discord (**Settings → Advanced**), right-click the channel you want alerts in and choose
-**Copy Channel ID**, then register it:
+**Copy Channel ID**. Then, in Grafana OnCall, go to **Settings → ChatOps → Discord**, click **Add Discord channel**
+and paste it in.
 
-```bash
-curl -X POST https://<your-oncall-engine>/api/internal/v1/discord/channels/ \
-  -H "Authorization: <grafana-token>" \
-  -H "Content-Type: application/json" \
-  -d '{"channel_id": "<channel id>"}'
-```
-
-`POST /api/internal/v1/discord/channels/<id>/set_default/` marks a channel as the default one alert groups are
-posted to. A route can override it by setting `notification_backends.DISCORD.channel` to a channel's id.
+**Make default** marks the channel alert groups are posted to. A route can override it: on an integration's route,
+switch on **Post to Discord channel** and pick another one.
 
 ## Register the slash command
 
@@ -75,16 +69,10 @@ python manage.py register_discord_commands
 A button press acts as the OnCall user linked to the pressing Discord account, and a Discord notification step
 mentions that account. To link one:
 
-1. Get a verification code, valid for ten minutes:
-
-   ```bash
-   curl "https://<your-oncall-engine>/api/internal/v1/users/<user id>/get_backend_verification_code?backend=DISCORD" \
-     -H "Authorization: <grafana-token>"
-   ```
-
-2. In Discord, run `/oncall-link code:<code>`. The reply is only visible to you.
-
-`POST /api/internal/v1/users/<user id>/unlink_backend?backend=DISCORD` unlinks it again.
+1. In OnCall, open your user profile and go to the **Discord Connection** tab. It shows a verification code, valid
+   for ten minutes.
+2. In Discord, run `/oncall-link` and paste the code as the `code` option. The reply is only visible to you.
+3. Refresh the page. The **Discord** row of your profile now shows the linked account, with a button to unlink it.
 
 Until an account is linked, a button press gets an ephemeral reply saying so, and a Discord notification step is
 recorded as failed with "has not linked a Discord account".

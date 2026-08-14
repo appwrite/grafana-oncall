@@ -8,6 +8,7 @@ import { ApiSchemas } from 'network/oncall-api/api.types';
 import { AppFeature } from 'state/features';
 import { useStore } from 'state/useStore';
 
+import { DiscordConnector } from './DiscordConnector';
 import { ICalConnector } from './ICalConnector';
 import { MSTeamsConnector } from './MSTeamsConnector';
 import { MattermostConnector } from './MattermostConnector';
@@ -32,6 +33,7 @@ export const Connectors: FC<ConnectorsProps> = observer((props) => {
       {store.hasFeature(AppFeature.Telegram) && <TelegramConnector {...props} />}
       {store.hasFeature(AppFeature.PersonalWebhook) && <PersonalWebhookConnector {...props} />}
       {store.hasFeature(AppFeature.Mattermost) && <MattermostConnector {...props} />}
+      {store.hasFeature(AppFeature.Discord) && <DiscordConnector {...props} />}
       {store.hasFeature(AppFeature.MsTeams) && <MSTeamsConnector {...props} />}
       <Legend>Calendar export</Legend>
       <ICalConnector {...props} />
