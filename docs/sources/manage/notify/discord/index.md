@@ -88,3 +88,15 @@ mentions that account. To link one:
 
 Until an account is linked, a button press gets an ephemeral reply saying so, and a Discord notification step is
 recorded as failed with "has not linked a Discord account".
+
+## Shift announcements
+
+Every ten minutes OnCall checks each schedule for shifts that have just started and announces them in the default
+Discord channel, mentioning whoever is going on call:
+
+> 📅 @alice, @bob — your **Primary** on-call shift just started.
+
+Someone on call without a linked Discord account is named in plain text rather than left out. Only shift starts are
+announced: in a follow-the-sun rota every shift ending coincides with another starting, so "ended" messages would be
+daily noise. Overrides and swaps announce too, because the announcement reads the schedule's final events rather
+than its rotations.

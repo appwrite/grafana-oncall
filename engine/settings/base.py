@@ -906,6 +906,11 @@ if FEATURE_MATTERMOST_INTEGRATION_ENABLED:
 DISCORD_BACKEND_INTERNAL_ID = 10
 if FEATURE_DISCORD_INTEGRATION_ENABLED:
     EXTRA_MESSAGING_BACKENDS += [("apps.discord.backend.DiscordBackend", DISCORD_BACKEND_INTERNAL_ID)]
+    CELERY_BEAT_SCHEDULE["announce_shift_starts_for_all_schedules"] = {
+        "task": "apps.discord.shifts.announce_shift_starts_for_all_schedules",
+        "schedule": crontab(minute="*/10"),  # every 10 minutes
+        "args": (),
+    }
 
 # Inbound email settings
 INBOUND_EMAIL_ESP = os.getenv("INBOUND_EMAIL_ESP")
