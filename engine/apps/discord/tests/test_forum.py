@@ -114,9 +114,9 @@ def test_a_retry_adopts_the_post_a_dead_attempt_already_opened(make_forum, make_
     organization, _ = make_forum()
     alert_group, alert = make_alert_for(organization)
 
-    with patch(
-        "apps.discord.tasks.DiscordClient.find_thread_by_name", return_value="1300000000000000009"
-    ) as find, patch("apps.discord.tasks.DiscordClient.create_thread") as create_thread:
+    with patch("apps.discord.tasks.DiscordClient.find_thread_for", return_value="1300000000000000009") as find, patch(
+        "apps.discord.tasks.DiscordClient.create_thread"
+    ) as create_thread:
         run_as_retry(on_create_alert_async, alert.pk, retries=1)
 
     create_thread.assert_not_called()
@@ -129,7 +129,7 @@ def test_a_retry_with_nothing_to_adopt_opens_the_post(make_forum, make_alert_for
     organization, _ = make_forum()
     alert_group, alert = make_alert_for(organization)
 
-    with patch("apps.discord.tasks.DiscordClient.find_thread_by_name", return_value=None), patch(
+    with patch("apps.discord.tasks.DiscordClient.find_thread_for", return_value=None), patch(
         "apps.discord.tasks.DiscordClient.create_thread",
         return_value=DiscordAPIMessage(message_id="1300000000000000010", channel_id="1300000000000000010"),
     ) as create_thread:
@@ -145,7 +145,7 @@ def test_the_first_attempt_does_not_go_looking(make_forum, make_alert_for):
     organization, _ = make_forum()
     _, alert = make_alert_for(organization)
 
-    with patch("apps.discord.tasks.DiscordClient.find_thread_by_name") as find, patch(
+    with patch("apps.discord.tasks.DiscordClient.find_thread_for") as find, patch(
         "apps.discord.tasks.DiscordClient.create_thread",
         return_value=DiscordAPIMessage(message_id="1300000000000000011", channel_id="1300000000000000011"),
     ):

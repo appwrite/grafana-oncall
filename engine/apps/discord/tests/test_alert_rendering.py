@@ -343,6 +343,31 @@ def test_timeline_of_a_resolved_alert_group(make_rendered_message):
 
 
 @pytest.mark.django_db
+def test_a_long_title_keeps_the_number_that_identifies_the_post(
+    make_organization, make_user_for_organization, make_alert_receive_channel, make_alert_group, make_alert
+):
+    """Two alerts whose long titles agree must still get distinguishable post names."""
+    from apps.discord.client import THREAD_NAME_LIMIT
+
+    organization = make_organization()
+    make_user_for_organization(organization, username="loks0n")
+    alert_receive_channel = make_alert_receive_channel(
+        organization, integration=AlertReceiveChannel.INTEGRATION_GRAFANA_ALERTING
+    )
+    payload = {"status": "firing", "groupLabels": {"alertname": "DiskSpaceLow" * 20}}
+
+    names = []
+    for _ in range(2):
+        alert_group = make_alert_group(alert_receive_channel=alert_receive_channel)
+        make_alert(alert_group=alert_group, raw_request_data=payload)
+        names.append(DiscordMessageRenderer(alert_group).render_thread_name())
+
+    assert all(len(name) <= THREAD_NAME_LIMIT for name in names), names
+    assert names[0] != names[1], names
+    assert names[0].endswith("· #1") and names[1].endswith("· #2"), names
+
+
+@pytest.mark.django_db
 def test_a_grafana_alert_gets_a_dashboard_button(
     make_organization, make_user_for_organization, make_alert_receive_channel, make_alert_group, make_alert
 ):

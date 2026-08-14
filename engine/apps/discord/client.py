@@ -132,20 +132,31 @@ class DiscordClient:
         response = self._request("POST", f"{self.base_url}/channels/{channel_id}/threads", data=payload)
         return DiscordMessage(message_id=response["id"], channel_id=response["id"])
 
-    def find_thread_by_name(self, guild_id: str, channel_id: str, name: str) -> typing.Optional[str]:
-        """A forum post already carrying `name`, active or archived.
+    def get_message(self, channel_id: str, message_id: str) -> dict:
+        return self._request("GET", f"{self.base_url}/channels/{channel_id}/messages/{message_id}")
 
-        Thread creation takes no nonce, so unlike an ordinary message it cannot be made idempotent by Discord. This
-        is how a task that posted and then died before recording the placement finds its own post again instead of
-        opening a second one.
+    def find_thread_for(self, guild_id: str, channel_id: str, name: str, marker: str) -> typing.Optional[str]:
+        """A forum post this application already opened for `marker`, active or archived.
+
+        Thread creation takes no nonce, so unlike an ordinary message Discord cannot make it idempotent. This is how
+        a task that posted and then died before recording the placement finds its own post again instead of opening
+        a second one.
+
+        The name only narrows the search and the card's own buttons decide, because a name is not an identity: two
+        organizations may register the same forum, and Discord fixes a post's name at creation while an alert's
+        title can be edited to match another's afterwards. A button's custom_id carries the alert group it acts on,
+        which is exactly the question being asked.
         """
         wanted = name[:THREAD_NAME_LIMIT]
-        for path, key in (
-            (f"{self.base_url}/guilds/{guild_id}/threads/active", "threads"),
-            (f"{self.base_url}/channels/{channel_id}/threads/archived/public", "threads"),
+        for path in (
+            f"{self.base_url}/guilds/{guild_id}/threads/active",
+            f"{self.base_url}/channels/{channel_id}/threads/archived/public",
         ):
-            for thread in self._request("GET", path).get(key) or []:
-                if thread.get("parent_id") == channel_id and thread.get("name") == wanted:
+            for thread in self._request("GET", path).get("threads") or []:
+                if thread.get("parent_id") != channel_id or thread.get("name") != wanted:
+                    continue
+                # A thread and its first message share an id, so this reads the card that opened the post.
+                if _acts_on(self.get_message(thread["id"], thread["id"]), marker):
                     return thread["id"]
         return None
 
@@ -164,6 +175,15 @@ class DiscordClient:
     def update_message(self, channel_id: str, message_id: str, data: dict) -> DiscordMessage:
         response = self._request("PATCH", f"{self.base_url}/channels/{channel_id}/messages/{message_id}", data=data)
         return DiscordMessage(message_id=response["id"], channel_id=response["channel_id"])
+
+
+def _acts_on(message: dict, marker: str) -> bool:
+    """Whether a message's controls act on `marker` — the alert group a custom_id names."""
+    for row in message.get("components") or []:
+        for component in row.get("components") or []:
+            if marker in (component.get("custom_id") or ""):
+                return True
+    return False
 
 
 def _error_message(response: requests.models.Response) -> str:

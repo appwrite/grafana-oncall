@@ -67,8 +67,11 @@ def on_create_alert_async(self, alert_pk):
                     # is about to open already exists — which it does if a previous attempt posted and then died
                     # before it could record where.
                     thread_id = (
-                        client.find_thread_by_name(
-                            guild_id=discord_channel.guild_id, channel_id=discord_channel.channel_id, name=name
+                        client.find_thread_for(
+                            guild_id=discord_channel.guild_id,
+                            channel_id=discord_channel.channel_id,
+                            name=name,
+                            marker=alert_group.public_primary_key,
                         )
                         if self.request.retries
                         else None

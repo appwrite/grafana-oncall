@@ -326,10 +326,16 @@ class DiscordMessageRenderer:
 
     def render_thread_name(self) -> str:
         """What a forum post is called. Discord fixes this at creation, so it carries the alert's identity and
-        leaves current state to the card and the post's tag."""
+        leaves current state to the card and the post's tag.
+
+        The number is what distinguishes two posts about similarly named alerts, so the title is trimmed to leave
+        room for it rather than the pair being trimmed together — which would drop the number off a long title and
+        make the two posts indistinguishable.
+        """
         renderer = AlertGroupDiscordRenderer(self.alert_group)
         title = str_or_backup(renderer.alert_renderer.templated_alert.title, "Alert")
-        return truncate(f"{title} · #{self.alert_group.inside_organization_number}", THREAD_NAME_LIMIT)
+        suffix = f" · #{self.alert_group.inside_organization_number}"
+        return truncate(title, THREAD_NAME_LIMIT - len(suffix)) + suffix
 
     def state_tag_name(self) -> str:
         """The forum tag this alert group should carry, matched against the forum's tags by name."""

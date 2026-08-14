@@ -149,6 +149,73 @@ def test_a_long_post_name_is_cut_to_what_discord_accepts():
     assert json.loads(responses.calls[0].request.body)["name"] == "n" * THREAD_NAME_LIMIT
 
 
+def register_threads(*threads):
+    responses.add(
+        responses.GET, f"{DISCORD_API_URL}/guilds/789/threads/active", json={"threads": list(threads)}, status=200
+    )
+    responses.add(
+        responses.GET,
+        f"{DISCORD_API_URL}/channels/123/threads/archived/public",
+        json={"threads": []},
+        status=200,
+    )
+
+
+def register_card(thread_id, alert_group):
+    responses.add(
+        responses.GET,
+        f"{DISCORD_API_URL}/channels/{thread_id}/messages/{thread_id}",
+        json={
+            "id": thread_id,
+            "components": [{"type": 1, "components": [{"type": 2, "custom_id": f"oncall:acknowledge:{alert_group}"}]}],
+        },
+        status=200,
+    )
+
+
+@pytest.mark.django_db
+@responses.activate
+def test_find_thread_for_matches_the_post_whose_card_acts_on_the_alert_group():
+    """Two posts share a name — a long title truncates the same way — so the buttons decide which is which."""
+    register_threads(
+        {"id": "900", "parent_id": "123", "name": "DiskSpaceLow · #1"},
+        {"id": "901", "parent_id": "123", "name": "DiskSpaceLow · #1"},
+    )
+    register_card("900", "IOTHERGROUP")
+    register_card("901", "IWANTEDGROUP")
+
+    found = DiscordClient().find_thread_for(
+        guild_id="789", channel_id="123", name="DiskSpaceLow · #1", marker="IWANTEDGROUP"
+    )
+
+    assert found == "901"
+
+
+@pytest.mark.django_db
+@responses.activate
+def test_find_thread_for_refuses_another_alert_groups_post():
+    register_threads({"id": "900", "parent_id": "123", "name": "DiskSpaceLow · #1"})
+    register_card("900", "IOTHERGROUP")
+
+    found = DiscordClient().find_thread_for(
+        guild_id="789", channel_id="123", name="DiskSpaceLow · #1", marker="IWANTEDGROUP"
+    )
+
+    assert found is None
+
+
+@pytest.mark.django_db
+@responses.activate
+def test_find_thread_for_ignores_posts_in_another_channel():
+    register_threads({"id": "900", "parent_id": "456", "name": "DiskSpaceLow · #1"})
+
+    found = DiscordClient().find_thread_for(
+        guild_id="789", channel_id="123", name="DiskSpaceLow · #1", marker="IWANTEDGROUP"
+    )
+
+    assert found is None
+
+
 @pytest.mark.django_db
 @responses.activate
 def test_update_thread_sets_tags_and_unarchives():
