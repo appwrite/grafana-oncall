@@ -442,14 +442,17 @@ def test_the_timeline_reads_by_status_whatever_the_severity(
     assert payload["embeds"][0]["title"].startswith(CARD_STYLE[severity][0])
 
 
+# The shape Grafana Alerting actually sends: its own identifiers are wrapped in double underscores, as labels
+# and as annotations. Taken from a live payload rather than written by hand.
 ALERTMANAGER_PAYLOAD = {
     "status": "firing",
     "groupLabels": {"alertname": "Test failing", "name": "backups-tor", "severity": "critical"},
     "commonLabels": {
+        "__alert_rule_namespace_uid__": "terraform-alerts",
+        "__alert_rule_uid__": "afsxq6b2qb85cb",
         "alertname": "Test failing",
-        "alert_rule_namespace_uid": "terraform-alerts",
-        "alert_rule_uid": "afsxq6b2qb85cb",
         "cluster": "assets-fra1-prod",
+        "grafana_folder": "Terraform Alerts",
         "kind": "PlaywrightTest",
         "name": "backups-tor",
         "service": "backups",
@@ -457,14 +460,14 @@ ALERTMANAGER_PAYLOAD = {
         "team": "databases",
     },
     "commonAnnotations": {
-        "alert_rule_namespace_uid": "terraform-alerts",
-        "orgId": "1",
-        "value_string": "[ var='A' labels={name=backups-tor} type='query' value=0 ]",
-        "values": '{"A":0}',
+        "__alert_rule_namespace_uid__": "terraform-alerts",
+        "__orgId__": "1",
+        "__value_string__": "[ var='A' labels={name=backups-tor} type='query' value=0 ]",
+        "__values__": '{"A":0}',
+        "dashboard_url": "https://grafana.example/d/synthetics",
+        "impact": "backups unverified",
         "summary": "Synthetic test failed two consecutive runs.",
         "runbook_url": "https://runbooks.example/synthetics",
-        "__dashboardUid__": "synthetics-PlaywrightTest",
-        "__panelId__": "3",
     },
     "alerts": [{"status": "firing", "labels": {}, "annotations": {}, "generatorURL": ""}],
 }
@@ -486,7 +489,6 @@ def test_a_card_keeps_every_label_and_drops_what_is_said_twice(integration):
     )
 
     assert "Synthetic test failed two consecutive runs." in rendered
-    # Every label the alert carries, named, so a reader can tell which is which.
     # One per line, named, so a reader can scan them rather than unpick a wrapped line of pairs.
     lines = rendered.splitlines()
     for label in (
@@ -495,23 +497,22 @@ def test_a_card_keeps_every_label_and_drops_what_is_said_twice(integration):
         "kind: PlaywrightTest",
         "service: backups",
         "team: databases",
-        "alert_rule_uid: afsxq6b2qb85cb",
     ):
         assert label in lines, f"{label} should be a line of its own"
-    # Annotations that are not duplicates, and a runbook.
-    assert "orgId: 1" in rendered
-    assert 'values: {"A":0}' in rendered
+    # An annotation of the sender's own, and a runbook.
+    assert "impact: backups unverified" in lines
     assert "https://runbooks.example/synthetics" in rendered
 
-    # alertname is the card's title, severity is its title emoji and its tag, value_string is the long form of
-    # values, and alert_rule_namespace_uid is in the labels with the same value.
+    # alertname is the card's title and severity is its title emoji and its tag.
     assert "alertname: " not in rendered
     assert "severity: " not in rendered
-    assert "value_string" not in rendered
-    # Grafana reserves the double-underscore names for itself and hides them in its own UI.
-    assert "__dashboardUid__" not in rendered
-    assert "__panelId__" not in rendered
-    assert rendered.count("terraform-alerts") == 1
+    # Grafana reserves the double-underscore names for itself and hides them in its own UI. It uses them for
+    # labels as well as annotations, which is what the live cards showed.
+    for reserved in ("__alert_rule_uid__", "__alert_rule_namespace_uid__", "__orgId__", "__values__"):
+        assert reserved not in rendered, f"{reserved} should not reach a card"
+    assert "terraform-alerts" not in rendered
+    # The dashboard link is a button on the card.
+    assert "dashboard_url" not in rendered
 
     # The headings that made it a page.
     for heading in ("Severity:", "Status:", "CommonLabels", "GroupLabels", "Annotations:"):
