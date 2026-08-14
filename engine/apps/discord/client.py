@@ -11,6 +11,9 @@ from apps.discord.exceptions import DiscordAPIException, DiscordAPITokenInvalid
 
 DISCORD_API_URL = "https://discord.com/api/v10"
 
+# Discord truncates a longer nonce rather than rejecting it, which would silently break deduplication.
+NONCE_LIMIT = 25
+
 
 class BotAuth(AuthBase):
     def __init__(self, token: str) -> None:
@@ -86,7 +89,17 @@ class DiscordClient:
     def overwrite_commands(self, application_id: str, commands: list) -> list:
         return self._request("PUT", f"{self.base_url}/applications/{application_id}/commands", data=commands)
 
-    def create_message(self, channel_id: str, data: dict) -> DiscordMessage:
+    def create_message(self, channel_id: str, data: dict, nonce: Optional[str] = None) -> DiscordMessage:
+        """Post a message, optionally letting Discord deduplicate it.
+
+        Posting and recording where it landed cannot be made one atomic step, so a task that posts successfully and
+        then dies before it writes the row is retried with everything already done except the row. `enforce_nonce`
+        makes Discord answer that retry with the message it already has rather than a second one.
+
+        https://discord.com/developers/docs/resources/message#create-message
+        """
+        if nonce:
+            data = data | {"nonce": nonce[:NONCE_LIMIT], "enforce_nonce": True}
         response = self._request("POST", f"{self.base_url}/channels/{channel_id}/messages", data=data)
         return DiscordMessage(message_id=response["id"], channel_id=response["channel_id"])
 

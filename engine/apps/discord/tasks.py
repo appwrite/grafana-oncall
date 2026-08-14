@@ -54,7 +54,11 @@ def on_create_alert_async(self, alert_pk):
 
         with OkToRetry(task=self, exc=(DiscordAPIException,), num_retries=3):
             try:
-                discord_message = DiscordClient().create_message(channel_id=discord_channel.channel_id, data=payload)
+                discord_message = DiscordClient().create_message(
+                    channel_id=discord_channel.channel_id,
+                    data=payload,
+                    nonce=f"ag-{alert_group.public_primary_key}",
+                )
             except DiscordAPITokenInvalid:
                 logger.error(f"Discord bot token is invalid, could not create message for alert {alert_pk}")
             except DiscordAPIException as ex:
@@ -163,7 +167,13 @@ def notify_user_about_alert_async(user_pk, alert_group_pk, notification_policy_p
     }
 
     try:
-        DiscordClient().create_message(channel_id=discord_message.channel_id, data=payload)
+        DiscordClient().create_message(
+            channel_id=discord_message.channel_id,
+            data=payload,
+            # Same reason as the alert group card: the log record is written after the post, and a retry in between
+            # must not page the user twice.
+            nonce=f"un-{notification_policy.pk}-{alert_group.pk}",
+        )
     except DiscordAPITokenInvalid:
         logger.error(f"Discord bot token is invalid, could not notify user about alert group {alert_group_pk}")
         _create_error_log_record(UserNotificationPolicyLogRecord.ERROR_NOTIFICATION_IN_DISCORD_API_TOKEN_INVALID)

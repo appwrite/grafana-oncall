@@ -1,7 +1,9 @@
+import json
+
 import pytest
 import responses
 
-from apps.discord.client import DISCORD_API_URL, DiscordClient
+from apps.discord.client import DISCORD_API_URL, NONCE_LIMIT, DiscordClient
 from apps.discord.exceptions import DiscordAPIException, DiscordAPITokenInvalid
 
 
@@ -91,3 +93,35 @@ def test_register_commands():
     )
 
     assert [command["name"] for command in register_commands()] == [LINK_COMMAND_NAME]
+
+
+@pytest.mark.django_db
+@responses.activate
+def test_create_message_with_a_nonce_asks_discord_to_deduplicate():
+    responses.add(
+        responses.POST,
+        f"{DISCORD_API_URL}/channels/123/messages",
+        json={"id": "456", "channel_id": "123"},
+        status=200,
+    )
+
+    DiscordClient().create_message(channel_id="123", data={"embeds": []}, nonce="ag-IJL19VG5TWBEV")
+
+    sent = json.loads(responses.calls[0].request.body)
+    assert sent["nonce"] == "ag-IJL19VG5TWBEV"
+    assert sent["enforce_nonce"] is True
+
+
+@pytest.mark.django_db
+@responses.activate
+def test_a_long_nonce_is_cut_to_what_discord_accepts():
+    responses.add(
+        responses.POST,
+        f"{DISCORD_API_URL}/channels/123/messages",
+        json={"id": "456", "channel_id": "123"},
+        status=200,
+    )
+
+    DiscordClient().create_message(channel_id="123", data={}, nonce="n" * 40)
+
+    assert json.loads(responses.calls[0].request.body)["nonce"] == "n" * NONCE_LIMIT

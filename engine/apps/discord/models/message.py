@@ -43,9 +43,16 @@ class DiscordMessage(models.Model):
 
     @staticmethod
     def create_message(alert_group: AlertGroup, message: DiscordAPIMessage, message_type: int) -> "DiscordMessage":
-        return DiscordMessage.objects.create(
+        """Record where a message landed, idempotently.
+
+        A task that posted and then failed on the way to writing this row is retried, and Discord answers the second
+        post with the same message. Matching the uniqueness constraint here means that retry settles on the row it
+        meant to write instead of raising against it.
+        """
+        discord_message, _ = DiscordMessage.objects.get_or_create(
             alert_group=alert_group,
-            message_id=message.message_id,
-            channel_id=message.channel_id,
             message_type=message_type,
+            channel_id=message.channel_id,
+            defaults={"message_id": message.message_id},
         )
+        return discord_message
