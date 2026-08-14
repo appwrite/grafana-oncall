@@ -19,7 +19,7 @@ escalation chains and personal notification policies.
 
 At the moment, this integration is only available for OSS installations.
 
-![An alert group posted to Discord, with Acknowledge, Resolve and OnCall buttons](img/alert-firing.png)
+![An alert group posted to Discord, with its timeline and controls](img/alert-firing.png)
 
 The card carries the same controls Slack's does: acknowledge and resolve, a **Silence** menu of durations, a
 **Page a responder** menu that adds somebody to the escalation, and **Add note** for a resolution note. Where the
@@ -86,6 +86,8 @@ id and applies nothing.
 Nothing archives a post deliberately — Discord archives quiet posts on its own, and OnCall unarchives a post before
 editing it, so a reopened alert comes back to the active list by itself.
 
+![An alert group as a forum post, titled after the alert and tagged with its state](img/forum-post.png)
+
 The bot needs **Create Public Threads** and **Send Messages in Threads** in a forum, on top of the permissions above.
 
 ## Escalate to a role
@@ -94,7 +96,7 @@ A route can name a Discord role to shout at when OnCall escalates. Set **escalat
 id (Developer Mode → right-click the role → **Copy Role ID**). When an escalation chain reaches **Notify Whole
 Channel** or **Notify Group**, OnCall replies to the alert group's card mentioning that role:
 
-> **@Engineering** — this alert group is still unacknowledged.
+![An escalation replying to the card, mentioning a role](img/escalation-role.png)
 
 This is deliberately only the loud part. Reaching the right people is still the escalation chain's job, through
 their own notification policies, so that who gets woken respects who is actually on call. Nothing is posted if the
