@@ -31,8 +31,10 @@ PING, APPLICATION_COMMAND, MESSAGE_COMPONENT, MODAL_SUBMIT = 1, 2, 3, 5
 PONG, CHANNEL_MESSAGE_WITH_SOURCE, DEFERRED_UPDATE_MESSAGE, MODAL = 1, 4, 6, 9
 EPHEMERAL = 1 << 6
 
-# https://discord.com/developers/docs/components/reference#text-input
-TEXT_INPUT, PARAGRAPH = 4, 2
+# https://discord.com/developers/docs/components/reference
+# A modal wraps each input in a Label. Action rows around text inputs are deprecated, and the two shapes come back
+# differently on submit, which `_submitted_text` accounts for.
+TEXT_INPUT, PARAGRAPH, LABEL = 4, 2, 18
 RESOLUTION_NOTE_INPUT = "text"
 RESOLUTION_NOTE_LIMIT = 3000
 
@@ -146,17 +148,15 @@ class DiscordInteractionView(APIView):
                     "title": "Add a resolution note",
                     "components": [
                         {
-                            "type": 1,
-                            "components": [
-                                {
-                                    "type": TEXT_INPUT,
-                                    "custom_id": RESOLUTION_NOTE_INPUT,
-                                    "label": "What should the next responder know?",
-                                    "style": PARAGRAPH,
-                                    "max_length": RESOLUTION_NOTE_LIMIT,
-                                    "required": True,
-                                }
-                            ],
+                            "type": LABEL,
+                            "label": "What should the next responder know?",
+                            "component": {
+                                "type": TEXT_INPUT,
+                                "custom_id": RESOLUTION_NOTE_INPUT,
+                                "style": PARAGRAPH,
+                                "max_length": RESOLUTION_NOTE_LIMIT,
+                                "required": True,
+                            },
                         }
                     ],
                 },
@@ -168,12 +168,7 @@ class DiscordInteractionView(APIView):
         if alert_group is None:
             return _ephemeral("That alert group no longer exists.")
 
-        text = ""
-        for row in data.get("components", []):
-            for component in row.get("components", []):
-                if component.get("custom_id") == RESOLUTION_NOTE_INPUT:
-                    text = component.get("value", "")
-
+        text = _submitted_text(data, RESOLUTION_NOTE_INPUT)
         if not text.strip():
             return _ephemeral("A resolution note needs some text.")
 
@@ -202,6 +197,20 @@ class DiscordInteractionView(APIView):
         if discord_user is None:
             return _ephemeral("That verification code is not valid, or it has expired. Generate a new one in OnCall.")
         return _ephemeral(f"This Discord account is now linked to {discord_user.user.username} 🎉")
+
+
+def _submitted_text(data: dict, custom_id: str) -> str:
+    """The value somebody typed into a modal input.
+
+    Discord is mid-migration here: a Label wraps its one input as `component`, while the deprecated action row
+    wrapped several as `components`. Reading both means a modal opened before the migration still submits.
+    """
+    for entry in data.get("components", []):
+        wrapped = entry.get("components") or ([entry["component"]] if entry.get("component") else [])
+        for component in wrapped:
+            if component.get("custom_id") == custom_id:
+                return component.get("value") or ""
+    return ""
 
 
 def _ephemeral(content: str) -> Response:

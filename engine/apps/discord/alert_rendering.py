@@ -24,6 +24,9 @@ BUTTON_PRIMARY = 1
 BUTTON_SECONDARY = 2
 BUTTON_LINK = 5
 SELECT_LABEL_LIMIT = 100
+# A message carries five rows, and a row five buttons.
+ACTION_ROW_LIMIT = 5
+BUTTONS_PER_ROW = 5
 # A select carries at most 25 options, with no way to group them the way Slack does. Everything offered in one is
 # therefore capped, and the cap is named here so the copy that explains it stays next to the number.
 SELECT_OPTION_LIMIT = 25
@@ -223,13 +226,21 @@ class AlertGroupDiscordRenderer(AlertGroupBaseRenderer):
         return "\n".join(lines)
 
     def _components(self) -> list:
-        """Rows of controls. A select has to occupy a row of its own, which is why these are not all one row."""
-        rows = [{"type": ACTION_ROW, "components": self._buttons()}]
+        """Rows of controls.
+
+        A row holds five buttons at most and a select has to occupy one alone, so the buttons are chunked and the
+        selects get rows of their own. A silenced alert group with a dashboard link is the case that overflows.
+        """
+        buttons = self._buttons()
+        rows = [
+            {"type": ACTION_ROW, "components": buttons[index : index + BUTTONS_PER_ROW]}
+            for index in range(0, len(buttons), BUTTONS_PER_ROW)
+        ]
         if not self.alert_group.resolved:
             if not self.alert_group.silenced:
                 rows.append({"type": ACTION_ROW, "components": [self._silence_select()]})
             rows.append({"type": ACTION_ROW, "components": [self._responders_select()]})
-        return rows
+        return rows[:ACTION_ROW_LIMIT]
 
     def _silence_select(self) -> dict:
         from apps.discord.events import EventAction, custom_id

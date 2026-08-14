@@ -197,6 +197,37 @@ def test_a_firing_card_offers_silence_and_paging(make_rendered_message):
 
 
 @pytest.mark.django_db
+def test_a_full_card_stays_within_discord_row_limits(
+    make_organization, make_user_for_organization, make_alert_receive_channel, make_alert_group, make_alert
+):
+    """A silenced alert group with a dashboard link is the widest the card gets: six buttons for a five-wide row."""
+    organization = make_organization()
+    make_user_for_organization(organization, username="loks0n")
+    alert_receive_channel = make_alert_receive_channel(
+        organization, integration=AlertReceiveChannel.INTEGRATION_GRAFANA_ALERTING
+    )
+    alert_group = make_alert_group(
+        alert_receive_channel=alert_receive_channel, silenced=True, silenced_at=timezone.now()
+    )
+    make_alert(
+        alert_group=alert_group,
+        raw_request_data={
+            "status": "firing",
+            "groupLabels": {"alertname": "DiskSpaceLow"},
+            "alerts": [{"status": "firing", "generatorURL": "https://telemetry.appwrite.systems/d/abc/disk"}],
+        },
+    )
+
+    payload = DiscordMessageRenderer(alert_group).render_alert_group_message()
+
+    assert len(payload["components"]) <= 5
+    for row in payload["components"]:
+        assert len(row["components"]) <= 5
+    assert button_labels(payload) == ["Acknowledge", "Resolve", "Unsilence", "Dashboard", "Add note"]
+    assert [c["label"] for c in payload["components"][1]["components"]] == ["OnCall"]
+
+
+@pytest.mark.django_db
 def test_a_silenced_card_offers_unsilence_instead(make_rendered_message):
     payload = make_rendered_message(silenced=True, silenced_at=timezone.now())
 

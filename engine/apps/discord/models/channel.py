@@ -38,11 +38,12 @@ class DiscordChannel(models.Model):
     )
 
     guild_id = models.CharField(max_length=100)
-    # A forum channel holds posts rather than messages, so an alert group becomes a thread there instead.
-    channel_type = models.IntegerField(default=0)
+    # A forum channel holds posts rather than messages, so an alert group becomes a thread there instead. Both of
+    # these are nullable so that adding them takes no NOT NULL constraint to an existing table.
+    channel_type = models.IntegerField(null=True, default=0)
     # The forum's tags as {name: id}, captured when the channel is connected. Re-connect the channel to pick up
     # tags added since.
-    available_tags = models.JSONField(default=dict, blank=True)
+    available_tags = models.JSONField(null=True, blank=True, default=dict)
     channel_id = models.CharField(max_length=100)
     channel_name = models.CharField(max_length=100, default=None)
     is_default_channel = models.BooleanField(null=True, default=False)

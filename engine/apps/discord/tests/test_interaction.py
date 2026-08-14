@@ -275,25 +275,49 @@ def test_resolution_note_button_opens_a_modal(make_alert_group_with_discord_mess
     modal = response.json()
     assert modal["type"] == MODAL
     assert modal["data"]["custom_id"] == f"oncall:note-submit:{alert_group.public_primary_key}"
-    assert modal["data"]["components"][0]["components"][0]["custom_id"] == "text"
+    # A Label wrapping one input, not the deprecated action row.
+    label = modal["data"]["components"][0]
+    assert label["type"] == 18
+    assert label["component"]["custom_id"] == "text"
+    assert label["component"]["type"] == 4
+
+
+def label_submission(alert_group, discord_user_id, text):
+    """What Discord sends back from a Label-wrapped input."""
+    return {
+        "type": 5,
+        "data": {
+            "custom_id": f"oncall:note-submit:{alert_group.public_primary_key}",
+            "components": [
+                {"type": 18, "id": 1, "component": {"type": 4, "id": 2, "custom_id": "text", "value": text}}
+            ],
+        },
+        "member": {"user": {"id": discord_user_id, "username": "responder"}},
+    }
+
+
+def action_row_submission(alert_group, discord_user_id, text):
+    """What a modal opened before the Label migration still sends back."""
+    return {
+        "type": 5,
+        "data": {
+            "custom_id": f"oncall:note-submit:{alert_group.public_primary_key}",
+            "components": [{"type": 1, "components": [{"type": 4, "custom_id": "text", "value": text}]}],
+        },
+        "member": {"user": {"id": discord_user_id, "username": "responder"}},
+    }
 
 
 @pytest.mark.django_db
-def test_submitting_the_modal_saves_a_resolution_note(make_alert_group_with_discord_message, sign_discord_interaction):
+@pytest.mark.parametrize("submission", [label_submission, action_row_submission])
+def test_submitting_the_modal_saves_a_resolution_note(
+    make_alert_group_with_discord_message, sign_discord_interaction, submission
+):
     from apps.alerts.models import ResolutionNote
 
     alert_group, user, discord_user = make_alert_group_with_discord_message()
     body, headers = sign_discord_interaction(
-        {
-            "type": 5,
-            "data": {
-                "custom_id": f"oncall:note-submit:{alert_group.public_primary_key}",
-                "components": [
-                    {"type": 1, "components": [{"type": 4, "custom_id": "text", "value": "restarted the pooler"}]}
-                ],
-            },
-            "member": {"user": {"id": discord_user.discord_user_id, "username": "responder"}},
-        }
+        submission(alert_group, discord_user.discord_user_id, "restarted the pooler")
     )
 
     response = APIClient().post(interaction_url(), data=body, content_type="application/json", **headers)
@@ -308,16 +332,7 @@ def test_submitting_the_modal_saves_a_resolution_note(make_alert_group_with_disc
 @pytest.mark.django_db
 def test_an_empty_resolution_note_is_refused(make_alert_group_with_discord_message, sign_discord_interaction):
     alert_group, _, discord_user = make_alert_group_with_discord_message()
-    body, headers = sign_discord_interaction(
-        {
-            "type": 5,
-            "data": {
-                "custom_id": f"oncall:note-submit:{alert_group.public_primary_key}",
-                "components": [{"type": 1, "components": [{"type": 4, "custom_id": "text", "value": "   "}]}],
-            },
-            "member": {"user": {"id": discord_user.discord_user_id, "username": "responder"}},
-        }
-    )
+    body, headers = sign_discord_interaction(label_submission(alert_group, discord_user.discord_user_id, "   "))
 
     response = APIClient().post(interaction_url(), data=body, content_type="application/json", **headers)
 

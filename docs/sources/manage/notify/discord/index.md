@@ -79,6 +79,10 @@ If the forum has tags named **Alert**, **Warning**, **Acknowledged**, **Silenced
 the matching one and keeps it current, which turns the sidebar into a triage view you can filter. Tags you do not
 create are simply not applied. Create them with the same names to opt in; rename them and OnCall stops.
 
+OnCall reads the forum's tags when you connect the channel, so re-connect it after adding or renaming any. Deleting
+a tag that OnCall still has in that list leaves posts untagged rather than erroring — Discord accepts an unknown tag
+id and applies nothing.
+
 Nothing archives a post deliberately — Discord archives quiet posts on its own, and OnCall unarchives a post before
 editing it, so a reopened alert comes back to the active list by itself.
 
