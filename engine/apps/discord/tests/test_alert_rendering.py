@@ -596,3 +596,72 @@ def test_a_dashboard_annotation_matching_the_source_link_gets_one_button(
 
     assert button_labels(payload).count("Dashboard") == 0
     assert button_labels(payload).count("Source") == 1
+
+
+@pytest.mark.parametrize("integration", ["alertmanager", "grafana_alerting"])
+def test_a_card_reads_a_legacy_payload_too(integration):
+    """The legacy alertmanager integration puts labels and annotations at the top level.
+
+    Reading only the common* keys left such an alert with a card that said nothing about itself.
+    """
+    rendered = apply_jinja_template(
+        import_module(f"config_integrations.{integration}").discord_message,
+        payload={
+            "status": "firing",
+            "labels": {"alertname": "InstanceDown", "instance": "localhost:8082", "job": "node"},
+            "annotations": {"summary": "Instance is down", "impact": "checkout unavailable"},
+        },
+        source_link="",
+        integration_name="Alertmanager",
+    )
+
+    lines = rendered.splitlines()
+    assert "Instance is down" in lines
+    assert "instance: localhost:8082" in lines
+    assert "job: node" in lines
+    assert "impact: checkout unavailable" in lines
+
+
+@pytest.mark.parametrize("integration", ["alertmanager", "grafana_alerting"])
+def test_a_card_says_both_the_summary_and_the_description(integration):
+    """A rule that wrote both meant both: one says what happened, the other what it means."""
+    rendered = apply_jinja_template(
+        import_module(f"config_integrations.{integration}").discord_message,
+        payload={
+            "groupLabels": {"alertname": "DiskSpaceLow"},
+            "commonAnnotations": {
+                "summary": "Disk is nearly full",
+                "description": "Writes will fail within the hour at the current rate.",
+            },
+        },
+        source_link="",
+        integration_name="Alertmanager",
+    )
+
+    lines = rendered.splitlines()
+    assert "Disk is nearly full" in lines
+    assert "Writes will fail within the hour at the current rate." in lines
+
+
+@pytest.mark.parametrize("integration", ["alertmanager", "grafana_alerting"])
+def test_value_string_survives_when_there_is_no_values_to_read_instead(integration):
+    """It is dropped for being the long form of `values`, so without `values` it is the only form there is."""
+    template = import_module(f"config_integrations.{integration}").discord_message
+    annotations = {"summary": "Threshold crossed", "value_string": "[ var='A' value=42 ]"}
+
+    without_values = apply_jinja_template(
+        template,
+        payload={"groupLabels": {"alertname": "Slow"}, "commonAnnotations": annotations},
+        source_link="",
+        integration_name="Alertmanager",
+    )
+    with_values = apply_jinja_template(
+        template,
+        payload={"groupLabels": {"alertname": "Slow"}, "commonAnnotations": {**annotations, "values": '{"A":42}'}},
+        source_link="",
+        integration_name="Alertmanager",
+    )
+
+    assert "value_string: [ var='A' value=42 ]" in without_values.splitlines()
+    assert "value_string" not in with_values
+    assert 'values: {"A":42}' in with_values.splitlines()
