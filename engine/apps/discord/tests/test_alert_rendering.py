@@ -307,7 +307,7 @@ def test_timeline_of_a_firing_alert_group(make_rendered_message):
     lines = timeline(make_rendered_message()).split("\n")
 
     assert len(lines) == 1
-    assert lines[0].startswith("🚨 Fired <t:")
+    assert lines[0].startswith("🔥 Fired <t:")
     # Discord renders the same instant twice: as a clock, and as how long ago.
     assert lines[0].endswith(":R>)")
 
@@ -331,7 +331,7 @@ def test_timeline_records_who_acknowledged_and_when(
 
     lines = timeline(DiscordMessageRenderer(alert_group).render_alert_group_message()).split("\n")
 
-    assert lines[0].startswith("🚨 Fired")
+    assert lines[0].startswith("🔥 Fired")
     assert lines[1].startswith(f"🟡 Acknowledged by {user.username} <t:")
 
 
@@ -410,3 +410,30 @@ def test_a_link_that_is_not_a_url_gets_no_button(
 
     assert "Dashboard" not in button_labels(payload)
     assert "Source" not in button_labels(payload)
+
+
+@pytest.mark.django_db
+@pytest.mark.parametrize("severity", ["critical", "warning", "info"])
+def test_the_timeline_reads_by_status_whatever_the_severity(
+    make_organization, make_alert_receive_channel, make_channel_filter, make_alert_group, make_alert, severity
+):
+    """A timeline line names a status, so it shows that status — the severity is the card's title.
+
+    Firing used to borrow the severity emoji here, which left one line of the four speaking a different
+    vocabulary from the tag beside it.
+    """
+    organization = make_organization()
+    alert_receive_channel = make_alert_receive_channel(
+        organization, integration=AlertReceiveChannel.INTEGRATION_GRAFANA
+    )
+    channel_filter = make_channel_filter(
+        alert_receive_channel, notification_backends={"DISCORD": {"severity": severity, "enabled": True}}
+    )
+    alert_group = make_alert_group(alert_receive_channel=alert_receive_channel, channel_filter=channel_filter)
+    make_alert(alert_group=alert_group, raw_request_data=alert_receive_channel.config.example_payload)
+
+    payload = DiscordMessageRenderer(alert_group).render_alert_group_message()
+
+    assert timeline(payload).startswith("🔥 Fired")
+    # The severity still leads the title, so nothing about it is lost.
+    assert payload["embeds"][0]["title"].startswith(CARD_STYLE[severity][0])
