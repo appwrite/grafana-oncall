@@ -11,7 +11,7 @@ from apps.discord.exceptions import DiscordAPIException, DiscordAPITokenInvalid
 from apps.discord.models import DiscordChannel, DiscordMessage
 from apps.user_management.models import User
 from common.custom_celery_tasks import shared_dedicated_queue_retry_task
-from common.utils import OkToRetry
+from common.utils import OkToRetry, task_lock
 
 logger = get_task_logger(__name__)
 logger.setLevel(logging.DEBUG)
@@ -38,26 +38,37 @@ def on_create_alert_async(self, alert_pk):
         logger.error(f"Discord channel not found for alert {alert_pk}. Probably it was deleted. Stop retrying")
         return
 
-    message = alert_group.discord_messages.filter(message_type=DiscordMessage.ALERT_GROUP_MESSAGE).first()
-    if message:
-        logger.error(f"Discord message exists with message id {message.message_id} hence skipping")
-        return
+    # Every alert in a group queues one of these, so the "has it been posted yet" check and the post itself have to
+    # happen together: two tasks that both read "no" would each post a card, and only one of them could be recorded.
+    with task_lock(f"discord-alert-group-message-{alert_group.pk}", self.request.id) as acquired:
+        if not acquired:
+            logger.info(f"Another task is already posting alert group {alert_group.pk} to discord, skipping")
+            return
 
-    payload = DiscordMessageRenderer(alert_group).render_alert_group_message()
+        message = alert_group.discord_messages.filter(message_type=DiscordMessage.ALERT_GROUP_MESSAGE).first()
+        if message:
+            logger.info(f"Discord message exists with message id {message.message_id} hence skipping")
+            return
 
-    with OkToRetry(task=self, exc=(DiscordAPIException,), num_retries=3):
-        try:
-            discord_message = DiscordClient().create_message(channel_id=discord_channel.channel_id, data=payload)
-        except DiscordAPITokenInvalid:
-            logger.error(f"Discord bot token is invalid, could not create message for alert {alert_pk}")
-        except DiscordAPIException as ex:
-            logger.error(f"Discord API error {ex}")
-            if ex.status not in [status.HTTP_401_UNAUTHORIZED, status.HTTP_403_FORBIDDEN, status.HTTP_404_NOT_FOUND]:
-                raise ex
-        else:
-            DiscordMessage.create_message(
-                alert_group=alert_group, message=discord_message, message_type=DiscordMessage.ALERT_GROUP_MESSAGE
-            )
+        payload = DiscordMessageRenderer(alert_group).render_alert_group_message()
+
+        with OkToRetry(task=self, exc=(DiscordAPIException,), num_retries=3):
+            try:
+                discord_message = DiscordClient().create_message(channel_id=discord_channel.channel_id, data=payload)
+            except DiscordAPITokenInvalid:
+                logger.error(f"Discord bot token is invalid, could not create message for alert {alert_pk}")
+            except DiscordAPIException as ex:
+                logger.error(f"Discord API error {ex}")
+                if ex.status not in [
+                    status.HTTP_401_UNAUTHORIZED,
+                    status.HTTP_403_FORBIDDEN,
+                    status.HTTP_404_NOT_FOUND,
+                ]:
+                    raise ex
+            else:
+                DiscordMessage.create_message(
+                    alert_group=alert_group, message=discord_message, message_type=DiscordMessage.ALERT_GROUP_MESSAGE
+                )
 
 
 @shared_dedicated_queue_retry_task(

@@ -80,3 +80,21 @@ def test_on_create_alert_swallows_a_forbidden_channel(make_organization, make_di
         on_create_alert_async(alert.pk)
 
     assert not alert_group.discord_messages.exists()
+
+
+@pytest.mark.django_db
+def test_on_create_alert_posts_once_while_another_task_holds_the_lock(
+    make_organization, make_discord_channel, make_alert_for_channel
+):
+    organization = make_organization()
+    make_discord_channel(organization=organization, is_default_channel=True)
+    _, alert_group, alert = make_alert_for_channel(organization)
+
+    with patch("apps.discord.tasks.task_lock") as lock, patch(
+        "apps.discord.tasks.DiscordClient.create_message"
+    ) as create_message:
+        lock.return_value.__enter__.return_value = False
+        on_create_alert_async(alert.pk)
+
+    create_message.assert_not_called()
+    assert not alert_group.discord_messages.exists()

@@ -50,7 +50,12 @@ def process_interaction(value: str, user) -> None:
 
     action, alert_group_public_primary_key = parsed
     try:
-        alert_group = AlertGroup.objects.get(public_primary_key=alert_group_public_primary_key)
+        # Scoped to the presser's organization: the custom_id is whatever was in the message they pressed, and the
+        # permission check upstream only speaks for their own tenant.
+        alert_group = AlertGroup.objects.get(
+            public_primary_key=alert_group_public_primary_key,
+            channel__organization=user.organization,
+        )
     except AlertGroup.DoesNotExist:
         logger.info(f"Alert group {alert_group_public_primary_key} from discord interaction not found")
         return

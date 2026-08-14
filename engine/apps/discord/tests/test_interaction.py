@@ -167,3 +167,28 @@ def test_unknown_command_is_ignored(make_organization_and_user, sign_discord_int
     response = APIClient().post(interaction_url(), data=body, content_type="application/json", **headers)
 
     assert response.status_code == status.HTTP_204_NO_CONTENT
+
+
+@pytest.mark.django_db
+def test_button_for_another_organization_does_nothing(
+    make_alert_group_with_discord_message,
+    make_organization_and_user,
+    make_alert_receive_channel,
+    make_alert_group,
+    make_alert,
+    sign_discord_interaction,
+):
+    _, _, discord_user = make_alert_group_with_discord_message()
+    other_organization, _ = make_organization_and_user()
+    other_channel = make_alert_receive_channel(other_organization, integration=AlertReceiveChannel.INTEGRATION_GRAFANA)
+    other_alert_group = make_alert_group(alert_receive_channel=other_channel)
+    make_alert(alert_group=other_alert_group, raw_request_data=other_channel.config.example_payload)
+
+    body, headers = sign_discord_interaction(
+        message_component(f"oncall:acknowledge:{other_alert_group.public_primary_key}", discord_user.discord_user_id)
+    )
+    response = APIClient().post(interaction_url(), data=body, content_type="application/json", **headers)
+
+    assert response.status_code == status.HTTP_200_OK
+    other_alert_group.refresh_from_db()
+    assert not other_alert_group.acknowledged
