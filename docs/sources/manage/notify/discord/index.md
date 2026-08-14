@@ -80,9 +80,17 @@ severity — **Critical**, **Warning**, **Info** — OnCall applies the matching
 the sidebar into a triage view you can filter. Tags you do not create are simply not applied. Create them with the
 same names to opt in; rename them and OnCall stops.
 
-Decoration around the name is ignored, so tags can read the way you want them to in Discord: **🔥 Firing**,
-**Resolved ✅** and **Status: 🔥 Firing** all match the firing status, and **Severity: 🚨 Critical** matches a
-critical one.
+A tag is read a word at a time, so the decoration around the word that matters does not stop it matching and tags
+can read the way you want them to in Discord: **🔥 Firing**, **Resolved ✅**, **Status: 🔥 Firing** and
+**P1 Critical** all name the state they end in, and **ℹ️ Info** names Info. Only a whole word counts — a tag named
+**Informational** names nothing.
+
+Tags matching the cards read well as a set, if you want somewhere to start:
+
+```text
+🔥 Firing      🟡 Acknowledged   🔕 Silenced   ✅ Resolved
+🚨 Critical    ⚠️ Warning        ℹ️ Info
+```
 
 A forum set up against an earlier version has a tag named **Alert**, which nothing is named any more: rename it to
 **Firing** or **Critical**, whichever you meant it to be. Until you do, its posts keep whichever tag they were last
