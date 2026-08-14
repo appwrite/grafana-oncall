@@ -9,6 +9,14 @@ from common.insight_log.chatops_insight_logs import ChatOpsEvent, ChatOpsTypePlu
 from common.public_primary_keys import generate_public_primary_key, increase_public_primary_key_length
 
 
+def _tag_key(name: str) -> str:
+    """A forum tag matched on the letters of its value alone, so the decoration a forum owner puts around a
+    state — an emoji, a label they group their tags under — still counts as the tag it reads as:
+    "🔥 Alert", "Resolved ✅" and "Status: 🔥 Alert" all match the alert state."""
+    value = name.rpartition(":")[2]
+    return "".join(character for character in value.casefold() if character.isalnum())
+
+
 def generate_public_primary_key_for_discord_channel():
     prefix = "DC"
     new_public_primary_key = generate_public_primary_key(prefix)
@@ -58,11 +66,11 @@ class DiscordChannel(models.Model):
 
         return self.channel_type == FORUM_CHANNEL
 
-    def tag_ids_for(self, name: str) -> typing.Optional[list]:
-        """The forum tag matching a card state, if the forum happens to have one by that name."""
-        by_name = {key.casefold(): value for key, value in (self.available_tags or {}).items()}
-        tag_id = by_name.get(name.casefold())
-        return [tag_id] if tag_id else None
+    def tag_ids_for(self, names: list) -> typing.Optional[list]:
+        """The forum tags matching a card's status and severity, whichever of them the forum happens to have."""
+        by_name = {_tag_key(key): value for key, value in (self.available_tags or {}).items()}
+        tag_ids = [by_name[key] for key in map(_tag_key, names) if key in by_name]
+        return tag_ids or None
 
     @classmethod
     def get_channel_for_alert_group(cls, alert_group: AlertGroup) -> typing.Optional["DiscordChannel"]:

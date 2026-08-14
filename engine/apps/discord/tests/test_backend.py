@@ -162,7 +162,7 @@ def test_relinking_an_account_moves_it_off_the_previous_user(make_organization_a
 
 
 @pytest.mark.django_db
-@pytest.mark.parametrize("severity", ["alert", "warning"])
+@pytest.mark.parametrize("severity", ["critical", "warning", "info"])
 def test_validate_channel_filter_severity(make_organization, severity):
     organization = make_organization()
 

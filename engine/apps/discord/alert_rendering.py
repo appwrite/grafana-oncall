@@ -44,21 +44,25 @@ DASHBOARD_INTEGRATIONS = (
     "legacy_alertmanager",
 )
 
-# How a card reads for each state an alert group can be in: the emoji leads the title so a channel list shows the
-# current state without opening anything, and the colour is the embed's left border.
-ALERT, WARNING, ACKNOWLEDGED, SILENCED, RESOLVED = "alert", "warning", "acknowledged", "silenced", "resolved"
+# The status an alert group is in, named the way OnCall names it everywhere else.
+FIRING, ACKNOWLEDGED, SILENCED, RESOLVED = "firing", "acknowledged", "silenced", "resolved"
+
+# What a route may declare a still-open alert group to be, in the words alerting labels already use. Severity
+# belongs to the route rather than to the payload, because which label means "wake somebody" differs per deployment
+# and OnCall already asks a route to decide where an alert goes and who it pages.
+CRITICAL, WARNING, INFO = "critical", "warning", "info"
+SEVERITIES = (CRITICAL, WARNING, INFO)
+
+# How a card reads: the emoji leads the title so a channel list shows where a group stands without opening anything,
+# and the colour is the embed's left border. A firing group reads by its severity, any other status by itself.
 CARD_STYLE = {
-    ALERT: ("🚨", 0xA30200),
+    CRITICAL: ("🚨", 0xA30200),
     WARNING: ("⚠️", 0xE67E22),
+    INFO: ("ℹ️", 0x3274D9),
     ACKNOWLEDGED: ("🟡", 0xDAA038),
     SILENCED: ("🔕", 0xDDDDDD),
     RESOLVED: ("✅", 0x2EB886),
 }
-
-# What a route may declare an alert group to be. Severity says how loud a still-open group reads; it is a property of
-# the route rather than of the payload, because which label means "wake somebody" differs per deployment and OnCall
-# already asks a route to decide where an alert goes and who it pages.
-SEVERITIES = (ALERT, WARNING)
 
 
 def truncate(value: str, limit: int, notice: str = "…") -> str:
@@ -90,7 +94,7 @@ def route_config(alert_group: AlertGroup) -> dict:
 
 def route_severity(alert_group: AlertGroup) -> str:
     severity = route_config(alert_group).get("severity")
-    return severity if severity in SEVERITIES else ALERT
+    return severity if severity in SEVERITIES else CRITICAL
 
 
 def route_escalation_role(alert_group: AlertGroup) -> typing.Optional[str]:
@@ -98,16 +102,22 @@ def route_escalation_role(alert_group: AlertGroup) -> typing.Optional[str]:
     return route_config(alert_group).get("role") or None
 
 
-def card_state(alert_group: AlertGroup) -> str:
-    # An acknowledgement outranks severity: once somebody owns the group, who owns it is the more useful thing for
-    # the channel to show.
+def card_status(alert_group: AlertGroup) -> str:
+    """Where the group stands, in OnCall's own words."""
     if alert_group.resolved:
         return RESOLVED
     if alert_group.acknowledged:
         return ACKNOWLEDGED
     if alert_group.silenced:
         return SILENCED
-    return route_severity(alert_group)
+    return FIRING
+
+
+def card_style(alert_group: AlertGroup) -> tuple:
+    # A status outranks severity: once somebody owns the group, or it is done, that is the more useful thing for the
+    # channel to show than how loudly it arrived.
+    status = card_status(alert_group)
+    return CARD_STYLE[route_severity(alert_group) if status == FIRING else status]
 
 
 class AlertDiscordTemplater(AlertTemplater):
@@ -175,8 +185,7 @@ class AlertGroupDiscordRenderer(AlertGroupBaseRenderer):
 
     def render_alert_group_message(self) -> dict:
         """The whole Discord message for an alert group: one embed, one row of buttons."""
-        state = card_state(self.alert_group)
-        emoji, color = CARD_STYLE[state]
+        emoji, color = card_style(self.alert_group)
 
         embed = self.alert_renderer.render_alert_embed()
         embed["title"] = truncate(f"{emoji} {embed['title']}", EMBED_TITLE_LIMIT)
@@ -211,7 +220,7 @@ class AlertGroupDiscordRenderer(AlertGroupBaseRenderer):
         sees how long the alert has been open without subtracting timestamps by hand.
         """
         alert_group = self.alert_group
-        lines = [f"{CARD_STYLE[ALERT][0]} Fired {stamp(alert_group.started_at)}"]
+        lines = [f"{CARD_STYLE[route_severity(alert_group)][0]} Fired {stamp(alert_group.started_at)}"]
 
         if alert_group.acknowledged and alert_group.acknowledged_at:
             lines.append(
@@ -326,7 +335,7 @@ class DiscordMessageRenderer:
 
     def render_thread_name(self) -> str:
         """What a forum post is called. Discord fixes this at creation, so it carries the alert's identity and
-        leaves current state to the card and the post's tag.
+        leaves where it stands to the card and the post's tags.
 
         The number is what distinguishes two posts about similarly named alerts, so the title is trimmed to leave
         room for it rather than the pair being trimmed together — which would drop the number off a long title and
@@ -337,6 +346,7 @@ class DiscordMessageRenderer:
         suffix = f" · #{self.alert_group.inside_organization_number}"
         return truncate(title, THREAD_NAME_LIMIT - len(suffix)) + suffix
 
-    def state_tag_name(self) -> str:
-        """The forum tag this alert group should carry, matched against the forum's tags by name."""
-        return card_state(self.alert_group).capitalize()
+    def tag_names(self) -> list:
+        """The forum tags this alert group should carry, matched against the forum's tags by name: where it stands,
+        and how loudly it arrived."""
+        return [card_status(self.alert_group).capitalize(), route_severity(self.alert_group).capitalize()]

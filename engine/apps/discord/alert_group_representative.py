@@ -113,7 +113,7 @@ class AlertGroupDiscordRepresentative(AlertGroupAbstractRepresentative):
                 ).first()
                 client.update_thread(
                     thread_id=discord_message.thread_id,
-                    applied_tags=channel.tag_ids_for(renderer.state_tag_name()) if channel else None,
+                    applied_tags=channel.tag_ids_for(renderer.tag_names()) if channel else None,
                     archived=False,
                 )
                 client.update_message(

@@ -41,7 +41,7 @@ def test_render_firing_alert_group(make_rendered_message):
 
     embed = payload["embeds"][0]
     assert embed["title"].startswith("🚨")
-    assert embed["color"] == CARD_STYLE["alert"][1]
+    assert embed["color"] == CARD_STYLE["critical"][1]
     assert button_labels(payload) == ["Acknowledge", "Resolve", "Add note", "OnCall"]
 
 
@@ -130,8 +130,9 @@ def test_templater_fixes_up_the_shared_web_defaults(
     "notification_backends,emoji",
     [
         ({"DISCORD": {"severity": "warning", "enabled": True}}, "⚠️"),
-        ({"DISCORD": {"severity": "alert", "enabled": True}}, "🚨"),
-        # A route that says nothing about severity, or says something unknown, is an alert.
+        ({"DISCORD": {"severity": "info", "enabled": True}}, "ℹ️"),
+        ({"DISCORD": {"severity": "critical", "enabled": True}}, "🚨"),
+        # A route that says nothing about severity, or says something unknown, is critical.
         ({"DISCORD": {"enabled": True}}, "🚨"),
         ({"DISCORD": {"severity": "whatever", "enabled": True}}, "🚨"),
         (None, "🚨"),

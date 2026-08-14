@@ -12,7 +12,7 @@ from apps.discord.client import DiscordMessage as DiscordAPIMessage
 from apps.discord.models import DiscordMessage
 from apps.discord.tasks import on_create_alert_async
 
-TAGS = {"Alert": "111", "Acknowledged": "222", "Resolved": "333"}
+TAGS = {"Firing": "111", "Acknowledged": "222", "Resolved": "333", "Critical": "444"}
 
 
 @pytest.fixture()
@@ -59,7 +59,8 @@ def test_an_alert_group_becomes_a_forum_post(make_forum, make_alert_for):
     _, kwargs = create_thread.call_args
     assert kwargs["channel_id"] == channel.channel_id
     assert kwargs["name"].endswith(f"#{alert_group.inside_organization_number}")
-    assert kwargs["applied_tags"] == ["111"]
+    # Where the group stands, and how loudly it arrived.
+    assert kwargs["applied_tags"] == ["111", "444"]
     assert kwargs["data"]["embeds"]
 
     # The post is the message: a thread and its first message share an id, and the placement remembers the forum it
@@ -82,6 +83,22 @@ def test_a_forum_without_matching_tags_still_posts(make_forum, make_alert_for):
         on_create_alert_async(alert.pk)
 
     assert create_thread.call_args[1]["applied_tags"] is None
+
+
+@pytest.mark.django_db
+def test_a_decorated_tag_still_matches_what_it_names(make_forum, make_alert_for):
+    """Forum owners dress their tags up — an emoji, a label they group them under — and the tag still reads as
+    the status or severity it names."""
+    organization, _ = make_forum(available_tags={"Status: 🔥 Firing": "999", "Severity: 🚨 Critical": "888"})
+    _, alert = make_alert_for(organization)
+
+    with patch(
+        "apps.discord.tasks.DiscordClient.create_thread",
+        return_value=DiscordAPIMessage(message_id="1300000000000000009", channel_id="1300000000000000009"),
+    ) as create_thread:
+        on_create_alert_async(alert.pk)
+
+    assert create_thread.call_args[1]["applied_tags"] == ["999", "888"]
 
 
 @pytest.mark.django_db
@@ -187,7 +204,7 @@ def test_updating_a_post_unarchives_and_retags_it_first(make_forum, make_alert_f
     # Discord refuses an edit to an archived post, so unarchiving happens in the same call that retags it.
     assert update_thread.call_args[1] == {
         "thread_id": "1300000000000000009",
-        "applied_tags": ["222"],
+        "applied_tags": ["222", "444"],
         "archived": False,
     }
     assert update_message.call_args[1]["channel_id"] == "1300000000000000009"

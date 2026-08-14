@@ -16,9 +16,17 @@ import { useStore } from 'state/useStore';
 import { getConnectorsStyles } from './Connectors.styles';
 
 const SEVERITY_OPTIONS = [
-  { value: 'alert', label: '🚨 Alert' },
+  { value: 'critical', label: '🚨 Critical' },
   { value: 'warning', label: '⚠️ Warning' },
+  { value: 'info', label: 'ℹ️ Info' },
 ];
+
+// A route saved before these were the words — or saying nothing at all — reads as critical, the way the engine
+// reads it, rather than leaving an empty box behind.
+const severityOf = (channelFilter: ChannelFilter) => {
+  const severity = channelFilter.notification_backends?.DISCORD?.severity;
+  return SEVERITY_OPTIONS.some((option) => option.value === severity) ? severity : 'critical';
+};
 
 interface DiscordConnectorProps {
   channelFilterId: ChannelFilter['id'];
@@ -53,11 +61,11 @@ export const DiscordConnector = observer((props: DiscordConnectorProps) => {
     });
   }, []);
 
-  // How loud a still-open alert group from this route reads in Discord: an alert is red, a warning amber. Which
-  // payloads count as either is what the route itself already decides.
+  // How loud a still-open alert group from this route reads in Discord: critical is red, warning amber, info blue.
+  // Which payloads count as which is what the route itself already decides.
   const handleSeverityChange = useCallback((option: SelectableValue<string>) => {
     alertReceiveChannelStore.saveChannelFilter(channelFilterId, {
-      notification_backends: { DISCORD: { severity: option?.value || 'alert' } },
+      notification_backends: { DISCORD: { severity: option?.value || 'critical' } },
     });
   }, []);
 
@@ -102,7 +110,7 @@ export const DiscordConnector = observer((props: DiscordConnectorProps) => {
           <Select
             className={cx('select', 'control')}
             options={SEVERITY_OPTIONS}
-            value={channelFilter.notification_backends?.DISCORD?.severity || 'alert'}
+            value={severityOf(channelFilter)}
             onChange={handleSeverityChange}
             aria-label="Discord severity"
           />
