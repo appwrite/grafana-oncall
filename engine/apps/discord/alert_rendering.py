@@ -58,7 +58,10 @@ SEVERITIES = (CRITICAL, WARNING, INFO)
 CARD_STYLE = {
     CRITICAL: ("🚨", 0xA30200),
     WARNING: ("⚠️", 0xE67E22),
-    INFO: ("ℹ️", 0x3274D9),
+    # A book rather than ℹ️: a forum tag is read by the letters of its words, and U+2139 is a lowercase
+    # letter to Unicode, so "ℹ️ Info" reads as a word that is not "info". Keeping the card and the tag on
+    # the same emoji keeps that trap out of a forum owner's way.
+    INFO: ("📘", 0x3274D9),
     ACKNOWLEDGED: ("🟡", 0xDAA038),
     SILENCED: ("🔕", 0xDDDDDD),
     RESOLVED: ("✅", 0x2EB886),

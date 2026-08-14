@@ -130,7 +130,7 @@ def test_templater_fixes_up_the_shared_web_defaults(
     "notification_backends,emoji",
     [
         ({"DISCORD": {"severity": "warning", "enabled": True}}, "⚠️"),
-        ({"DISCORD": {"severity": "info", "enabled": True}}, "ℹ️"),
+        ({"DISCORD": {"severity": "info", "enabled": True}}, "📘"),
         ({"DISCORD": {"severity": "critical", "enabled": True}}, "🚨"),
         # A route that says nothing about severity, or says something unknown, is critical.
         ({"DISCORD": {"enabled": True}}, "🚨"),

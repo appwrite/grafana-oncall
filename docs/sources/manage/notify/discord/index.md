@@ -80,9 +80,21 @@ severity — **Critical**, **Warning**, **Info** — OnCall applies the matching
 the sidebar into a triage view you can filter. Tags you do not create are simply not applied. Create them with the
 same names to opt in; rename them and OnCall stops.
 
-Decoration around the name is ignored, so tags can read the way you want them to in Discord: **🔥 Firing**,
-**Resolved ✅** and **Status: 🔥 Firing** all match the firing status, and **Severity: 🚨 Critical** matches a
-critical one.
+A tag is read a word at a time, so the decoration around the word that matters does not stop it matching and tags
+can read the way you want them to in Discord: **🔥 Firing**, **Resolved ✅**, **Status: 🔥 Firing** and
+**P1 Critical** all name the state they end in. Only a whole word counts — a tag named **Informational** names
+nothing.
+
+The tags matching the cards read well as a set, if you want somewhere to start:
+
+```text
+🔥 Firing      🟡 Acknowledged   🔕 Silenced   ✅ Resolved
+🚨 Critical    ⚠️ Warning        📘 Info
+```
+
+One emoji to avoid: **ℹ️** is a lowercase letter to Unicode rather than a symbol, and Discord stores the name
+without the selector that marks it as an emoji, so **ℹ️ Info** is a word that is not "info" and names nothing.
+Cards use 📘 for info severity for the same reason.
 
 A forum set up against an earlier version has a tag named **Alert**, which nothing is named any more: rename it to
 **Firing** or **Critical**, whichever you meant it to be. Until you do, its posts keep whichever tag they were last
@@ -113,7 +125,7 @@ alert group has already been acknowledged, silenced or resolved by the time the 
 
 ## Split critical alerts from the rest
 
-A route also chooses how loud its alert groups read: **🚨 Critical**, **⚠️ Warning** or **ℹ️ Info**. Set it to
+A route also chooses how loud its alert groups read: **🚨 Critical**, **⚠️ Warning** or **📘 Info**. Set it to
 warning and a still-open group from that route is amber rather than red:
 
 ![A warning alert group, amber rather than red](img/alert-warning.png)

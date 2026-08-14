@@ -10,11 +10,21 @@ from common.public_primary_keys import generate_public_primary_key, increase_pub
 
 
 def _tag_key(name: str) -> str:
-    """A forum tag matched on the letters of its value alone, so the decoration a forum owner puts around a
-    state — an emoji, a label they group their tags under — still counts as the tag it reads as:
-    "🔥 Alert", "Resolved ✅" and "Status: 🔥 Alert" all match the alert state."""
-    value = name.rpartition(":")[2]
-    return "".join(character for character in value.casefold() if character.isalnum())
+    """The letters and digits of a name, casefolded, which is what two names being the same means here."""
+    return "".join(character for character in name.casefold() if character.isalnum())
+
+
+def _tag_words(name: str) -> typing.Set[str]:
+    """A tag's name as the set of words in it, so the decoration a forum owner puts around a state — an
+    emoji, a label they group their tags under, a priority prefix — is a word of its own rather than part
+    of the one that matters: "🔥 Firing", "Resolved ✅", "Status: 🔥 Firing" and "P1 Critical" all read as
+    the state they name.
+
+    Per word rather than per name because a letterlike emoji cannot be told from a letter: ℹ, the
+    canonical emoji for Info, is a lowercase letter to Unicode, and Discord stores "ℹ️ Info" with the
+    variation selector that marked it as emoji dropped. As a word it is simply not the word "info".
+    """
+    return {_tag_key(word) for word in name.replace(":", " ").split()}
 
 
 def generate_public_primary_key_for_discord_channel():
@@ -68,8 +78,13 @@ class DiscordChannel(models.Model):
 
     def tag_ids_for(self, names: list) -> typing.Optional[list]:
         """The forum tags matching a card's status and severity, whichever of them the forum happens to have."""
-        by_name = {_tag_key(key): value for key, value in (self.available_tags or {}).items()}
-        tag_ids = [by_name[key] for key in map(_tag_key, names) if key in by_name]
+        available = [(_tag_words(name), tag_id) for name, tag_id in (self.available_tags or {}).items()]
+        tag_ids = []
+        for key in map(_tag_key, names):
+            for words, tag_id in available:
+                if key in words and tag_id not in tag_ids:
+                    tag_ids.append(tag_id)
+                    break
         return tag_ids or None
 
     @classmethod

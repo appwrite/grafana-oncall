@@ -102,6 +102,38 @@ def test_a_decorated_tag_still_matches_what_it_names(make_forum, make_alert_for)
 
 
 @pytest.mark.django_db
+@pytest.mark.parametrize(
+    "tag_name",
+    [
+        "ℹ️ Info",  # as typed, with the variation selector that marks emoji presentation
+        "ℹ Info",  # as Discord stores it, having dropped that selector
+        "ⓘ Info",
+        "Info ℹ️",
+        "P1 Info",
+    ],
+)
+def test_a_letterlike_emoji_is_decoration_not_a_letter(make_forum, make_alert_for, tag_name):
+    """ℹ is the canonical emoji for Info and a lowercase letter to Unicode, so it cannot be told from one.
+
+    Stripping non-letters therefore leaves it stuck to the word, and "ℹ Info" stops naming Info — the tag
+    silently never applies. Read per word instead, and the emoji is simply a word that is not "info".
+    """
+    organization, _ = make_forum(available_tags={tag_name: "777"})
+    alert_group, alert = make_alert_for(organization)
+
+    channel = organization.discord_channels.get()
+    assert channel.tag_ids_for(["Info"]) == ["777"]
+
+
+@pytest.mark.django_db
+def test_a_tag_naming_something_else_does_not_match(make_forum, make_alert_for):
+    organization, _ = make_forum(available_tags={"Firehose": "111", "Informational": "222"})
+
+    channel = organization.discord_channels.get()
+    assert channel.tag_ids_for(["Firing", "Info"]) is None
+
+
+@pytest.mark.django_db
 def test_a_text_channel_still_gets_a_plain_message(
     make_organization, make_user_for_organization, make_discord_channel, make_alert_for
 ):
