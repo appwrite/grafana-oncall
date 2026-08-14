@@ -61,22 +61,25 @@ class AlertGroupDiscordRepresentative(AlertGroupAbstractRepresentative):
         if self.log_record.escalation_policy_step not in broadcast_steps:
             return
 
-        role = route_escalation_role(alert_group)
-        if not role:
-            return
-
         if alert_group.acknowledged or alert_group.resolved or alert_group.silenced:
-            logger.info(f"Alert group {alert_group.pk} was already handled, not escalating to discord role {role}")
+            logger.info(f"Alert group {alert_group.pk} was already handled, not escalating it in discord")
             return
 
         discord_message = alert_group.discord_messages.order_by("created_at").first()
         if discord_message is None:
             return
 
+        # A route names a role to escalate to, or it does not. Either way the channel is told, because a step
+        # that says "notify everyone" and then says nothing is worse than a channel message with no ping in it.
+        role = route_escalation_role(alert_group)
         payload = {
-            "content": f"<@&{role}> — this alert group is still unacknowledged.",
+            "content": (
+                f"<@&{role}> — this alert group is still unacknowledged."
+                if role
+                else "This alert group is still unacknowledged."
+            ),
             # The role being escalated to, and nothing else the alert text happens to name.
-            "allowed_mentions": {"parse": [], "roles": [role]},
+            "allowed_mentions": {"parse": [], "roles": [role] if role else []},
         }
         channel_id, reference = beside_card(discord_message)
         payload.update(reference)

@@ -155,12 +155,13 @@ class EscalationPolicyView(
             can_change_importance = (
                 step in EscalationPolicy.IMPORTANT_STEPS_SET or step in EscalationPolicy.DEFAULT_STEPS_SET
             )
-            broadcast_step = step in EscalationPolicy.SLACK_INTEGRATION_REQUIRED_STEPS
-            # Offered when anything can serve it, not only Slack. The flag the frontend reads keeps its name and
-            # its meaning: it says the step wants Slack, which is still true of the user-group steps.
-            slack_integration_required = broadcast_step
-            if broadcast_step and not (
-                settings.FEATURE_SLACK_INTEGRATION_ENABLED or settings.FEATURE_DISCORD_INTEGRATION_ENABLED
+            slack_integration_required = step in EscalationPolicy.SLACK_INTEGRATION_REQUIRED_STEPS
+            # Notifying a whole channel is the one of these steps another chat integration can serve, so it is
+            # offered when Discord is enabled too. The user-group steps point at a Slack user group.
+            served_by_discord = step == EscalationPolicy.STEP_FINAL_NOTIFYALL
+            if slack_integration_required and not (
+                settings.FEATURE_SLACK_INTEGRATION_ENABLED
+                or (served_by_discord and settings.FEATURE_DISCORD_INTEGRATION_ENABLED)
             ):
                 continue
 

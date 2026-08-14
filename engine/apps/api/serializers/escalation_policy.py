@@ -155,13 +155,18 @@ class EscalationPolicySerializer(EagerLoadingMixin, serializers.ModelSerializer)
         organization = self.context["request"].user.organization
         if step_type not in EscalationPolicy.INTERNAL_API_STEPS:
             raise serializers.ValidationError("Invalid step value")
-        if step_type in EscalationPolicy.SLACK_INTEGRATION_REQUIRED_STEPS and not (
-            EscalationPolicy.chatops_broadcast_available(organization)
+        # The user-group steps point at a Slack user group and are served by a task that gives up without
+        # Slack, so they stay Slack's. Only notifying a whole channel has a Discord equivalent.
+        if step_type == EscalationPolicy.STEP_FINAL_NOTIFYALL:
+            if not EscalationPolicy.chatops_broadcast_available(organization):
+                raise serializers.ValidationError(
+                    "Invalid escalation step type: step notifies a whole channel, "
+                    "and no chat integration is connected that can"
+                )
+        elif (
+            step_type in EscalationPolicy.SLACK_INTEGRATION_REQUIRED_STEPS and organization.slack_team_identity is None
         ):
-            raise serializers.ValidationError(
-                "Invalid escalation step type: step notifies a whole channel, "
-                "and no chat integration is connected that can"
-            )
+            raise serializers.ValidationError("Invalid escalation step type: step is Slack-specific")
         if step_type == EscalationPolicy.STEP_DECLARE_INCIDENT and not is_declare_incident_step_enabled(organization):
             raise serializers.ValidationError("Invalid escalation step type: step is not enabled")
         return step_type
