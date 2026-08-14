@@ -18,7 +18,7 @@ import { getConnectorsStyles } from './Connectors.styles';
 const SEVERITY_OPTIONS = [
   { value: 'critical', label: '🚨 Critical' },
   { value: 'warning', label: '⚠️ Warning' },
-  { value: 'info', label: 'ℹ️ Info' },
+  { value: 'info', label: '📘 Info' },
 ];
 
 // A route saved before these were the words — or saying nothing at all — reads as critical, the way the engine
