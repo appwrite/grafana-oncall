@@ -5,29 +5,36 @@ Grafana archived [OnCall OSS](https://github.com/grafana/oncall) on 2026-03-24 a
 
 ## What's different from upstream
 
-- **It runs on current Grafana.** Grafana 13 ships React 19, which removed `ReactDOM.findDOMNode`.
-  Upstream's plugin reaches it through three libraries, so escalation chains, notification policies
-  and the rotation modals crash on mount. Fixed by moving drag-and-drop to `@dnd-kit`, passing
-  `nodeRef` to `react-draggable`, and replacing `react-transition-group` with a CSS animation.
-- **Insights renders.** Its `alert_groups_total` variable was seeded multi-valued and URL-synced, so
-  a restored value interpolated a regex where PromQL wants a metric name, breaking every panel.
-- **End-to-end tests run against Grafana 12 and 13**, where upstream tested 10 and 11.
-- **~290 security patches.** Dependabot alerts went from 309 to 18.
-- **Django 5.2 LTS**, where upstream is on 4.2 — its extended support ended in April 2026.
-- **`fcm-django` from PyPI** rather than a tarball of a now-archived fork.
-- **Releases ship both halves**: multi-arch engine images to
-  [`ghcr.io/appwrite/grafana-oncall`](https://github.com/appwrite/grafana-oncall/pkgs/container/grafana-oncall)
-  and a plugin archive attached to each
-  [release](https://github.com/appwrite/grafana-oncall/releases). Upstream's catalog build is frozen
-  at 1.16.11.
+New features:
+
+- A [Discord integration](docs/sources/manage/notify/discord/index.md). Alert groups are posted as
+  cards with working buttons, forum channels get a post per alert group, routes choose a channel and
+  a severity, and escalation can mention a Discord role. Users link their account with
+  `/oncall-link`.
+- SMS through [MSG91](https://msg91.com), as a phone provider alongside Twilio, Zvonok and Exotel.
+
+Kept working:
+
+- Runs on Grafana 13 and React 19. Upstream's plugin crashes on mount there.
+- Runs on Django 5.2 LTS. Upstream is on 4.2, whose extended support has ended.
+- The Insights page renders again. Its alert group variable produced invalid PromQL on Grafana 13.
+- Dependencies are patched, and end-to-end tests run against Grafana 12 and 13.
+
+Published:
+
+- Multi-arch engine images at
+  [`ghcr.io/appwrite/grafana-oncall`](https://github.com/appwrite/grafana-oncall/pkgs/container/grafana-oncall).
+- A plugin archive and its checksum on every
+  [release](https://github.com/appwrite/grafana-oncall/releases), so a deployment can pin the
+  frontend by version.
 
 ## What it does not offer
 
-- No support and no roadmap commitments. We keep it working for our needs.
-- The plugin is unsigned, since signing needs a grafana.com access policy, so it needs
+- No support and no roadmap. We keep it working for our own use.
+- The plugin is unsigned, so Grafana needs
   `GF_PLUGINS_ALLOW_LOADING_UNSIGNED_PLUGINS=grafana-oncall-app`.
-- The helm chart is not published to a helm repository; install it from a checkout.
-- The mobile app relied on Grafana Cloud's push relay, which went away with the archival.
+- The Helm chart is not published to a chart repository. Install it from a checkout.
+- The mobile app does not work. It relied on Grafana Cloud's push relay.
 
 ## Grafana OnCall
 
