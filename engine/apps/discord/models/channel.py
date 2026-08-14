@@ -38,6 +38,11 @@ class DiscordChannel(models.Model):
     )
 
     guild_id = models.CharField(max_length=100)
+    # A forum channel holds posts rather than messages, so an alert group becomes a thread there instead.
+    channel_type = models.IntegerField(default=0)
+    # The forum's tags as {name: id}, captured when the channel is connected. Re-connect the channel to pick up
+    # tags added since.
+    available_tags = models.JSONField(default=dict, blank=True)
     channel_id = models.CharField(max_length=100)
     channel_name = models.CharField(max_length=100, default=None)
     is_default_channel = models.BooleanField(null=True, default=False)
@@ -45,6 +50,18 @@ class DiscordChannel(models.Model):
 
     class Meta:
         unique_together = ("organization", "channel_id")
+
+    @property
+    def is_forum(self) -> bool:
+        from apps.discord.client import FORUM_CHANNEL
+
+        return self.channel_type == FORUM_CHANNEL
+
+    def tag_ids_for(self, name: str) -> typing.Optional[list]:
+        """The forum tag matching a card state, if the forum happens to have one by that name."""
+        by_name = {key.casefold(): value for key, value in (self.available_tags or {}).items()}
+        tag_id = by_name.get(name.casefold())
+        return [tag_id] if tag_id else None
 
     @classmethod
     def get_channel_for_alert_group(cls, alert_group: AlertGroup) -> typing.Optional["DiscordChannel"]:

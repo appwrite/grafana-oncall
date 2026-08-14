@@ -1,11 +1,13 @@
 import re
 import typing
+from urllib.parse import urlparse
 
 from emoji import emojize
 
 from apps.alerts.incident_appearance.renderers.base_renderer import AlertBaseRenderer, AlertGroupBaseRenderer
 from apps.alerts.incident_appearance.templaters.alert_templater import AlertTemplater
 from apps.alerts.models import Alert, AlertGroup
+from apps.discord.client import THREAD_NAME_LIMIT
 from common.utils import is_string_with_visible_characters, str_or_backup
 
 # https://discord.com/developers/docs/resources/message#embed-object-embed-limits
@@ -27,6 +29,17 @@ SELECT_LABEL_LIMIT = 100
 SELECT_OPTION_LIMIT = 25
 
 TRIMMED_NOTICE = "… Message has been trimmed, open it in OnCall to read the whole thing."
+
+# A link button carries a URL rather than a custom_id, and Discord refuses anything that is not a real http(s) URL.
+BUTTON_URL_LIMIT = 512
+# Which integrations call their source link a dashboard. Everything else gets the neutral word.
+DASHBOARD_INTEGRATIONS = (
+    "grafana",
+    "grafana_alerting",
+    "alertmanager",
+    "legacy_grafana_alerting",
+    "legacy_alertmanager",
+)
 
 # How a card reads for each state an alert group can be in: the emoji leads the title so a channel list shows the
 # current state without opening anything, and the colour is the embed's left border.
@@ -52,12 +65,34 @@ def truncate(value: str, limit: int, notice: str = "…") -> str:
     return value[: limit - len(notice)].rstrip() + notice
 
 
-def route_severity(alert_group: AlertGroup) -> str:
+def valid_link(url: typing.Optional[str]) -> bool:
+    if not url or len(url) > BUTTON_URL_LIMIT:
+        return False
+    parsed = urlparse(url)
+    return parsed.scheme in ("http", "https") and bool(parsed.netloc)
+
+
+def stamp(moment) -> str:
+    """A moment as Discord renders it: the reader's own clock, and how long ago in their own words."""
+    seconds = int(moment.timestamp())
+    return f"<t:{seconds}:t> (<t:{seconds}:R>)"
+
+
+def route_config(alert_group: AlertGroup) -> dict:
     from apps.discord.backend import DiscordBackend  # To avoid circular import
 
     backends = getattr(alert_group.channel_filter, "notification_backends", None) or {}
-    severity = (backends.get(DiscordBackend.backend_id) or {}).get("severity")
+    return backends.get(DiscordBackend.backend_id) or {}
+
+
+def route_severity(alert_group: AlertGroup) -> str:
+    severity = route_config(alert_group).get("severity")
     return severity if severity in SEVERITIES else ALERT
+
+
+def route_escalation_role(alert_group: AlertGroup) -> typing.Optional[str]:
+    """The Discord role a route escalates to, if it names one."""
+    return route_config(alert_group).get("role") or None
 
 
 def card_state(alert_group: AlertGroup) -> str:
@@ -144,11 +179,9 @@ class AlertGroupDiscordRenderer(AlertGroupBaseRenderer):
         embed["title"] = truncate(f"{emoji} {embed['title']}", EMBED_TITLE_LIMIT)
         embed["color"] = color
 
-        status = self._status_text(state)
-        if status:
-            embed["fields"].append(
-                {"name": "Status", "value": truncate(status, EMBED_FIELD_VALUE_LIMIT), "inline": False}
-            )
+        embed["fields"].append(
+            {"name": "Timeline", "value": truncate(self._timeline(), EMBED_FIELD_VALUE_LIMIT), "inline": False}
+        )
 
         embed["footer"] = {"text": truncate(self._footer(), EMBED_FOOTER_LIMIT)}
 
@@ -168,12 +201,26 @@ class AlertGroupDiscordRenderer(AlertGroupBaseRenderer):
             parts.append(f"showing the last of {alerts_count} alerts")
         return " · ".join(parts)
 
-    def _status_text(self, state: str) -> str:
-        if state == RESOLVED:
-            return self.alert_group.get_resolve_text()
-        if state == ACKNOWLEDGED:
-            return self.alert_group.get_acknowledge_text()
-        return ""
+    def _timeline(self) -> str:
+        """What happened to this alert group and when, in the reader's own timezone.
+
+        Discord renders `<t:…>` client-side, so an engineer in another timezone reads their own clock and everybody
+        sees how long the alert has been open without subtracting timestamps by hand.
+        """
+        alert_group = self.alert_group
+        lines = [f"{CARD_STYLE[ALERT][0]} Fired {stamp(alert_group.started_at)}"]
+
+        if alert_group.acknowledged and alert_group.acknowledged_at:
+            lines.append(
+                f"{CARD_STYLE[ACKNOWLEDGED][0]} {alert_group.get_acknowledge_text()} "
+                f"{stamp(alert_group.acknowledged_at)}"
+            )
+        if alert_group.silenced and alert_group.silenced_at:
+            until = f" until {stamp(alert_group.silenced_until)}" if alert_group.silenced_until else ""
+            lines.append(f"{CARD_STYLE[SILENCED][0]} Silenced {stamp(alert_group.silenced_at)}{until}")
+        if alert_group.resolved and alert_group.resolved_at:
+            lines.append(f"{CARD_STYLE[RESOLVED][0]} {alert_group.get_resolve_text()} {stamp(alert_group.resolved_at)}")
+        return "\n".join(lines)
 
     def _components(self) -> list:
         """Rows of controls. A select has to occupy a row of its own, which is why these are not all one row."""
@@ -238,6 +285,19 @@ class AlertGroupDiscordRenderer(AlertGroupBaseRenderer):
         else:
             buttons.append(button(EventAction.UNRESOLVE, "Unresolve"))
 
+        source_link = self.alert_renderer.templated_alert.source_link
+        if valid_link(source_link):
+            buttons.append(
+                {
+                    "type": BUTTON,
+                    "style": BUTTON_LINK,
+                    "label": "Dashboard"
+                    if self.alert_group.channel.integration in DASHBOARD_INTEGRATIONS
+                    else "Source",
+                    "url": source_link,
+                }
+            )
+
         notes_count = self.alert_group.resolution_notes.count()
         buttons.append(
             button(EventAction.RESOLUTION_NOTE, f"Resolution notes [{notes_count}]" if notes_count else "Add note")
@@ -252,3 +312,14 @@ class DiscordMessageRenderer:
 
     def render_alert_group_message(self) -> dict:
         return AlertGroupDiscordRenderer(self.alert_group).render_alert_group_message()
+
+    def render_thread_name(self) -> str:
+        """What a forum post is called. Discord fixes this at creation, so it carries the alert's identity and
+        leaves current state to the card and the post's tag."""
+        renderer = AlertGroupDiscordRenderer(self.alert_group)
+        title = str_or_backup(renderer.alert_renderer.templated_alert.title, "Alert")
+        return truncate(f"{title} · #{self.alert_group.inside_organization_number}", THREAD_NAME_LIMIT)
+
+    def state_tag_name(self) -> str:
+        """The forum tag this alert group should carry, matched against the forum's tags by name."""
+        return card_state(self.alert_group).capitalize()

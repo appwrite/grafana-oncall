@@ -1,7 +1,7 @@
 import pytest
 from django.utils import timezone
 
-from apps.alerts.models import AlertReceiveChannel
+from apps.alerts.models import AlertGroup, AlertReceiveChannel
 from apps.discord.alert_rendering import CARD_STYLE, RESOLVED, STRING_SELECT, DiscordMessageRenderer
 
 
@@ -52,7 +52,7 @@ def test_render_acknowledged_alert_group(make_rendered_message):
     embed = payload["embeds"][0]
     assert embed["title"].startswith("🟡")
     assert button_labels(payload) == ["Unacknowledge", "Resolve", "Add note", "OnCall"]
-    assert embed["fields"][-1]["name"] == "Status"
+    assert embed["fields"][-1]["name"] == "Timeline"
 
 
 @pytest.mark.django_db
@@ -264,3 +264,92 @@ def test_paging_is_disabled_when_the_organization_has_no_users(
     assert responders["disabled"] is True
     # Discord rejects a select with no options at all, even a disabled one.
     assert responders["options"] == [{"label": "No users to page", "value": "none"}]
+
+
+def timeline(payload):
+    return next(field["value"] for field in payload["embeds"][0]["fields"] if field["name"] == "Timeline")
+
+
+@pytest.mark.django_db
+def test_timeline_of_a_firing_alert_group(make_rendered_message):
+    lines = timeline(make_rendered_message()).split("\n")
+
+    assert len(lines) == 1
+    assert lines[0].startswith("🚨 Fired <t:")
+    # Discord renders the same instant twice: as a clock, and as how long ago.
+    assert lines[0].endswith(":R>)")
+
+
+@pytest.mark.django_db
+def test_timeline_records_who_acknowledged_and_when(
+    make_organization_and_user, make_alert_receive_channel, make_alert_group, make_alert
+):
+    organization, user = make_organization_and_user()
+    alert_receive_channel = make_alert_receive_channel(
+        organization, integration=AlertReceiveChannel.INTEGRATION_GRAFANA
+    )
+    alert_group = make_alert_group(
+        alert_receive_channel=alert_receive_channel,
+        acknowledged=True,
+        acknowledged_at=timezone.now(),
+        acknowledged_by=AlertGroup.USER,
+        acknowledged_by_user=user,
+    )
+    make_alert(alert_group=alert_group, raw_request_data=alert_receive_channel.config.example_payload)
+
+    lines = timeline(DiscordMessageRenderer(alert_group).render_alert_group_message()).split("\n")
+
+    assert lines[0].startswith("🚨 Fired")
+    assert lines[1].startswith(f"🟡 Acknowledged by {user.username} <t:")
+
+
+@pytest.mark.django_db
+def test_timeline_of_a_resolved_alert_group(make_rendered_message):
+    lines = timeline(make_rendered_message(resolved=True, resolved_at=timezone.now())).split("\n")
+
+    assert len(lines) == 2
+    assert lines[1].startswith("✅ Resolved")
+
+
+@pytest.mark.django_db
+def test_a_grafana_alert_gets_a_dashboard_button(
+    make_organization, make_user_for_organization, make_alert_receive_channel, make_alert_group, make_alert
+):
+    organization = make_organization()
+    make_user_for_organization(organization, username="loks0n")
+    alert_receive_channel = make_alert_receive_channel(
+        organization, integration=AlertReceiveChannel.INTEGRATION_GRAFANA_ALERTING
+    )
+    alert_group = make_alert_group(alert_receive_channel=alert_receive_channel)
+    make_alert(
+        alert_group=alert_group,
+        raw_request_data={
+            "status": "firing",
+            "groupLabels": {"alertname": "DiskSpaceLow"},
+            "alerts": [{"status": "firing", "generatorURL": "https://telemetry.appwrite.systems/d/abc/disk"}],
+        },
+    )
+
+    payload = DiscordMessageRenderer(alert_group).render_alert_group_message()
+
+    dashboard = [c for c in payload["components"][0]["components"] if c.get("label") == "Dashboard"]
+    assert dashboard, button_labels(payload)
+    assert dashboard[0]["url"] == "https://telemetry.appwrite.systems/d/abc/disk"
+
+
+@pytest.mark.django_db
+def test_a_link_that_is_not_a_url_gets_no_button(
+    make_organization, make_user_for_organization, make_alert_receive_channel, make_alert_group, make_alert
+):
+    organization = make_organization()
+    make_user_for_organization(organization, username="loks0n")
+    alert_receive_channel = make_alert_receive_channel(
+        organization, integration=AlertReceiveChannel.INTEGRATION_GRAFANA
+    )
+    alert_group = make_alert_group(alert_receive_channel=alert_receive_channel)
+    make_alert(alert_group=alert_group, raw_request_data={"title": "no link here"})
+
+    payload = DiscordMessageRenderer(alert_group).render_alert_group_message()
+
+    assert "Dashboard" not in button_labels(payload)
+    assert "Source" not in button_labels(payload)

@@ -3,7 +3,7 @@ import json
 import pytest
 import responses
 
-from apps.discord.client import DISCORD_API_URL, NONCE_LIMIT, DiscordClient
+from apps.discord.client import DISCORD_API_URL, FORUM_CHANNEL, NONCE_LIMIT, THREAD_NAME_LIMIT, DiscordClient
 from apps.discord.exceptions import DiscordAPIException, DiscordAPITokenInvalid
 
 
@@ -93,6 +93,80 @@ def test_register_commands():
     )
 
     assert [command["name"] for command in register_commands()] == [LINK_COMMAND_NAME]
+
+
+@pytest.mark.django_db
+@responses.activate
+def test_get_channel_reads_a_forum_and_its_tags():
+    responses.add(
+        responses.GET,
+        f"{DISCORD_API_URL}/channels/123",
+        json={
+            "id": "123",
+            "guild_id": "789",
+            "name": "incidents",
+            "type": FORUM_CHANNEL,
+            "available_tags": [{"id": "111", "name": "Alert"}, {"id": "222", "name": "Resolved"}],
+        },
+        status=200,
+    )
+
+    channel = DiscordClient().get_channel(channel_id="123")
+
+    assert channel.is_forum
+    assert channel.available_tags == {"Alert": "111", "Resolved": "222"}
+
+
+@pytest.mark.django_db
+@responses.activate
+def test_create_thread_opens_a_post_carrying_the_card():
+    responses.add(
+        responses.POST,
+        f"{DISCORD_API_URL}/channels/123/threads",
+        json={"id": "456"},
+        status=200,
+    )
+
+    posted = DiscordClient().create_thread(
+        channel_id="123", name="DiskSpaceLow · #12", data={"embeds": []}, applied_tags=["111"]
+    )
+
+    sent = json.loads(responses.calls[0].request.body)
+    assert sent["name"] == "DiskSpaceLow · #12"
+    assert sent["applied_tags"] == ["111"]
+    assert sent["message"] == {"embeds": []}
+    # A thread and its first message share an id.
+    assert posted.message_id == posted.channel_id == "456"
+
+
+@pytest.mark.django_db
+@responses.activate
+def test_a_long_post_name_is_cut_to_what_discord_accepts():
+    responses.add(responses.POST, f"{DISCORD_API_URL}/channels/123/threads", json={"id": "456"}, status=200)
+
+    DiscordClient().create_thread(channel_id="123", name="n" * 200, data={})
+
+    assert json.loads(responses.calls[0].request.body)["name"] == "n" * THREAD_NAME_LIMIT
+
+
+@pytest.mark.django_db
+@responses.activate
+def test_update_thread_sets_tags_and_unarchives():
+    responses.add(responses.PATCH, f"{DISCORD_API_URL}/channels/456", json={"id": "456"}, status=200)
+
+    DiscordClient().update_thread(thread_id="456", applied_tags=["222"], archived=False)
+
+    assert json.loads(responses.calls[0].request.body) == {"archived": False, "applied_tags": ["222"]}
+
+
+@pytest.mark.django_db
+@responses.activate
+def test_update_thread_leaves_tags_alone_when_there_is_no_match():
+    responses.add(responses.PATCH, f"{DISCORD_API_URL}/channels/456", json={"id": "456"}, status=200)
+
+    DiscordClient().update_thread(thread_id="456", applied_tags=None)
+
+    assert json.loads(responses.calls[0].request.body) == {"archived": False}
 
 
 @pytest.mark.django_db

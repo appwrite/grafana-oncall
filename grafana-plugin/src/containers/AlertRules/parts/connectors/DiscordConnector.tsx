@@ -2,7 +2,7 @@ import React, { useCallback } from 'react';
 
 import { cx } from '@emotion/css';
 import { SelectableValue } from '@grafana/data';
-import { InlineSwitch, Select, Stack, useStyles2 } from '@grafana/ui';
+import { InlineSwitch, Input, Select, Stack, useStyles2 } from '@grafana/ui';
 import { UserActions } from 'helpers/authorization/authorization';
 import { StackSize } from 'helpers/consts';
 import { observer } from 'mobx-react';
@@ -61,6 +61,14 @@ export const DiscordConnector = observer((props: DiscordConnectorProps) => {
     });
   }, []);
 
+  // The role OnCall pings when an escalation reaches "notify whole channel" or "notify group" — the step that means
+  // nobody has picked the alert up.
+  const handleEscalationRoleChange = useCallback((event: React.FocusEvent<HTMLInputElement>) => {
+    alertReceiveChannelStore.saveChannelFilter(channelFilterId, {
+      notification_backends: { DISCORD: { role: event.target.value.trim() } },
+    });
+  }, []);
+
   return (
     <div className={styles.root}>
       <Stack wrap="wrap" gap={StackSize.sm}>
@@ -97,6 +105,16 @@ export const DiscordConnector = observer((props: DiscordConnectorProps) => {
             value={channelFilter.notification_backends?.DISCORD?.severity || 'alert'}
             onChange={handleSeverityChange}
             aria-label="Discord severity"
+          />
+        </WithPermissionControlTooltip>
+        escalating to role
+        <WithPermissionControlTooltip userAction={UserActions.IntegrationsWrite}>
+          <Input
+            className={cx('control')}
+            defaultValue={channelFilter.notification_backends?.DISCORD?.role || ''}
+            onBlur={handleEscalationRoleChange}
+            placeholder="Role ID (optional)"
+            aria-label="Discord escalation role"
           />
         </WithPermissionControlTooltip>
       </Stack>

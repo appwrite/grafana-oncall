@@ -19,10 +19,13 @@ class DiscordChannelSerializer(serializers.ModelSerializer):
             "guild_id",
             "channel_id",
             "channel_name",
+            "channel_type",
+            "available_tags",
             "is_default_channel",
         ]
         extra_kwargs = {
             "guild_id": {"required": True, "write_only": True},
+            "available_tags": {"write_only": True},
             "channel_id": {"required": True},
         }
 
@@ -47,5 +50,7 @@ class DiscordChannelSerializer(serializers.ModelSerializer):
                 "channel_id": channel.channel_id,
                 "guild_id": channel.guild_id,
                 "channel_name": channel.channel_name,
+                "channel_type": channel.channel_type,
+                "available_tags": channel.available_tags or {},
             }
         )

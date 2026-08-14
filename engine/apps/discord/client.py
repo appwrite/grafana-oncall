@@ -1,4 +1,5 @@
 import json
+import typing
 from dataclasses import dataclass
 from typing import Any, Optional, Union
 
@@ -10,6 +11,11 @@ from requests.models import PreparedRequest
 from apps.discord.exceptions import DiscordAPIException, DiscordAPITokenInvalid
 
 DISCORD_API_URL = "https://discord.com/api/v10"
+
+# https://discord.com/developers/docs/resources/channel#channel-object-channel-types
+FORUM_CHANNEL = 15
+# A forum post's name, which Discord fixes at creation.
+THREAD_NAME_LIMIT = 100
 
 # Discord truncates a longer nonce rather than rejecting it, which would silently break deduplication.
 NONCE_LIMIT = 25
@@ -29,6 +35,13 @@ class DiscordChannel:
     channel_id: str
     guild_id: str
     channel_name: str
+    channel_type: int = 0
+    # A forum's tags, as {name: id}. Applying one is how a post shows its state in the channel list.
+    available_tags: typing.Optional[dict] = None
+
+    @property
+    def is_forum(self) -> bool:
+        return self.channel_type == FORUM_CHANNEL
 
 
 @dataclass
@@ -81,6 +94,8 @@ class DiscordClient:
             channel_id=data["id"],
             guild_id=data.get("guild_id", ""),
             channel_name=data.get("name", ""),
+            channel_type=data.get("type", 0),
+            available_tags={tag["name"]: tag["id"] for tag in data.get("available_tags") or []},
         )
 
     def get_application_id(self) -> str:
@@ -102,6 +117,32 @@ class DiscordClient:
             data = data | {"nonce": nonce[:NONCE_LIMIT], "enforce_nonce": True}
         response = self._request("POST", f"{self.base_url}/channels/{channel_id}/messages", data=data)
         return DiscordMessage(message_id=response["id"], channel_id=response["channel_id"])
+
+    def create_thread(
+        self, channel_id: str, name: str, data: dict, applied_tags: typing.Optional[list] = None
+    ) -> DiscordMessage:
+        """Open a forum post carrying `data` as its first message.
+
+        A thread and its first message share an id, so the post can be edited later with `update_message` passing
+        that id as both the channel and the message.
+        """
+        payload: dict = {"name": name[:THREAD_NAME_LIMIT], "message": data}
+        if applied_tags:
+            payload["applied_tags"] = applied_tags
+        response = self._request("POST", f"{self.base_url}/channels/{channel_id}/threads", data=payload)
+        return DiscordMessage(message_id=response["id"], channel_id=response["id"])
+
+    def update_thread(self, thread_id: str, applied_tags: typing.Optional[list] = None, archived: bool = False) -> None:
+        """Set a post's tags, and take it out of the archive so its card can still be edited.
+
+        Discord archives a quiet post on its own, and an archived post will not accept an edit, so every update
+        unarchives first. Nothing archives a post deliberately — leaving that to Discord is what keeps the active
+        list honest about what is still open.
+        """
+        data: dict = {"archived": archived}
+        if applied_tags is not None:
+            data["applied_tags"] = applied_tags
+        self._request("PATCH", f"{self.base_url}/channels/{thread_id}", data=data)
 
     def update_message(self, channel_id: str, message_id: str, data: dict) -> DiscordMessage:
         response = self._request("PATCH", f"{self.base_url}/channels/{channel_id}/messages/{message_id}", data=data)

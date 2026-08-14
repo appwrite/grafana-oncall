@@ -1,3 +1,5 @@
+import typing
+
 from django.db import models
 
 from apps.alerts.models import AlertGroup
@@ -18,6 +20,10 @@ class DiscordMessage(models.Model):
     message_id = models.CharField(max_length=100)
 
     channel_id = models.CharField(max_length=100)
+
+    # Set when the alert group lives in a forum post rather than a channel message. A thread and its first message
+    # share an id, so this is both the post and the message to edit inside it.
+    thread_id = models.CharField(max_length=100, null=True, default=None)
 
     message_type = models.IntegerField(choices=DISCORD_MESSAGE_CHOICES)
 
@@ -42,7 +48,12 @@ class DiscordMessage(models.Model):
         ]
 
     @staticmethod
-    def create_message(alert_group: AlertGroup, message: DiscordAPIMessage, message_type: int) -> "DiscordMessage":
+    def create_message(
+        alert_group: AlertGroup,
+        message: DiscordAPIMessage,
+        message_type: int,
+        thread_id: typing.Optional[str] = None,
+    ) -> "DiscordMessage":
         """Record where a message landed, idempotently.
 
         A task that posted and then failed on the way to writing this row is retried, and Discord answers the second
@@ -53,6 +64,6 @@ class DiscordMessage(models.Model):
             alert_group=alert_group,
             message_type=message_type,
             channel_id=message.channel_id,
-            defaults={"message_id": message.message_id},
+            defaults={"message_id": message.message_id, "thread_id": thread_id},
         )
         return discord_message

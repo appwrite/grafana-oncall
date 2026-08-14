@@ -55,6 +55,14 @@ class DiscordBackend(BaseMessagingBackend):
                 raise serializers.ValidationError([f"Severity must be one of {', '.join(SEVERITIES)}"])
             notification_data["severity"] = data["severity"]
 
+        if "role" in data:
+            role = str(data["role"] or "").strip()
+            # A Discord role id is a snowflake. Rejecting anything else here beats a silent no-op at escalation time,
+            # when whoever configured it is asleep.
+            if role and not role.isdigit():
+                raise serializers.ValidationError(["Escalation role must be a Discord role id"])
+            notification_data["role"] = role
+
         if "channel" not in data:
             return notification_data
 

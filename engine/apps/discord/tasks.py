@@ -7,6 +7,7 @@ from rest_framework import status
 from apps.alerts.models import Alert, AlertGroup
 from apps.discord.alert_rendering import AlertGroupDiscordRenderer, DiscordMessageRenderer
 from apps.discord.client import DiscordClient
+from apps.discord.client import DiscordMessage as DiscordAPIMessage
 from apps.discord.exceptions import DiscordAPIException, DiscordAPITokenInvalid
 from apps.discord.models import DiscordChannel, DiscordMessage
 from apps.user_management.models import User
@@ -50,15 +51,33 @@ def on_create_alert_async(self, alert_pk):
             logger.info(f"Discord message exists with message id {message.message_id} hence skipping")
             return
 
-        payload = DiscordMessageRenderer(alert_group).render_alert_group_message()
+        renderer = DiscordMessageRenderer(alert_group)
+        payload = renderer.render_alert_group_message()
 
         with OkToRetry(task=self, exc=(DiscordAPIException,), num_retries=3):
             try:
-                discord_message = DiscordClient().create_message(
-                    channel_id=discord_channel.channel_id,
-                    data=payload,
-                    nonce=f"ag-{alert_group.public_primary_key}",
-                )
+                client = DiscordClient()
+                if discord_channel.is_forum:
+                    # A forum post is the alert group's own thread, so discussion lands beside the card rather than
+                    # in a shared channel. Thread creation takes no nonce, so the lock and the placement check above
+                    # are what keep a retry from opening a second post.
+                    posted = client.create_thread(
+                        channel_id=discord_channel.channel_id,
+                        name=renderer.render_thread_name(),
+                        data=payload,
+                        applied_tags=discord_channel.tag_ids_for(renderer.state_tag_name()),
+                    )
+                    thread_id = posted.message_id
+                    discord_message = DiscordAPIMessage(
+                        message_id=posted.message_id, channel_id=discord_channel.channel_id
+                    )
+                else:
+                    thread_id = None
+                    discord_message = client.create_message(
+                        channel_id=discord_channel.channel_id,
+                        data=payload,
+                        nonce=f"ag-{alert_group.public_primary_key}",
+                    )
             except DiscordAPITokenInvalid:
                 logger.error(f"Discord bot token is invalid, could not create message for alert {alert_pk}")
             except DiscordAPIException as ex:
@@ -71,7 +90,10 @@ def on_create_alert_async(self, alert_pk):
                     raise ex
             else:
                 DiscordMessage.create_message(
-                    alert_group=alert_group, message=discord_message, message_type=DiscordMessage.ALERT_GROUP_MESSAGE
+                    alert_group=alert_group,
+                    message=discord_message,
+                    message_type=DiscordMessage.ALERT_GROUP_MESSAGE,
+                    thread_id=thread_id,
                 )
 
 
