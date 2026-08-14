@@ -491,21 +491,23 @@ def test_a_card_keeps_every_label_and_drops_what_is_said_twice(integration):
     assert "Synthetic test failed two consecutive runs." in rendered
     # One per line, named, so a reader can scan them rather than unpick a wrapped line of pairs.
     lines = rendered.splitlines()
+    assert "**Labels**" in lines
     for label in (
-        "name: backups-tor",
-        "cluster: assets-fra1-prod",
-        "kind: PlaywrightTest",
-        "service: backups",
-        "team: databases",
+        "- name: `backups-tor`",
+        "- cluster: `assets-fra1-prod`",
+        "- kind: `PlaywrightTest`",
+        "- service: `backups`",
+        "- team: `databases`",
     ):
-        assert label in lines, f"{label} should be a line of its own"
-    # An annotation of the sender's own, and a runbook.
-    assert "impact: backups unverified" in lines
+        assert label in lines, f"{label} should be a bullet of its own"
+    # An annotation of the sender's own, under its own heading, and a runbook.
+    assert "**Annotations**" in lines
+    assert "- impact: `backups unverified`" in lines
     assert "https://runbooks.example/synthetics" in rendered
 
     # alertname is the card's title and severity is its title emoji and its tag.
-    assert "alertname: " not in rendered
-    assert "severity: " not in rendered
+    assert "alertname:" not in rendered
+    assert "severity:" not in rendered
     # Grafana reserves the double-underscore names for itself and hides them in its own UI. It uses them for
     # labels as well as annotations, which is what the live cards showed.
     for reserved in ("__alert_rule_uid__", "__alert_rule_namespace_uid__", "__orgId__", "__values__"):
@@ -530,7 +532,7 @@ def test_a_card_says_something_when_the_alert_carries_no_annotations():
         integration_name="Alertmanager",
     )
 
-    assert "instance: localhost:8082" in rendered.splitlines()
+    assert "- instance: `localhost:8082`" in rendered.splitlines()
 
 
 @pytest.mark.django_db
@@ -622,9 +624,9 @@ def test_a_card_reads_a_legacy_payload_too(integration):
 
     lines = rendered.splitlines()
     assert "Instance is down" in lines
-    assert "instance: localhost:8082" in lines
-    assert "job: node" in lines
-    assert "impact: checkout unavailable" in lines
+    assert "- instance: `localhost:8082`" in lines
+    assert "- job: `node`" in lines
+    assert "- impact: `checkout unavailable`" in lines
     # Left to the Dashboard button, which reads the same top-level annotations.
     assert "dashboard_url" not in rendered
 
@@ -669,9 +671,9 @@ def test_value_string_survives_when_there_is_no_values_to_read_instead(integrati
         integration_name="Alertmanager",
     )
 
-    assert "value_string: [ var='A' value=42 ]" in without_values.splitlines()
+    assert "- value_string: `[ var='A' value=42 ]`" in without_values.splitlines()
     assert "value_string" not in with_values
-    assert 'values: {"A":42}' in with_values.splitlines()
+    assert '- values: `{"A":42}`' in with_values.splitlines()
 
 
 @pytest.mark.django_db
