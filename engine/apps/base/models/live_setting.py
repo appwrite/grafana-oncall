@@ -80,6 +80,9 @@ class LiveSetting(models.Model):
         "EXOTEL_SMS_SENDER_ID",
         "EXOTEL_SMS_VERIFICATION_TEMPLATE",
         "EXOTEL_SMS_DLT_ENTITY_ID",
+        "MSG91_AUTH_KEY",
+        "MSG91_SENDER_ID",
+        "MSG91_TEMPLATE_ID",
         "MATTERMOST_CLIENT_OAUTH_ID",
         "MATTERMOST_CLIENT_OAUTH_SECRET",
         "MATTERMOST_HOST",
@@ -195,6 +198,9 @@ class LiveSetting(models.Model):
         "EXOTEL_SMS_SENDER_ID": "Exotel SMS Sender ID to use for verification SMS",
         "EXOTEL_SMS_VERIFICATION_TEMPLATE": "SMS text template to be used for sending SMS, add $verification_code as a placeholder for the verification code",
         "EXOTEL_SMS_DLT_ENTITY_ID": "DLT Entity ID registered with TRAI.",
+        "MSG91_AUTH_KEY": "MSG91 auth key. You can get it in the MSG91 panel under Authkey.",
+        "MSG91_SENDER_ID": "MSG91 sender ID (DLT approved header) to send SMS from.",
+        "MSG91_TEMPLATE_ID": "MSG91 flow template ID. Its variable receives the SMS text, so the template must be registered with a single variable named content or otp.",
         "MATTERMOST_CLIENT_OAUTH_ID": (
             "Check <a href='"
             "https://grafana.com/docs/oncall/latest/open-source/#mattermost-setup"
@@ -248,6 +254,7 @@ class LiveSetting(models.Model):
         "ZVONOK_API_KEY",
         "EXOTEL_ACCOUNT_SID",
         "EXOTEL_API_TOKEN",
+        "MSG91_AUTH_KEY",
         "MATTERMOST_CLIENT_OAUTH_ID",
         "MATTERMOST_CLIENT_OAUTH_SECRET",
         "MATTERMOST_BOT_TOKEN",

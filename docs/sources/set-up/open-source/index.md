@@ -272,6 +272,22 @@ complete the following steps:
    $verification_code as a placeholder.
 9. `EXOTEL_SMS_DLT_ENTITY_ID` is the DLT Entity ID registered with TRAI.
 
+### MSG91
+
+Grafana OnCall supports MSG91 SMS notifications delivery. MSG91 does not support phone calls, so users notified through
+it receive SMS only. To configure SMS notifications using MSG91, complete the following steps:
+
+1. Set `GRAFANA_CLOUD_NOTIFICATIONS_ENABLED` as **False** to ensure the Grafana OSS <-> Cloud connector is disabled.
+2. Change `PHONE_PROVIDER` value to `msg91`.
+3. `MSG91_AUTH_KEY` is the auth key found in the MSG91 panel under Authkey.
+4. `MSG91_SENDER_ID` is the DLT approved header the SMS is sent from.
+5. `MSG91_TEMPLATE_ID` is the ID of an MSG91 flow template. OnCall passes the whole message text as the template's
+   variable (populating both `content` and `otp`, since the variable name is chosen by the template), so register a
+   template whose body is a single variable. The same template is used for notification and verification SMS.
+
+Phone number verification is done by OnCall itself: it generates a code, sends it as an SMS through the template above,
+and checks the user's input against it.
+
 ### Twilio
 
 Grafana OnCall supports Twilio SMS and phone call notifications delivery. If you prefer to configure SMS and phone call
