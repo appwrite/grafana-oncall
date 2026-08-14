@@ -1004,6 +1004,7 @@ PHONE_PROVIDERS = {
 if IS_OPEN_SOURCE:
     PHONE_PROVIDERS["zvonok"] = "apps.zvonok.phone_provider.ZvonokPhoneProvider"
     PHONE_PROVIDERS["exotel"] = "apps.exotel.phone_provider.ExotelPhoneProvider"
+    PHONE_PROVIDERS["msg91"] = "apps.msg91.phone_provider.MSG91PhoneProvider"
 
 PHONE_PROVIDER = os.environ.get("PHONE_PROVIDER", default=DEFAULT_PHONE_PROVIDER)
 
@@ -1026,6 +1027,10 @@ EXOTEL_CALLER_ID = os.getenv("EXOTEL_CALLER_ID", None)
 EXOTEL_SMS_SENDER_ID = os.getenv("EXOTEL_SMS_SENDER_ID", None)
 EXOTEL_SMS_VERIFICATION_TEMPLATE = os.getenv("EXOTEL_SMS_VERIFICATION_TEMPLATE", None)
 EXOTEL_SMS_DLT_ENTITY_ID = os.getenv("EXOTEL_SMS_DLT_ENTITY_ID", None)
+
+MSG91_AUTH_KEY = os.getenv("MSG91_AUTH_KEY", None)
+MSG91_SENDER_ID = os.getenv("MSG91_SENDER_ID", None)
+MSG91_TEMPLATE_ID = os.getenv("MSG91_TEMPLATE_ID", None)
 
 DETACHED_INTEGRATIONS_SERVER = getenv_boolean("DETACHED_INTEGRATIONS_SERVER", default=False)
 
