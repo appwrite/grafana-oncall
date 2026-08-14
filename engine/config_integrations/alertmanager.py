@@ -207,6 +207,14 @@ web_image_url = None
 discord_title = web_title
 
 discord_message = """\
+{% macro bullet(key, value) -%}
+{% set flat = (value | string).split() | join(" ") -%}
+{% if "`" in flat -%}
+- {{ key }}: {{ flat }}
+{%- else -%}
+- {{ key }}: `{{ flat }}`
+{%- endif -%}
+{% endmacro -%}
 {% set groupLabels = payload.get("groupLabels", {}) -%}
 {% set commonLabels = payload.get("commonLabels", {}) -%}
 {# The legacy alertmanager integration puts labels and annotations at the top level instead. -#}
@@ -222,8 +230,20 @@ discord_message = """\
    and not key.startswith("__")
    and said.get(key) != value -%}
 {% set _ = said.update({key: value}) -%}
-{% set _ = labels.append(key ~ ": " ~ value) -%}
+{% set _ = labels.append(bullet(key, value)) -%}
 {% endfor -%}
+{% endfor -%}
+
+{# The dashboard and runbook links are buttons on the card, so they are not repeated as lines to copy out of.
+   `value_string` is the long form of `values`, dropped only when there is a `values` to read instead of it. -#}
+{% set spoken = ["summary", "description", "runbook_url", "runbook_url_internal", "dashboard_url", "dashboardURL"] -%}
+{% set spoken = spoken + ["value_string"] if annotations.get("values") else spoken -%}
+{% set notes = [] -%}
+{% for key, value in annotations.items()
+   if key not in spoken
+   and not key.startswith("__")
+   and said.get(key) != value -%}
+{% set _ = notes.append(bullet(key, value)) -%}
 {% endfor -%}
 
 {% set summary = annotations.get("summary") -%}
@@ -234,21 +254,21 @@ discord_message = """\
 {# Both, when a rule bothered to write both: a summary says what happened and a description says what it means. -#}
 {% if description and description != summary -%}
 {{ description }}
-{% endif %}
+{% endif -%}
+
+{% if labels %}
+**Labels**
 {% for entry in labels -%}
 {{ entry }}
-{% endfor %}
-{# Anything wrapped in double underscores is Grafana's own, reserved and hidden in its own UI. The dashboard and
-   runbook links are buttons on the card, so they are not repeated as lines to copy out of. `value_string` is the
-   long form of `values` — dropped only when there is a `values` to read instead of it. -#}
-{% set spoken = ["summary", "description", "runbook_url", "runbook_url_internal", "dashboard_url", "dashboardURL"] -%}
-{% set spoken = spoken + ["value_string"] if annotations.get("values") else spoken -%}
-{% for key, value in annotations.items()
-   if key not in spoken
-   and not key.startswith("__")
-   and said.get(key) != value -%}
-{{ key }}: {{ value }}
 {% endfor -%}
+{% endif -%}
+
+{% if notes %}
+**Annotations**
+{% for entry in notes -%}
+{{ entry }}
+{% endfor -%}
+{% endif -%}
 
 {% if annotations.get("runbook_url") -%}
 [:book: Runbook]({{ annotations.runbook_url }})
