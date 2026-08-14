@@ -35,14 +35,10 @@ TRIMMED_NOTICE = "… Message has been trimmed, open it in OnCall to read the wh
 
 # A link button carries a URL rather than a custom_id, and Discord refuses anything that is not a real http(s) URL.
 BUTTON_URL_LIMIT = 512
-# Which integrations call their source link a dashboard. Everything else gets the neutral word.
-DASHBOARD_INTEGRATIONS = (
-    "grafana",
-    "grafana_alerting",
-    "alertmanager",
-    "legacy_grafana_alerting",
-    "legacy_alertmanager",
-)
+# Where a dashboard link hides when an alert carries one. Grafana Alerting sets `dashboardURL` for a rule attached
+# to a panel, and a rule can set `dashboard_url` itself; neither is the alert's source link, which for a
+# Grafana-managed rule is the rule's own page.
+DASHBOARD_ANNOTATIONS = ("dashboard_url", "dashboardURL")
 
 # The status an alert group is in, named the way OnCall names it everywhere else.
 FIRING, ACKNOWLEDGED, SILENCED, RESOLVED = "firing", "acknowledged", "silenced", "resolved"
@@ -296,6 +292,23 @@ class AlertGroupDiscordRenderer(AlertGroupBaseRenderer):
             "options": options or [{"label": "No users to page", "value": "none"}],
         }
 
+    def _dashboard_link(self) -> typing.Optional[str]:
+        """The dashboard an alert points at, if it carries one, so the card can offer it as a button.
+
+        A raw URL in the body is a line to read and then copy; a button is one press. Taken from the payload
+        rather than a template because it is a link, not prose — the templates leave it out for this reason.
+        """
+        alert = self.alert_group.alerts.last()
+        payload = getattr(alert, "raw_request_data", None) or {}
+        # Both places the templates read: a legacy alertmanager payload puts its annotations at the top level, and
+        # leaving it out here would take the link off the card entirely, since the body leaves it to this button.
+        for annotations in (payload.get("commonAnnotations"), payload.get("annotations")):
+            for name in DASHBOARD_ANNOTATIONS:
+                candidate = (annotations or {}).get(name)
+                if valid_link(candidate):
+                    return candidate
+        return None
+
     def _buttons(self) -> list:
         from apps.discord.events import EventAction, custom_id
 
@@ -321,18 +334,18 @@ class AlertGroupDiscordRenderer(AlertGroupBaseRenderer):
         else:
             buttons.append(button(EventAction.UNRESOLVE, "Unresolve"))
 
+        def link_button(label: str, url: str) -> dict:
+            return {"type": BUTTON, "style": BUTTON_LINK, "label": label, "url": url}
+
         source_link = self.alert_renderer.templated_alert.source_link
         if valid_link(source_link):
-            buttons.append(
-                {
-                    "type": BUTTON,
-                    "style": BUTTON_LINK,
-                    "label": "Dashboard"
-                    if self.alert_group.channel.integration in DASHBOARD_INTEGRATIONS
-                    else "Source",
-                    "url": source_link,
-                }
-            )
+            # "Source", not "Dashboard": for a Grafana-managed rule this opens the rule, and for an external
+            # Alertmanager it opens whatever raised the alert. Only a dashboard link gets called a dashboard.
+            buttons.append(link_button("Source", source_link))
+
+        dashboard_link = self._dashboard_link()
+        if dashboard_link and dashboard_link != source_link:
+            buttons.append(link_button("Dashboard", dashboard_link))
 
         notes_count = self.alert_group.resolution_notes.count()
         buttons.append(

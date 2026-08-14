@@ -72,6 +72,11 @@ class IntegrationOptionsMixin:
         "telegram_title",
         "telegram_message",
         "telegram_image_url",
+        # An extra messaging backend falls back to the web templates unless the integration defines its own, so
+        # these are only present for the integrations whose web template is a poor fit for a chat card.
+        "discord_title",
+        "discord_message",
+        "discord_image_url",
         "grouping_id",
         "resolve_condition",
         "acknowledge_condition",

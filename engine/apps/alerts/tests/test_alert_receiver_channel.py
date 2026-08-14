@@ -324,3 +324,39 @@ def test_create_duplicate_direct_paging_integrations(make_organization, make_tea
             integration=AlertReceiveChannel.INTEGRATION_DIRECT_PAGING,
         )
         super(AlertReceiveChannel, arc).save()  # bypass the custom save method, so that IntegrityError is raised
+
+
+@pytest.mark.django_db
+def test_get_default_template_attribute_prefers_the_backends_own(make_organization, make_alert_receive_channel):
+    """An integration whose web template reads badly in a chat message can ship one written for that backend.
+
+    Web is a page and most backends are messages, so the fallback stays: a template written for one integration
+    cannot be guessed for the rest.
+    """
+    organization = make_organization()
+    alert_receive_channel = make_alert_receive_channel(
+        organization, integration=AlertReceiveChannel.INTEGRATION_ALERTMANAGER
+    )
+
+    with mock.patch("apps.alerts.models.alert_receive_channel.get_messaging_backend_from_id", return_value=object()):
+        attr = alert_receive_channel.get_default_template_attribute("DISCORD", "message")
+
+    assert (
+        attr == AlertReceiveChannel.INTEGRATION_TO_DEFAULT_DISCORD_MESSAGE_TEMPLATE[alert_receive_channel.integration]
+    )
+    assert attr != AlertReceiveChannel.INTEGRATION_TO_DEFAULT_WEB_MESSAGE_TEMPLATE[alert_receive_channel.integration]
+
+
+@pytest.mark.django_db
+def test_get_default_template_attribute_falls_back_for_an_integration_without_one(
+    make_organization, make_alert_receive_channel
+):
+    organization = make_organization()
+    alert_receive_channel = make_alert_receive_channel(
+        organization, integration=AlertReceiveChannel.INTEGRATION_WEBHOOK
+    )
+
+    with mock.patch("apps.alerts.models.alert_receive_channel.get_messaging_backend_from_id", return_value=object()):
+        attr = alert_receive_channel.get_default_template_attribute("DISCORD", "message")
+
+    assert attr == AlertReceiveChannel.INTEGRATION_TO_DEFAULT_WEB_MESSAGE_TEMPLATE[alert_receive_channel.integration]

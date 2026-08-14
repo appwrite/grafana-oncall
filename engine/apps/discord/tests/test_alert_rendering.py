@@ -1,8 +1,11 @@
+from importlib import import_module
+
 import pytest
 from django.utils import timezone
 
 from apps.alerts.models import AlertGroup, AlertReceiveChannel
 from apps.discord.alert_rendering import CARD_STYLE, RESOLVED, STRING_SELECT, DiscordMessageRenderer
+from common.jinja_templater import apply_jinja_template
 
 
 @pytest.fixture()
@@ -224,7 +227,7 @@ def test_a_full_card_stays_within_discord_row_limits(
     assert len(payload["components"]) <= 5
     for row in payload["components"]:
         assert len(row["components"]) <= 5
-    assert button_labels(payload) == ["Acknowledge", "Resolve", "Unsilence", "Dashboard", "Add note"]
+    assert button_labels(payload) == ["Acknowledge", "Resolve", "Unsilence", "Source", "Add note"]
     assert [c["label"] for c in payload["components"][1]["components"]] == ["OnCall"]
 
 
@@ -389,9 +392,9 @@ def test_a_grafana_alert_gets_a_dashboard_button(
 
     payload = DiscordMessageRenderer(alert_group).render_alert_group_message()
 
-    dashboard = [c for c in payload["components"][0]["components"] if c.get("label") == "Dashboard"]
-    assert dashboard, button_labels(payload)
-    assert dashboard[0]["url"] == "https://telemetry.appwrite.systems/d/abc/disk"
+    source = [c for c in payload["components"][0]["components"] if c.get("label") == "Source"]
+    assert source, button_labels(payload)
+    assert source[0]["url"] == "https://telemetry.appwrite.systems/d/abc/disk"
 
 
 @pytest.mark.django_db
@@ -437,3 +440,269 @@ def test_the_timeline_reads_by_status_whatever_the_severity(
     assert timeline(payload).startswith("🔥 Fired")
     # The severity still leads the title, so nothing about it is lost.
     assert payload["embeds"][0]["title"].startswith(CARD_STYLE[severity][0])
+
+
+ALERTMANAGER_PAYLOAD = {
+    "status": "firing",
+    "groupLabels": {"alertname": "Test failing", "name": "backups-tor", "severity": "critical"},
+    "commonLabels": {
+        "alertname": "Test failing",
+        "alert_rule_namespace_uid": "terraform-alerts",
+        "alert_rule_uid": "afsxq6b2qb85cb",
+        "cluster": "assets-fra1-prod",
+        "kind": "PlaywrightTest",
+        "name": "backups-tor",
+        "service": "backups",
+        "severity": "critical",
+        "team": "databases",
+    },
+    "commonAnnotations": {
+        "alert_rule_namespace_uid": "terraform-alerts",
+        "orgId": "1",
+        "value_string": "[ var='A' labels={name=backups-tor} type='query' value=0 ]",
+        "values": '{"A":0}',
+        "summary": "Synthetic test failed two consecutive runs.",
+        "runbook_url": "https://runbooks.example/synthetics",
+        "__dashboardUid__": "synthetics-PlaywrightTest",
+        "__panelId__": "3",
+    },
+    "alerts": [{"status": "firing", "labels": {}, "annotations": {}, "generatorURL": ""}],
+}
+
+
+@pytest.mark.parametrize("integration", ["alertmanager", "grafana_alerting"])
+def test_a_card_keeps_every_label_and_drops_what_is_said_twice(integration):
+    """The web template ends with three headings and a bullet per label, which is a page rather than a message.
+
+    A card says the same things in a few lines. Nothing is dropped for being uninteresting — only what the card
+    already says elsewhere, and the long form of a value the payload also gives compactly.
+    """
+    config = import_module(f"config_integrations.{integration}")
+    rendered = apply_jinja_template(
+        config.discord_message,
+        payload=ALERTMANAGER_PAYLOAD,
+        source_link="https://alertmanager.example/#/alerts",
+        integration_name="Alertmanager",
+    )
+
+    assert "Synthetic test failed two consecutive runs." in rendered
+    # Every label the alert carries, named, so a reader can tell which is which.
+    # One per line, named, so a reader can scan them rather than unpick a wrapped line of pairs.
+    lines = rendered.splitlines()
+    for label in (
+        "name: backups-tor",
+        "cluster: assets-fra1-prod",
+        "kind: PlaywrightTest",
+        "service: backups",
+        "team: databases",
+        "alert_rule_uid: afsxq6b2qb85cb",
+    ):
+        assert label in lines, f"{label} should be a line of its own"
+    # Annotations that are not duplicates, and a runbook.
+    assert "orgId: 1" in rendered
+    assert 'values: {"A":0}' in rendered
+    assert "https://runbooks.example/synthetics" in rendered
+
+    # alertname is the card's title, severity is its title emoji and its tag, value_string is the long form of
+    # values, and alert_rule_namespace_uid is in the labels with the same value.
+    assert "alertname: " not in rendered
+    assert "severity: " not in rendered
+    assert "value_string" not in rendered
+    # Grafana reserves the double-underscore names for itself and hides them in its own UI.
+    assert "__dashboardUid__" not in rendered
+    assert "__panelId__" not in rendered
+    assert rendered.count("terraform-alerts") == 1
+
+    # The headings that made it a page.
+    for heading in ("Severity:", "Status:", "CommonLabels", "GroupLabels", "Annotations:"):
+        assert heading not in rendered, f"{heading} should not reach a card"
+
+    assert len(rendered) < len(config.web_message)
+
+
+def test_a_card_says_something_when_the_alert_carries_no_annotations():
+    """A bare payload still has to render, and to say what the alert is about."""
+    rendered = apply_jinja_template(
+        import_module("config_integrations.alertmanager").discord_message,
+        payload={"groupLabels": {"alertname": "InstanceDown", "instance": "localhost:8082"}, "commonLabels": {}},
+        source_link="",
+        integration_name="Alertmanager",
+    )
+
+    assert "instance: localhost:8082" in rendered.splitlines()
+
+
+@pytest.mark.django_db
+def test_a_dashboard_annotation_becomes_a_button_of_its_own(
+    make_organization, make_user_for_organization, make_alert_receive_channel, make_alert_group, make_alert
+):
+    """An alert's source and its dashboard are two different places, so they are two different buttons.
+
+    For a Grafana-managed rule the source link opens the rule itself, which is why calling that button
+    "Dashboard" was wrong: the dashboard is an annotation, and it used to be reachable only by copying a URL
+    out of the card's body.
+    """
+    organization = make_organization()
+    make_user_for_organization(organization, username="loks0n")
+    alert_receive_channel = make_alert_receive_channel(
+        organization, integration=AlertReceiveChannel.INTEGRATION_ALERTMANAGER
+    )
+    alert_group = make_alert_group(alert_receive_channel=alert_receive_channel)
+    make_alert(
+        alert_group=alert_group,
+        raw_request_data={
+            "status": "firing",
+            "groupLabels": {"alertname": "Test failing"},
+            "commonAnnotations": {"dashboard_url": "https://grafana.example/d/synthetics"},
+            "alerts": [{"status": "firing", "generatorURL": "https://grafana.example/alerting/grafana/abc/view"}],
+        },
+    )
+
+    payload = DiscordMessageRenderer(alert_group).render_alert_group_message()
+    buttons = {
+        component["label"]: component.get("url")
+        for row in payload["components"]
+        for component in row["components"]
+        if component.get("label")
+    }
+
+    assert buttons["Source"] == "https://grafana.example/alerting/grafana/abc/view"
+    assert buttons["Dashboard"] == "https://grafana.example/d/synthetics"
+    # And the body does not repeat a link that is a button.
+    assert "dashboard_url" not in payload["embeds"][0].get("description", "")
+
+
+@pytest.mark.django_db
+def test_a_dashboard_annotation_matching_the_source_link_gets_one_button(
+    make_organization, make_user_for_organization, make_alert_receive_channel, make_alert_group, make_alert
+):
+    organization = make_organization()
+    make_user_for_organization(organization, username="loks0n")
+    alert_receive_channel = make_alert_receive_channel(
+        organization, integration=AlertReceiveChannel.INTEGRATION_ALERTMANAGER
+    )
+    alert_group = make_alert_group(alert_receive_channel=alert_receive_channel)
+    make_alert(
+        alert_group=alert_group,
+        raw_request_data={
+            "status": "firing",
+            "groupLabels": {"alertname": "Test failing"},
+            "commonAnnotations": {"dashboard_url": "https://grafana.example/d/synthetics"},
+            "alerts": [{"status": "firing", "generatorURL": "https://grafana.example/d/synthetics"}],
+        },
+    )
+
+    payload = DiscordMessageRenderer(alert_group).render_alert_group_message()
+
+    assert button_labels(payload).count("Dashboard") == 0
+    assert button_labels(payload).count("Source") == 1
+
+
+@pytest.mark.parametrize("integration", ["alertmanager", "grafana_alerting"])
+def test_a_card_reads_a_legacy_payload_too(integration):
+    """The legacy alertmanager integration puts labels and annotations at the top level.
+
+    Reading only the common* keys left such an alert with a card that said nothing about itself.
+    """
+    rendered = apply_jinja_template(
+        import_module(f"config_integrations.{integration}").discord_message,
+        payload={
+            "status": "firing",
+            "labels": {"alertname": "InstanceDown", "instance": "localhost:8082", "job": "node"},
+            "annotations": {
+                "summary": "Instance is down",
+                "impact": "checkout unavailable",
+                "dashboard_url": "https://grafana.example/d/nodes",
+            },
+        },
+        source_link="",
+        integration_name="Alertmanager",
+    )
+
+    lines = rendered.splitlines()
+    assert "Instance is down" in lines
+    assert "instance: localhost:8082" in lines
+    assert "job: node" in lines
+    assert "impact: checkout unavailable" in lines
+    # Left to the Dashboard button, which reads the same top-level annotations.
+    assert "dashboard_url" not in rendered
+
+
+@pytest.mark.parametrize("integration", ["alertmanager", "grafana_alerting"])
+def test_a_card_says_both_the_summary_and_the_description(integration):
+    """A rule that wrote both meant both: one says what happened, the other what it means."""
+    rendered = apply_jinja_template(
+        import_module(f"config_integrations.{integration}").discord_message,
+        payload={
+            "groupLabels": {"alertname": "DiskSpaceLow"},
+            "commonAnnotations": {
+                "summary": "Disk is nearly full",
+                "description": "Writes will fail within the hour at the current rate.",
+            },
+        },
+        source_link="",
+        integration_name="Alertmanager",
+    )
+
+    lines = rendered.splitlines()
+    assert "Disk is nearly full" in lines
+    assert "Writes will fail within the hour at the current rate." in lines
+
+
+@pytest.mark.parametrize("integration", ["alertmanager", "grafana_alerting"])
+def test_value_string_survives_when_there_is_no_values_to_read_instead(integration):
+    """It is dropped for being the long form of `values`, so without `values` it is the only form there is."""
+    template = import_module(f"config_integrations.{integration}").discord_message
+    annotations = {"summary": "Threshold crossed", "value_string": "[ var='A' value=42 ]"}
+
+    without_values = apply_jinja_template(
+        template,
+        payload={"groupLabels": {"alertname": "Slow"}, "commonAnnotations": annotations},
+        source_link="",
+        integration_name="Alertmanager",
+    )
+    with_values = apply_jinja_template(
+        template,
+        payload={"groupLabels": {"alertname": "Slow"}, "commonAnnotations": {**annotations, "values": '{"A":42}'}},
+        source_link="",
+        integration_name="Alertmanager",
+    )
+
+    assert "value_string: [ var='A' value=42 ]" in without_values.splitlines()
+    assert "value_string" not in with_values
+    assert 'values: {"A":42}' in with_values.splitlines()
+
+
+@pytest.mark.django_db
+def test_a_legacy_payloads_dashboard_link_still_gets_a_button(
+    make_organization, make_user_for_organization, make_alert_receive_channel, make_alert_group, make_alert
+):
+    """The body leaves the dashboard to the button, so the button has to look where the body looks.
+
+    A legacy alertmanager payload keeps its annotations at the top level. Reading only `commonAnnotations` here
+    took the link off the card altogether: out of the body by the template, and never onto a button.
+    """
+    organization = make_organization()
+    make_user_for_organization(organization, username="loks0n")
+    alert_receive_channel = make_alert_receive_channel(
+        organization, integration=AlertReceiveChannel.INTEGRATION_ALERTMANAGER
+    )
+    alert_group = make_alert_group(alert_receive_channel=alert_receive_channel)
+    make_alert(
+        alert_group=alert_group,
+        raw_request_data={
+            "status": "firing",
+            "labels": {"alertname": "InstanceDown", "instance": "localhost:8082"},
+            "annotations": {"summary": "Instance is down", "dashboard_url": "https://grafana.example/d/nodes"},
+        },
+    )
+
+    payload = DiscordMessageRenderer(alert_group).render_alert_group_message()
+    buttons = {
+        component["label"]: component.get("url")
+        for row in payload["components"]
+        for component in row["components"]
+        if component.get("label")
+    }
+
+    assert buttons["Dashboard"] == "https://grafana.example/d/nodes"

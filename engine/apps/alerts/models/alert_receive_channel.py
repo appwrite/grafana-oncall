@@ -381,13 +381,20 @@ class AlertReceiveChannel(IntegrationOptionsMixin, MaintainableObject):
         return value
 
     def get_default_template_attribute(self, render_for, attr_name):
-        defaults = {}
         backend_id = render_for.upper()
         # check backend exists
-        if get_messaging_backend_from_id(backend_id):
-            # fallback to web defaults for now
-            defaults = getattr(self, f"INTEGRATION_TO_DEFAULT_WEB_{attr_name.upper()}_TEMPLATE", {})
-        return defaults.get(self.integration)
+        if not get_messaging_backend_from_id(backend_id):
+            return None
+
+        # A backend's own default if the integration defines one, and the web default otherwise. Web is a page and
+        # a backend is usually a chat message, so an integration whose web template is a label dump reads badly
+        # there — but a template written for one integration cannot be guessed for the rest, hence the fallback.
+        for prefix in (backend_id, "WEB"):
+            defaults = getattr(self, f"INTEGRATION_TO_DEFAULT_{prefix}_{attr_name.upper()}_TEMPLATE", {})
+            default = defaults.get(self.integration)
+            if default is not None:
+                return default
+        return None
 
     @classmethod
     def create(cls, **kwargs):

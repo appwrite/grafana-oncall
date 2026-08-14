@@ -195,6 +195,67 @@ slack_image_url = None
 
 web_image_url = None
 
+# Discord
+#
+# A card is read in a chat channel rather than opened as a page, so it keeps every label and annotation the alert
+# carries — the sender chose them — and drops the three headings and the bullets that made a page of them. One
+# entry per line: a long line of joined pairs wraps into something nobody can scan on a phone.
+#
+# Only what is genuinely said twice is dropped. `alertname` is the card's title and `severity` is its title emoji
+# and its forum tag; `value_string` is the long form of `values`, so the compact one is kept; and a key that
+# appears in both the labels and the annotations with the same value is printed once.
+discord_title = web_title
+
+discord_message = """\
+{% set groupLabels = payload.get("groupLabels", {}) -%}
+{% set commonLabels = payload.get("commonLabels", {}) -%}
+{# The legacy alertmanager integration puts labels and annotations at the top level instead. -#}
+{% set annotations = payload.get("commonAnnotations", {}) if payload.get("commonAnnotations") else payload.get("annotations", {}) -%}
+{% set legacyLabels = payload.get("labels", {}) -%}
+
+{% set said = {} -%}
+{% set labels = [] -%}
+{% for source in [groupLabels, commonLabels, legacyLabels] -%}
+{% for key, value in source.items() if key not in ["alertname", "severity"] and said.get(key) != value -%}
+{% set _ = said.update({key: value}) -%}
+{% set _ = labels.append(key ~ ": " ~ value) -%}
+{% endfor -%}
+{% endfor -%}
+
+{% set summary = annotations.get("summary") -%}
+{% set description = annotations.get("description") -%}
+{% if summary -%}
+{{ summary }}
+{% endif -%}
+{# Both, when a rule bothered to write both: a summary says what happened and a description says what it means. -#}
+{% if description and description != summary -%}
+{{ description }}
+{% endif %}
+{% for entry in labels -%}
+{{ entry }}
+{% endfor %}
+{# Anything wrapped in double underscores is Grafana's own, reserved and hidden in its own UI. The dashboard and
+   runbook links are buttons on the card, so they are not repeated as lines to copy out of. `value_string` is the
+   long form of `values` — dropped only when there is a `values` to read instead of it. -#}
+{% set spoken = ["summary", "description", "runbook_url", "runbook_url_internal", "dashboard_url", "dashboardURL"] -%}
+{% set spoken = spoken + ["value_string"] if annotations.get("values") else spoken -%}
+{% for key, value in annotations.items()
+   if key not in spoken
+   and not key.startswith("__")
+   and said.get(key) != value -%}
+{{ key }}: {{ value }}
+{% endfor -%}
+
+{% if annotations.get("runbook_url") -%}
+[:book: Runbook]({{ annotations.runbook_url }})
+{% endif -%}
+{% if annotations.get("runbook_url_internal") -%}
+[:closed_book: Runbook (internal)]({{ annotations.runbook_url_internal }})
+{% endif -%}
+"""  # noqa
+
+discord_image_url = web_image_url
+
 # SMS
 sms_title = web_title
 
