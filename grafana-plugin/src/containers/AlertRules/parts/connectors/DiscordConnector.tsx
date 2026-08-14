@@ -21,6 +21,13 @@ const SEVERITY_OPTIONS = [
   { value: 'info', label: 'ℹ️ Info' },
 ];
 
+// A route saved before these were the words — or saying nothing at all — reads as critical, the way the engine
+// reads it, rather than leaving an empty box behind.
+const severityOf = (channelFilter: ChannelFilter) => {
+  const severity = channelFilter.notification_backends?.DISCORD?.severity;
+  return SEVERITY_OPTIONS.some((option) => option.value === severity) ? severity : 'critical';
+};
+
 interface DiscordConnectorProps {
   channelFilterId: ChannelFilter['id'];
 }
@@ -103,7 +110,7 @@ export const DiscordConnector = observer((props: DiscordConnectorProps) => {
           <Select
             className={cx('select', 'control')}
             options={SEVERITY_OPTIONS}
-            value={channelFilter.notification_backends?.DISCORD?.severity || 'critical'}
+            value={severityOf(channelFilter)}
             onChange={handleSeverityChange}
             aria-label="Discord severity"
           />

@@ -84,6 +84,10 @@ Decoration around the name is ignored, so tags can read the way you want them to
 **Resolved ✅** and **Status: 🔥 Firing** all match the firing status, and **Severity: 🚨 Critical** matches a
 critical one.
 
+A forum set up against an earlier version has a tag named **Alert**, which nothing is named any more: rename it to
+**Firing** or **Critical**, whichever you meant it to be. Until you do, its posts keep whichever tag they were last
+given — an unmatched name leaves a post's tags alone rather than clearing them.
+
 OnCall reads the forum's tags when you connect the channel, so re-connect it after adding or renaming any. Deleting
 a tag that OnCall still has in that list leaves posts untagged rather than erroring — Discord accepts an unknown tag
 id and applies nothing.
