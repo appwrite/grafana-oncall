@@ -39,7 +39,7 @@ Add `discord` to `CELERY_WORKER_QUEUE` so the alert group messages are actually 
 Discord delivers button presses over HTTP rather than a gateway connection. On the application's **General
 Information** page, set the **Interactions Endpoint URL** to:
 
-```
+```text
 https://<your-oncall-engine>/api/internal/v1/discord/interaction/
 ```
 
