@@ -59,18 +59,32 @@ def on_create_alert_async(self, alert_pk):
                 client = DiscordClient()
                 if discord_channel.is_forum:
                     # A forum post is the alert group's own thread, so discussion lands beside the card rather than
-                    # in a shared channel. Thread creation takes no nonce, so the lock and the placement check above
-                    # are what keep a retry from opening a second post.
-                    posted = client.create_thread(
-                        channel_id=discord_channel.channel_id,
-                        name=renderer.render_thread_name(),
-                        data=payload,
-                        applied_tags=discord_channel.tag_ids_for(renderer.state_tag_name()),
+                    # in a shared channel.
+                    name = renderer.render_thread_name()
+
+                    # Thread creation takes no nonce, so Discord cannot make the retry idempotent the way it does
+                    # for a message. A retry is therefore the one time it is worth asking whether the post this task
+                    # is about to open already exists — which it does if a previous attempt posted and then died
+                    # before it could record where.
+                    thread_id = (
+                        client.find_thread_by_name(
+                            guild_id=discord_channel.guild_id, channel_id=discord_channel.channel_id, name=name
+                        )
+                        if self.request.retries
+                        else None
                     )
-                    thread_id = posted.message_id
-                    discord_message = DiscordAPIMessage(
-                        message_id=posted.message_id, channel_id=discord_channel.channel_id
-                    )
+                    if thread_id:
+                        logger.info(
+                            f"Adopting discord post {thread_id} already opened for alert group {alert_group.pk}"
+                        )
+                    else:
+                        thread_id = client.create_thread(
+                            channel_id=discord_channel.channel_id,
+                            name=name,
+                            data=payload,
+                            applied_tags=discord_channel.tag_ids_for(renderer.state_tag_name()),
+                        ).message_id
+                    discord_message = DiscordAPIMessage(message_id=thread_id, channel_id=discord_channel.channel_id)
                 else:
                     thread_id = None
                     discord_message = client.create_message(

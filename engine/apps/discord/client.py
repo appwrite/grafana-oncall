@@ -132,6 +132,23 @@ class DiscordClient:
         response = self._request("POST", f"{self.base_url}/channels/{channel_id}/threads", data=payload)
         return DiscordMessage(message_id=response["id"], channel_id=response["id"])
 
+    def find_thread_by_name(self, guild_id: str, channel_id: str, name: str) -> typing.Optional[str]:
+        """A forum post already carrying `name`, active or archived.
+
+        Thread creation takes no nonce, so unlike an ordinary message it cannot be made idempotent by Discord. This
+        is how a task that posted and then died before recording the placement finds its own post again instead of
+        opening a second one.
+        """
+        wanted = name[:THREAD_NAME_LIMIT]
+        for path, key in (
+            (f"{self.base_url}/guilds/{guild_id}/threads/active", "threads"),
+            (f"{self.base_url}/channels/{channel_id}/threads/archived/public", "threads"),
+        ):
+            for thread in self._request("GET", path).get(key) or []:
+                if thread.get("parent_id") == channel_id and thread.get("name") == wanted:
+                    return thread["id"]
+        return None
+
     def update_thread(self, thread_id: str, applied_tags: typing.Optional[list] = None, archived: bool = False) -> None:
         """Set a post's tags, and take it out of the archive so its card can still be edited.
 

@@ -103,6 +103,57 @@ def test_a_text_channel_still_gets_a_plain_message(
     assert alert_group.discord_messages.get().thread_id is None
 
 
+def run_as_retry(task, *args, retries):
+    """Run the task the way celery runs it on a retry, so `self.request.retries` is what the code reads."""
+    return task.apply(args=args, retries=retries, throw=True)
+
+
+@pytest.mark.django_db
+def test_a_retry_adopts_the_post_a_dead_attempt_already_opened(make_forum, make_alert_for):
+    """Discord opened the post, the worker died before recording it, and celery retried the task."""
+    organization, _ = make_forum()
+    alert_group, alert = make_alert_for(organization)
+
+    with patch(
+        "apps.discord.tasks.DiscordClient.find_thread_by_name", return_value="1300000000000000009"
+    ) as find, patch("apps.discord.tasks.DiscordClient.create_thread") as create_thread:
+        run_as_retry(on_create_alert_async, alert.pk, retries=1)
+
+    create_thread.assert_not_called()
+    find.assert_called_once()
+    assert alert_group.discord_messages.get().thread_id == "1300000000000000009"
+
+
+@pytest.mark.django_db
+def test_a_retry_with_nothing_to_adopt_opens_the_post(make_forum, make_alert_for):
+    organization, _ = make_forum()
+    alert_group, alert = make_alert_for(organization)
+
+    with patch("apps.discord.tasks.DiscordClient.find_thread_by_name", return_value=None), patch(
+        "apps.discord.tasks.DiscordClient.create_thread",
+        return_value=DiscordAPIMessage(message_id="1300000000000000010", channel_id="1300000000000000010"),
+    ) as create_thread:
+        run_as_retry(on_create_alert_async, alert.pk, retries=2)
+
+    create_thread.assert_called_once()
+    assert alert_group.discord_messages.get().thread_id == "1300000000000000010"
+
+
+@pytest.mark.django_db
+def test_the_first_attempt_does_not_go_looking(make_forum, make_alert_for):
+    """The duplicate only exists after a retry, so the common path pays nothing for it."""
+    organization, _ = make_forum()
+    _, alert = make_alert_for(organization)
+
+    with patch("apps.discord.tasks.DiscordClient.find_thread_by_name") as find, patch(
+        "apps.discord.tasks.DiscordClient.create_thread",
+        return_value=DiscordAPIMessage(message_id="1300000000000000011", channel_id="1300000000000000011"),
+    ):
+        on_create_alert_async(alert.pk)
+
+    find.assert_not_called()
+
+
 @pytest.fixture()
 def acknowledge(make_alert_group_log_record):
     def _acknowledge(alert_group):
