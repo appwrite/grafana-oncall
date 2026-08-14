@@ -215,10 +215,14 @@ discord_message = """\
 {% set annotations = payload.get("commonAnnotations", {}) if payload.get("commonAnnotations") else payload.get("annotations", {}) -%}
 {% set legacyLabels = payload.get("labels", {}) -%}
 
+{# Grafana sends its own identifiers as labels too, wrapped in double underscores the same way. -#}
 {% set said = {} -%}
 {% set labels = [] -%}
 {% for source in [groupLabels, commonLabels, legacyLabels] -%}
-{% for key, value in source.items() if key not in ["alertname", "severity"] and said.get(key) != value -%}
+{% for key, value in source.items()
+   if key not in ["alertname", "severity"]
+   and not key.startswith("__")
+   and said.get(key) != value -%}
 {% set _ = said.update({key: value}) -%}
 {% set _ = labels.append(key ~ ": " ~ value) -%}
 {% endfor -%}
