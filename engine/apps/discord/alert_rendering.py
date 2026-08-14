@@ -1,3 +1,8 @@
+import re
+import typing
+
+from emoji import emojize
+
 from apps.alerts.incident_appearance.renderers.base_renderer import AlertBaseRenderer, AlertGroupBaseRenderer
 from apps.alerts.incident_appearance.templaters.alert_templater import AlertTemplater
 from apps.alerts.models import Alert, AlertGroup
@@ -43,6 +48,29 @@ class AlertDiscordTemplater(AlertTemplater):
 
     def _render_for(self) -> str:
         return self.RENDER_FOR_DISCORD
+
+    def _postformat(self, templated_alert):
+        """Fix up what OnCall's shared defaults assume about the surface they land on.
+
+        There are no `discord_*` default templates, so an integration falls back to the web ones, which were written
+        for a client that turns `:fire:` into an emoji and shrugs at a link with no target. Discord expands a
+        shortcode only in the client as somebody types it — never over the API, and never inside an embed — and shows
+        an empty masked link as its literal brackets. Both are cheap to fix here, and fixing them here covers every
+        integration, including ones added later.
+        """
+        templated_alert.title = _for_discord(templated_alert.title)
+        templated_alert.message = _for_discord(templated_alert.message)
+        return templated_alert
+
+
+# `[label]()` — a masked link whose target the template had nothing to fill in with.
+EMPTY_MASKED_LINK = re.compile(r"\[([^\]]*)\]\(\s*\)")
+
+
+def _for_discord(text: typing.Optional[str]) -> typing.Optional[str]:
+    if not text:
+        return text
+    return EMPTY_MASKED_LINK.sub(r"\1", emojize(text, language="alias"))
 
 
 class AlertDiscordRenderer(AlertBaseRenderer):

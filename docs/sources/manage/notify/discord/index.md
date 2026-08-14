@@ -19,6 +19,12 @@ escalation chains and personal notification policies.
 
 At the moment, this integration is only available for OSS installations.
 
+![An alert group posted to Discord, with Acknowledge, Resolve and OnCall buttons](img/alert-firing.png)
+
+Acknowledging or resolving — from Discord or anywhere else — edits the same message in place:
+
+![The same alert group after being acknowledged, showing who acknowledged it](img/alert-acknowledged.png)
+
 ## Before you begin
 
 Create a Discord application at <https://discord.com/developers/applications>, add a bot to it, and invite the bot to
@@ -82,7 +88,7 @@ recorded as failed with "has not linked a Discord account".
 Every ten minutes OnCall checks each schedule for shifts that have just started and announces them in the default
 Discord channel, mentioning whoever is going on call:
 
-> 📅 @alice, @bob — your **Primary** on-call shift just started.
+![A shift announcement mentioning the users going on call](img/shift-announcement.png)
 
 Someone on call without a linked Discord account is named in plain text rather than left out. Only shift starts are
 announced: in a follow-the-sun rota every shift ending coincides with another starting, so "ended" messages would be

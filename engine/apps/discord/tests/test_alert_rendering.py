@@ -67,3 +67,47 @@ def test_buttons_carry_the_alert_group(make_rendered_message, make_organization,
     acknowledge = payload["components"][0]["components"][0]
     assert acknowledge["custom_id"].startswith("oncall:acknowledge:")
     assert len(acknowledge["custom_id"]) <= 100
+
+
+@pytest.mark.parametrize(
+    "templated,expected",
+    [
+        # Discord expands a shortcode only client-side, so anything OnCall's shared defaults emit must arrive as
+        # the character itself.
+        (":fire: it is on fire", "🔥 it is on fire"),
+        (":rotating_light: critical", "🚨 critical"),
+        # A masked link with nothing to point at renders as its own brackets, so drop the markup and keep the label.
+        ("[View in AlertManager]()", "View in AlertManager"),
+        ("[Runbook](https://runbooks.appwrite.io/db)", "[Runbook](https://runbooks.appwrite.io/db)"),
+        # An unknown shortcode is left alone rather than guessed at.
+        (":not_an_emoji: stays", ":not_an_emoji: stays"),
+        ("", ""),
+        (None, None),
+    ],
+)
+def test_for_discord(templated, expected):
+    from apps.discord.alert_rendering import _for_discord
+
+    assert _for_discord(templated) == expected
+
+
+@pytest.mark.django_db
+def test_templater_fixes_up_the_shared_web_defaults(
+    make_organization, make_alert_receive_channel, make_alert_group, make_alert
+):
+    from apps.alerts.incident_appearance.templaters.alert_templater import TemplatedAlert
+    from apps.discord.alert_rendering import AlertDiscordTemplater
+
+    organization = make_organization()
+    alert_receive_channel = make_alert_receive_channel(
+        organization, integration=AlertReceiveChannel.INTEGRATION_GRAFANA
+    )
+    alert_group = make_alert_group(alert_receive_channel=alert_receive_channel)
+    alert = make_alert(alert_group=alert_group, raw_request_data=alert_receive_channel.config.example_payload)
+
+    templated = AlertDiscordTemplater(alert)._postformat(
+        TemplatedAlert(title=":fire: Down", message="Status: firing :fire:\n[View in AlertManager]()")
+    )
+
+    assert templated.title == "🔥 Down"
+    assert templated.message == "Status: firing 🔥\nView in AlertManager"
