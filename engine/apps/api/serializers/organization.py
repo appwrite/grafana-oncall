@@ -87,10 +87,12 @@ class CurrentOrganizationSerializer(OrganizationSerializer):
         mattermost_configured = not LiveSetting.objects.filter(
             name__startswith="MATTERMOST", error__isnull=False
         ).exists()
+        discord_configured = not LiveSetting.objects.filter(name__startswith="DISCORD", error__isnull=False).exists()
         return {
             "telegram_configured": telegram_configured,
             "phone_provider": asdict(phone_provider_config),
             "mattermost_configured": mattermost_configured,
+            "discord_configured": discord_configured,
         }
 
 

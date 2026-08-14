@@ -8,6 +8,7 @@ import { IS_CURRENT_ENV_OSS } from 'helpers/consts';
 import { observer } from 'mobx-react';
 
 import { VerticalTabsBar, VerticalTab } from 'components/VerticalTabsBar/VerticalTabsBar';
+import { DiscordSettings } from 'pages/settings/tabs/ChatOps/tabs/DiscordSettings/DiscordSettings';
 import { MSTeamsSettings } from 'pages/settings/tabs/ChatOps/tabs/MSTeamsSettings/MSTeamsSettings';
 import { MattermostSettings } from 'pages/settings/tabs/ChatOps/tabs/MattermostSettings/MattermostSettings';
 import { SlackSettings } from 'pages/settings/tabs/ChatOps/tabs/SlackSettings/SlackSettings';
@@ -24,6 +25,7 @@ export enum ChatOpsTab {
   Telegram = 'Telegram',
   MSTeams = 'MSTeams',
   Mattermost = 'Mattermost',
+  Discord = 'Discord',
 }
 interface ChatOpsProps extends AppRootProps, WithStoreProps, Themeable2 {}
 interface ChatOpsState {
@@ -95,7 +97,8 @@ export class _ChatOpsPage extends React.Component<ChatOpsProps, ChatOpsState> {
       store.hasFeature(AppFeature.Slack) ||
       store.hasFeature(AppFeature.Telegram) ||
       store.hasFeature(AppFeature.MsTeams) ||
-      store.hasFeature(AppFeature.Mattermost)
+      store.hasFeature(AppFeature.Mattermost) ||
+      store.hasFeature(AppFeature.Discord)
     );
   }
 
@@ -151,6 +154,14 @@ const Tabs = (props: TabsProps) => {
           </Stack>
         </VerticalTab>
       )}
+      {store.hasFeature(AppFeature.Discord) && (
+        <VerticalTab id={ChatOpsTab.Discord}>
+          <Stack>
+            <Icon name="message" />
+            Discord
+          </Stack>
+        </VerticalTab>
+      )}
     </VerticalTabsBar>
   );
 };
@@ -169,6 +180,7 @@ const TabsContent = (props: TabsContentProps) => {
       {store.hasFeature(AppFeature.Telegram) && activeTab === ChatOpsTab.Telegram && <TelegramSettings />}
       {store.hasFeature(AppFeature.MsTeams) && activeTab === ChatOpsTab.MSTeams && <MSTeamsSettings />}
       {store.hasFeature(AppFeature.Mattermost) && activeTab === ChatOpsTab.Mattermost && <MattermostSettings />}
+      {store.hasFeature(AppFeature.Discord) && activeTab === ChatOpsTab.Discord && <DiscordSettings />}
     </>
   );
 };

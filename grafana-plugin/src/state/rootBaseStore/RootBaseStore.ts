@@ -12,6 +12,7 @@ import { AlertGroupStore } from 'models/alertgroup/alertgroup';
 import { ApiTokenStore } from 'models/api_token/api_token';
 import { CloudStore } from 'models/cloud/cloud';
 import { DirectPagingStore } from 'models/direct_paging/direct_paging';
+import { DiscordChannelStore } from 'models/discord/discord_channel';
 import { EscalationChainStore } from 'models/escalation_chain/escalation_chain';
 import { EscalationPolicyStore } from 'models/escalation_policy/escalation_policy';
 import { FiltersStore } from 'models/filters/filters';
@@ -86,6 +87,7 @@ export class RootBaseStore {
   slackChannelStore = new SlackChannelStore(this);
   mattermostStore = new MattermostStore(this);
   mattermostChannelStore = new MattermostChannelStore(this);
+  discordChannelStore = new DiscordChannelStore(this);
   heartbeatStore = new HeartbeatStore(this);
   scheduleStore = new ScheduleStore(this);
   userGroupStore = new UserGroupStore(this);

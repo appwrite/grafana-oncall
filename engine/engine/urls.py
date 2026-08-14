@@ -68,6 +68,11 @@ if settings.FEATURE_MATTERMOST_INTEGRATION_ENABLED:
         path("api/internal/v1/mattermost/", include("apps.mattermost.urls")),
     ]
 
+if settings.FEATURE_DISCORD_INTEGRATION_ENABLED:
+    urlpatterns += [
+        path("api/internal/v1/discord/", include("apps.discord.urls")),
+    ]
+
 if settings.IS_OPEN_SOURCE:
     urlpatterns += [
         path("api/internal/v1/", include("apps.oss_installation.urls", namespace="oss_installation")),

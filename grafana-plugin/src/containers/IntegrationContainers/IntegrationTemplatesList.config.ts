@@ -45,7 +45,27 @@ const additionalTemplatesToRender: TemplateBlock[] = [
         height: MONACO_INPUT_HEIGHT_SMALL,
       },
     ],
-  }
+  },
+  {
+    name: 'Discord',
+    contents: [
+      {
+        name: 'discord_title_template',
+        label: 'Title',
+        height: MONACO_INPUT_HEIGHT_SMALL,
+      },
+      {
+        name: 'discord_message_template',
+        label: 'Message',
+        height: MONACO_INPUT_HEIGHT_TALL,
+      },
+      {
+        name: 'discord_image_url_template',
+        label: 'Image',
+        height: MONACO_INPUT_HEIGHT_SMALL,
+      },
+    ],
+  },
 ];
 
 export const getTemplatesToRender = (features?: Record<string, boolean>) => {
@@ -55,6 +75,9 @@ export const getTemplatesToRender = (features?: Record<string, boolean>) => {
   }
   if (features?.[AppFeature.Mattermost]) {
     templatesToRender.push(additionalTemplatesToRender[1])
+  }
+  if (features?.[AppFeature.Discord]) {
+    templatesToRender.push(additionalTemplatesToRender[2])
   }
   return templatesToRender;
 };

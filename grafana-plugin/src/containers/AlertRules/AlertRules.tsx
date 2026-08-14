@@ -3,6 +3,7 @@ import React, { useEffect } from 'react';
 import { Stack, useTheme2 } from '@grafana/ui';
 
 import { Timeline } from 'components/Timeline/Timeline';
+import { DiscordConnector } from 'containers/AlertRules/parts/connectors/DiscordConnector';
 import { MSTeamsConnector } from 'containers/AlertRules/parts/connectors/MSTeamsConnector';
 import { MattermostConnector } from 'containers/AlertRules/parts/connectors/MattermostConnector';
 import { SlackConnector } from 'containers/AlertRules/parts/connectors/SlackConnector';
@@ -21,7 +22,8 @@ export const ChatOpsConnectors = (props: ChatOpsConnectorsProps) => {
 
   const store = useStore();
   const theme = useTheme2();
-  const { organizationStore, telegramChannelStore, msteamsChannelStore, mattermostChannelStore } = store;
+  const { organizationStore, telegramChannelStore, msteamsChannelStore, mattermostChannelStore, discordChannelStore } =
+    store;
 
   const isSlackInstalled = Boolean(organizationStore.currentOrganization?.slack_team_identity);
   const isTelegramInstalled =
@@ -30,12 +32,15 @@ export const ChatOpsConnectors = (props: ChatOpsConnectorsProps) => {
   useEffect(() => {
     msteamsChannelStore.updateMSTeamsChannels();
     mattermostChannelStore.updateMattermostChannels();
+    discordChannelStore.updateItems();
   }, []);
 
   const isMSTeamsInstalled = msteamsChannelStore.currentTeamToMSTeamsChannel?.length > 0;
   const isMattermostInstalled = store.hasFeature(AppFeature.Mattermost) && Object.keys(mattermostChannelStore.items).length > 0;
 
-  if (!isSlackInstalled && !isTelegramInstalled && !isMSTeamsInstalled && !isMattermostInstalled) {
+  const isDiscordInstalled = store.hasFeature(AppFeature.Discord) && Object.keys(discordChannelStore.items).length > 0;
+
+  if (!isSlackInstalled && !isTelegramInstalled && !isMSTeamsInstalled && !isMattermostInstalled && !isDiscordInstalled) {
     return null;
   }
 
@@ -46,6 +51,7 @@ export const ChatOpsConnectors = (props: ChatOpsConnectorsProps) => {
         {isTelegramInstalled && <TelegramConnector channelFilterId={channelFilterId} />}
         {isMSTeamsInstalled && <MSTeamsConnector channelFilterId={channelFilterId} />}
         {isMattermostInstalled && <MattermostConnector channelFilterId={channelFilterId}/>}
+        {isDiscordInstalled && <DiscordConnector channelFilterId={channelFilterId} />}
       </Stack>
     </Timeline.Item>
   );

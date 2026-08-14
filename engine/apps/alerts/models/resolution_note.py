@@ -123,6 +123,7 @@ class ResolutionNote(models.Model):
         SLACK = 0, "Slack"
         WEB = 1, "Web"
         MOBILE_APP = 2, "Mobile App"
+        DISCORD = 3, "Discord"
 
     public_primary_key = models.CharField(
         max_length=20,

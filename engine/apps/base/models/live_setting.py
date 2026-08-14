@@ -86,6 +86,8 @@ class LiveSetting(models.Model):
         "MATTERMOST_BOT_TOKEN",
         "MATTERMOST_LOGIN_RETURN_REDIRECT_HOST",
         "MATTERMOST_SIGNING_SECRET",
+        "DISCORD_BOT_TOKEN",
+        "DISCORD_PUBLIC_KEY",
     )
 
     DESCRIPTIONS = {
@@ -223,6 +225,11 @@ class LiveSetting(models.Model):
             "https://grafana.com/docs/oncall/latest/open-source/#mattermost-setup"
             "' target='_blank'>instruction</a> for details how to set up Mattermost. "
         ),
+        "DISCORD_BOT_TOKEN": "Bot token of the Discord application OnCall posts alert groups with.",
+        "DISCORD_PUBLIC_KEY": (
+            "Public key of the Discord application, used to verify interactions posted to "
+            "<code>/api/internal/v1/discord/interaction/</code>, which is the application's Interactions Endpoint URL."
+        ),
     }
 
     SECRET_SETTING_NAMES = (
@@ -244,6 +251,7 @@ class LiveSetting(models.Model):
         "MATTERMOST_CLIENT_OAUTH_ID",
         "MATTERMOST_CLIENT_OAUTH_SECRET",
         "MATTERMOST_BOT_TOKEN",
+        "DISCORD_BOT_TOKEN",
     )
 
     def __str__(self):
