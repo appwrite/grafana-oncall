@@ -609,7 +609,11 @@ def test_a_card_reads_a_legacy_payload_too(integration):
         payload={
             "status": "firing",
             "labels": {"alertname": "InstanceDown", "instance": "localhost:8082", "job": "node"},
-            "annotations": {"summary": "Instance is down", "impact": "checkout unavailable"},
+            "annotations": {
+                "summary": "Instance is down",
+                "impact": "checkout unavailable",
+                "dashboard_url": "https://grafana.example/d/nodes",
+            },
         },
         source_link="",
         integration_name="Alertmanager",
@@ -620,6 +624,8 @@ def test_a_card_reads_a_legacy_payload_too(integration):
     assert "instance: localhost:8082" in lines
     assert "job: node" in lines
     assert "impact: checkout unavailable" in lines
+    # Left to the Dashboard button, which reads the same top-level annotations.
+    assert "dashboard_url" not in rendered
 
 
 @pytest.mark.parametrize("integration", ["alertmanager", "grafana_alerting"])
@@ -665,3 +671,38 @@ def test_value_string_survives_when_there_is_no_values_to_read_instead(integrati
     assert "value_string: [ var='A' value=42 ]" in without_values.splitlines()
     assert "value_string" not in with_values
     assert 'values: {"A":42}' in with_values.splitlines()
+
+
+@pytest.mark.django_db
+def test_a_legacy_payloads_dashboard_link_still_gets_a_button(
+    make_organization, make_user_for_organization, make_alert_receive_channel, make_alert_group, make_alert
+):
+    """The body leaves the dashboard to the button, so the button has to look where the body looks.
+
+    A legacy alertmanager payload keeps its annotations at the top level. Reading only `commonAnnotations` here
+    took the link off the card altogether: out of the body by the template, and never onto a button.
+    """
+    organization = make_organization()
+    make_user_for_organization(organization, username="loks0n")
+    alert_receive_channel = make_alert_receive_channel(
+        organization, integration=AlertReceiveChannel.INTEGRATION_ALERTMANAGER
+    )
+    alert_group = make_alert_group(alert_receive_channel=alert_receive_channel)
+    make_alert(
+        alert_group=alert_group,
+        raw_request_data={
+            "status": "firing",
+            "labels": {"alertname": "InstanceDown", "instance": "localhost:8082"},
+            "annotations": {"summary": "Instance is down", "dashboard_url": "https://grafana.example/d/nodes"},
+        },
+    )
+
+    payload = DiscordMessageRenderer(alert_group).render_alert_group_message()
+    buttons = {
+        component["label"]: component.get("url")
+        for row in payload["components"]
+        for component in row["components"]
+        if component.get("label")
+    }
+
+    assert buttons["Dashboard"] == "https://grafana.example/d/nodes"

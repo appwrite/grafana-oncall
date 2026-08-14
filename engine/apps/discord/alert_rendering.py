@@ -299,11 +299,14 @@ class AlertGroupDiscordRenderer(AlertGroupBaseRenderer):
         rather than a template because it is a link, not prose — the templates leave it out for this reason.
         """
         alert = self.alert_group.alerts.last()
-        annotations = (getattr(alert, "raw_request_data", None) or {}).get("commonAnnotations") or {}
-        for name in DASHBOARD_ANNOTATIONS:
-            candidate = annotations.get(name)
-            if valid_link(candidate):
-                return candidate
+        payload = getattr(alert, "raw_request_data", None) or {}
+        # Both places the templates read: a legacy alertmanager payload puts its annotations at the top level, and
+        # leaving it out here would take the link off the card entirely, since the body leaves it to this button.
+        for annotations in (payload.get("commonAnnotations"), payload.get("annotations")):
+            for name in DASHBOARD_ANNOTATIONS:
+                candidate = (annotations or {}).get(name)
+                if valid_link(candidate):
+                    return candidate
         return None
 
     def _buttons(self) -> list:
