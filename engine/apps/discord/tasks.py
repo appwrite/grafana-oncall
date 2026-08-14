@@ -10,6 +10,7 @@ from apps.discord.client import DiscordClient
 from apps.discord.client import DiscordMessage as DiscordAPIMessage
 from apps.discord.exceptions import DiscordAPIException, DiscordAPITokenInvalid
 from apps.discord.models import DiscordChannel, DiscordMessage
+from apps.discord.utils import beside_card
 from apps.user_management.models import User
 from common.custom_celery_tasks import shared_dedicated_queue_retry_task
 from common.utils import OkToRetry, task_lock
@@ -197,17 +198,18 @@ def notify_user_about_alert_async(user_pk, alert_group_pk, notification_policy_p
     else:
         content = f"{templated_alert.title}\nInviting {discord_user.mention_username} to look at the alert group."
 
+    channel_id, reference = beside_card(discord_message)
     payload = {
         "content": content,
-        "message_reference": {"message_id": discord_message.message_id, "fail_if_not_exists": False},
         # An alert annotation is attacker-adjacent text, so a stray @everyone in one must never resolve: only the
         # user being invited is allowed to be pinged.
         "allowed_mentions": {"parse": [], "users": [discord_user.discord_user_id] if discord_user else []},
+        **reference,
     }
 
     try:
         DiscordClient().create_message(
-            channel_id=discord_message.channel_id,
+            channel_id=channel_id,
             data=payload,
             # Same reason as the alert group card: the log record is written after the post, and a retry in between
             # must not page the user twice.

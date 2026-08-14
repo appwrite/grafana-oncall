@@ -111,6 +111,24 @@ def test_notify_user_mentions_only_that_user(make_notification, make_discord_use
 
 
 @pytest.mark.django_db
+def test_notify_user_in_a_forum_pings_inside_the_post(make_notification, make_discord_user):
+    """Discord refuses a message addressed to a forum channel, so the ping has to go into the post itself."""
+    user, alert_group, notification_policy = make_notification()
+    make_discord_user(user)
+    placement = alert_group.discord_messages.first()
+    placement.thread_id = "1300000000000000777"
+    placement.save(update_fields=["thread_id"])
+
+    with patch("apps.discord.tasks.DiscordClient.create_message") as create_message:
+        notify_user_about_alert_async(user.pk, alert_group.pk, notification_policy.pk)
+
+    _, kwargs = create_message.call_args
+    assert kwargs["channel_id"] == placement.thread_id
+    # Inside the post there is nothing to quote: the card is the post.
+    assert "message_reference" not in kwargs["data"]
+
+
+@pytest.mark.django_db
 def test_notify_unlinked_user_is_logged_as_failed(make_notification):
     user, alert_group, notification_policy = make_notification()
 
