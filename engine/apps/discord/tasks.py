@@ -4,11 +4,12 @@ from celery.utils.log import get_task_logger
 from django.conf import settings
 from rest_framework import status
 
-from apps.alerts.models import Alert
-from apps.discord.alert_rendering import DiscordMessageRenderer
+from apps.alerts.models import Alert, AlertGroup
+from apps.discord.alert_rendering import AlertGroupDiscordRenderer, DiscordMessageRenderer
 from apps.discord.client import DiscordClient
 from apps.discord.exceptions import DiscordAPIException, DiscordAPITokenInvalid
 from apps.discord.models import DiscordChannel, DiscordMessage
+from apps.user_management.models import User
 from common.custom_celery_tasks import shared_dedicated_queue_retry_task
 from common.utils import OkToRetry
 
@@ -88,3 +89,84 @@ def on_alert_group_action_triggered_async(log_record_id):
     representative = AlertGroupDiscordRepresentative(log_record)
     if representative.is_applicable():
         representative.get_handler()(log_record.alert_group)
+
+
+@shared_dedicated_queue_retry_task(
+    autoretry_for=(Exception,), retry_backoff=True, max_retries=1 if settings.DEBUG else None
+)
+def notify_user_about_alert_async(user_pk, alert_group_pk, notification_policy_pk):
+    from apps.base.models import UserNotificationPolicy, UserNotificationPolicyLogRecord
+
+    def _create_error_log_record(notification_error_code=None):
+        UserNotificationPolicyLogRecord.objects.create(
+            author=user,
+            type=UserNotificationPolicyLogRecord.TYPE_PERSONAL_NOTIFICATION_FAILED,
+            notification_policy=notification_policy,
+            alert_group=alert_group,
+            reason="Error during discord notification",
+            notification_step=notification_policy.step,
+            notification_channel=notification_policy.notify_by,
+            notification_error_code=notification_error_code,
+        )
+
+    try:
+        user = User.objects.get(pk=user_pk)
+        alert_group = AlertGroup.objects.get(pk=alert_group_pk)
+        notification_policy = UserNotificationPolicy.objects.get(pk=notification_policy_pk)
+        discord_message = alert_group.discord_messages.get(message_type=DiscordMessage.ALERT_GROUP_MESSAGE)
+    except User.DoesNotExist:
+        logger.warning(f"User {user_pk} is not found")
+        return
+    except AlertGroup.DoesNotExist:
+        logger.warning(f"Alert group {alert_group_pk} is not found")
+        return
+    except UserNotificationPolicy.DoesNotExist:
+        logger.warning(f"UserNotificationPolicy {notification_policy_pk} is not found")
+        return
+    except DiscordMessage.DoesNotExist as e:
+        if notify_user_about_alert_async.request.retries >= 10:
+            logger.error(
+                f"Alert group discord message is not created {alert_group_pk}. Hence stopped retrying for user notification"
+            )
+            _create_error_log_record(
+                UserNotificationPolicyLogRecord.ERROR_NOTIFICATION_IN_DISCORD_ALERT_GROUP_MESSAGE_NOT_FOUND
+            )
+            return
+        raise e
+
+    templated_alert = AlertGroupDiscordRenderer(alert_group).alert_renderer.templated_alert
+    discord_user = getattr(user, "discord_user_identity", None)
+    if discord_user is None:
+        content = f"{templated_alert.title}\nTried to invite {user.username} to look at the alert group. "
+        content += f"Unfortunately {user.username} has not linked a Discord account."
+        _create_error_log_record(UserNotificationPolicyLogRecord.ERROR_NOTIFICATION_IN_DISCORD_USER_NOT_IN_DISCORD)
+    else:
+        content = f"{templated_alert.title}\nInviting {discord_user.mention_username} to look at the alert group."
+
+    payload = {
+        "content": content,
+        "message_reference": {"message_id": discord_message.message_id, "fail_if_not_exists": False},
+        # An alert annotation is attacker-adjacent text, so a stray @everyone in one must never resolve: only the
+        # user being invited is allowed to be pinged.
+        "allowed_mentions": {"parse": [], "users": [discord_user.discord_user_id] if discord_user else []},
+    }
+
+    try:
+        DiscordClient().create_message(channel_id=discord_message.channel_id, data=payload)
+    except DiscordAPITokenInvalid:
+        logger.error(f"Discord bot token is invalid, could not notify user about alert group {alert_group_pk}")
+        _create_error_log_record(UserNotificationPolicyLogRecord.ERROR_NOTIFICATION_IN_DISCORD_API_TOKEN_INVALID)
+    except DiscordAPIException as ex:
+        logger.error(f"Discord API error {ex}")
+        if ex.status not in [status.HTTP_401_UNAUTHORIZED, status.HTTP_403_FORBIDDEN]:
+            raise ex
+        _create_error_log_record(UserNotificationPolicyLogRecord.ERROR_NOTIFICATION_IN_DISCORD_API_UNAUTHORIZED)
+    else:
+        UserNotificationPolicyLogRecord.objects.create(
+            author=user,
+            type=UserNotificationPolicyLogRecord.TYPE_PERSONAL_NOTIFICATION_SUCCESS,
+            notification_policy=notification_policy,
+            alert_group=alert_group,
+            notification_step=notification_policy.step,
+            notification_channel=notification_policy.notify_by,
+        )

@@ -14,7 +14,8 @@ keywords:
 
 The Discord integration posts every alert group to a Discord channel as an embed with Acknowledge and Resolve
 buttons, and keeps that message up to date as the alert group changes state — whether the change came from Discord,
-the OnCall UI, Slack or the API.
+the OnCall UI, Slack or the API. Once a user links their Discord account, Discord is also selectable as a step in
+escalation chains and personal notification policies.
 
 At the moment, this integration is only available for OSS installations.
 
@@ -60,7 +61,30 @@ curl -X POST https://<your-oncall-engine>/api/internal/v1/discord/channels/ \
 `POST /api/internal/v1/discord/channels/<id>/set_default/` marks a channel as the default one alert groups are
 posted to. A route can override it by setting `notification_backends.DISCORD.channel` to a channel's id.
 
-## Acknowledge from Discord
+## Register the slash command
 
-A button press acts as the OnCall user linked to the pressing Discord account. Until an account is linked, OnCall
-replies to the presser — and only to them — that their Discord account is not linked to a Grafana OnCall user.
+Linking a Discord account to an OnCall user is done with a slash command, which has to be registered with the
+application once per deployment (and again whenever it changes):
+
+```bash
+python manage.py register_discord_commands
+```
+
+## Link a Discord account
+
+A button press acts as the OnCall user linked to the pressing Discord account, and a Discord notification step
+mentions that account. To link one:
+
+1. Get a verification code, valid for ten minutes:
+
+   ```bash
+   curl "https://<your-oncall-engine>/api/internal/v1/users/<user id>/get_backend_verification_code?backend=DISCORD" \
+     -H "Authorization: <grafana-token>"
+   ```
+
+2. In Discord, run `/oncall-link code:<code>`. The reply is only visible to you.
+
+`POST /api/internal/v1/users/<user id>/unlink_backend?backend=DISCORD` unlinks it again.
+
+Until an account is linked, a button press gets an ephemeral reply saying so, and a Discord notification step is
+recorded as failed with "has not linked a Discord account".

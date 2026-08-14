@@ -2,21 +2,43 @@ from rest_framework import serializers
 
 from apps.base.messaging import BaseMessagingBackend
 from apps.discord.models import DiscordChannel
+from apps.discord.tasks import notify_user_about_alert_async
 
 
 class DiscordBackend(BaseMessagingBackend):
-    """Discord as a routing destination.
-
-    `available_for_use` stays False until a Discord account can be linked to an OnCall user, which is what a personal
-    notification step would need; registering the backend already gives routes a Discord channel and alert templates a
-    `discord` render target.
-    """
+    """Discord as a notification channel and a routing destination."""
 
     backend_id = "DISCORD"
     label = "Discord"
     short_label = "Discord"
-    available_for_use = False
+    available_for_use = True
     templater = "apps.discord.alert_rendering.AlertDiscordTemplater"
+
+    def generate_user_verification_code(self, user):
+        from apps.discord.utils import create_verification_code
+
+        return create_verification_code(user)
+
+    def unlink_user(self, user):
+        from apps.discord.models import DiscordUser
+
+        DiscordUser.objects.get(user=user).delete()
+
+    def serialize_user(self, user):
+        discord_user = getattr(user, "discord_user_identity", None)
+        if not discord_user:
+            return None
+        return {
+            "discord_user_id": discord_user.discord_user_id,
+            "username": discord_user.username,
+        }
+
+    def notify_user(self, user, alert_group, notification_policy):
+        notify_user_about_alert_async.delay(
+            user_pk=user.pk,
+            alert_group_pk=alert_group.pk,
+            notification_policy_pk=notification_policy.pk,
+        )
 
     def validate_channel_filter_data(self, organization, data):
         notification_data = {}

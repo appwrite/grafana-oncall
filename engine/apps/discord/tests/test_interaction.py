@@ -124,3 +124,46 @@ def test_unknown_custom_id_does_nothing(make_alert_group_with_discord_message, s
     assert response.status_code == status.HTTP_200_OK
     alert_group.refresh_from_db()
     assert not alert_group.acknowledged
+
+
+def slash_command(code, discord_user_id, name="oncall-link"):
+    return {
+        "type": 2,
+        "data": {"name": name, "options": [{"name": "code", "value": code}]},
+        "member": {"user": {"id": discord_user_id, "username": "responder"}},
+    }
+
+
+@pytest.mark.django_db
+def test_link_command_links_the_account(make_organization_and_user, sign_discord_interaction):
+    from apps.discord.backend import DiscordBackend
+
+    _, user = make_organization_and_user()
+    code = DiscordBackend().generate_user_verification_code(user)
+    body, headers = sign_discord_interaction(slash_command(code, "1300000000000000042"))
+
+    response = APIClient().post(interaction_url(), data=body, content_type="application/json", **headers)
+
+    assert response.json()["data"]["flags"] == 64
+    user.refresh_from_db()
+    assert user.discord_user_identity.discord_user_id == "1300000000000000042"
+
+
+@pytest.mark.django_db
+def test_link_command_with_a_bad_code_links_nothing(make_organization_and_user, sign_discord_interaction):
+    _, user = make_organization_and_user()
+    body, headers = sign_discord_interaction(slash_command("not-a-code", "1300000000000000042"))
+
+    response = APIClient().post(interaction_url(), data=body, content_type="application/json", **headers)
+
+    assert "not valid" in response.json()["data"]["content"]
+    assert not hasattr(user, "discord_user_identity")
+
+
+@pytest.mark.django_db
+def test_unknown_command_is_ignored(make_organization_and_user, sign_discord_interaction):
+    body, headers = sign_discord_interaction(slash_command("code", "1300000000000000042", name="something-else"))
+
+    response = APIClient().post(interaction_url(), data=body, content_type="application/json", **headers)
+
+    assert response.status_code == status.HTTP_204_NO_CONTENT

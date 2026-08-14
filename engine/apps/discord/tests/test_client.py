@@ -75,3 +75,19 @@ def test_missing_bot_token(settings):
 
     with pytest.raises(DiscordAPITokenInvalid):
         DiscordClient()
+
+
+@pytest.mark.django_db
+@responses.activate
+def test_register_commands():
+    from apps.discord.commands import LINK_COMMAND_NAME, register_commands
+
+    responses.add(responses.GET, f"{DISCORD_API_URL}/applications/@me", json={"id": "999"}, status=200)
+    responses.add(
+        responses.PUT,
+        f"{DISCORD_API_URL}/applications/999/commands",
+        json=[{"id": "1", "name": LINK_COMMAND_NAME}],
+        status=200,
+    )
+
+    assert [command["name"] for command in register_commands()] == [LINK_COMMAND_NAME]

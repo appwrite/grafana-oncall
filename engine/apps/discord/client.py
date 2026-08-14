@@ -1,6 +1,6 @@
 import json
 from dataclasses import dataclass
-from typing import Optional
+from typing import Any, Optional, Union
 
 import requests
 from django.conf import settings
@@ -50,7 +50,7 @@ class DiscordClient:
         if not self.token:
             raise DiscordAPITokenInvalid
 
-    def _request(self, method: str, url: str, data: Optional[dict] = None) -> dict:
+    def _request(self, method: str, url: str, data: Union[dict, list, None] = None) -> Any:
         try:
             response = requests.request(
                 method=method,
@@ -79,6 +79,12 @@ class DiscordClient:
             guild_id=data.get("guild_id", ""),
             channel_name=data.get("name", ""),
         )
+
+    def get_application_id(self) -> str:
+        return self._request("GET", f"{self.base_url}/applications/@me")["id"]
+
+    def overwrite_commands(self, application_id: str, commands: list) -> list:
+        return self._request("PUT", f"{self.base_url}/applications/{application_id}/commands", data=commands)
 
     def create_message(self, channel_id: str, data: dict) -> DiscordMessage:
         response = self._request("POST", f"{self.base_url}/channels/{channel_id}/messages", data=data)

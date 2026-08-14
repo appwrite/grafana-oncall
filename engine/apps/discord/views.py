@@ -9,16 +9,18 @@ from rest_framework.views import APIView
 from apps.api.permissions import RBACPermission, user_is_authorized
 from apps.auth_token.auth import PluginAuthentication
 from apps.discord.auth import get_user, verify_signature
+from apps.discord.commands import LINK_COMMAND_NAME
 from apps.discord.events import process_interaction
 from apps.discord.models import DiscordChannel
 from apps.discord.serializers import DiscordChannelSerializer
+from apps.discord.utils import link_user
 from common.api_helpers.mixins import PublicPrimaryKeyMixin
 from common.insight_log.chatops_insight_logs import ChatOpsEvent, ChatOpsTypePlug, write_chatops_insight_log
 
 logger = logging.getLogger(__name__)
 
 # https://discord.com/developers/docs/interactions/receiving-and-responding
-PING, MESSAGE_COMPONENT = 1, 3
+PING, APPLICATION_COMMAND, MESSAGE_COMPONENT = 1, 2, 3
 PONG, CHANNEL_MESSAGE_WITH_SOURCE, DEFERRED_UPDATE_MESSAGE = 1, 4, 6
 EPHEMERAL = 1 << 6
 
@@ -90,6 +92,9 @@ class DiscordInteractionView(APIView):
         if interaction.get("type") == PING:
             return Response({"type": PONG})
 
+        if interaction.get("type") == APPLICATION_COMMAND:
+            return self._link_account(interaction)
+
         if interaction.get("type") != MESSAGE_COMPONENT:
             return Response(status=status.HTTP_204_NO_CONTENT)
 
@@ -104,6 +109,29 @@ class DiscordInteractionView(APIView):
         # The card is edited by the alert group representative once OnCall records the action, so the press itself
         # needs no reply beyond acknowledging it.
         return Response({"type": DEFERRED_UPDATE_MESSAGE})
+
+    def _link_account(self, interaction) -> Response:
+        """`/oncall-link code:<code>`, the Discord half of linking an account to an OnCall user.
+
+        Discord cannot carry a payload into a slash command, so the code is read from OnCall and pasted here. Every
+        reply is ephemeral: the code is a bearer credential until it expires, and nobody else in the channel needs
+        to see it.
+        """
+        data = interaction.get("data", {})
+        if data.get("name") != LINK_COMMAND_NAME:
+            return Response(status=status.HTTP_204_NO_CONTENT)
+
+        author = (interaction.get("member") or {}).get("user") or interaction.get("user") or {}
+        code = next((option.get("value", "") for option in data.get("options", []) if option.get("name") == "code"), "")
+
+        discord_user = link_user(
+            code=code,
+            discord_user_id=author.get("id", ""),
+            username=author.get("username", ""),
+        )
+        if discord_user is None:
+            return _ephemeral("That verification code is not valid, or it has expired. Generate a new one in OnCall.")
+        return _ephemeral(f"This Discord account is now linked to {discord_user.user.username} 🎉")
 
 
 def _ephemeral(content: str) -> Response:

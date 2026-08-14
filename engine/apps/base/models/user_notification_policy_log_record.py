@@ -111,7 +111,11 @@ class UserNotificationPolicyLogRecord(models.Model):
         ERROR_NOTIFICATION_IN_MATTERMOST_ALERT_GROUP_MESSAGE_NOT_FOUND,
         ERROR_NOTIFICATION_IN_MATTERMOST_API_TOKEN_INVALID,
         ERROR_NOTIFICATION_IN_MATTERMOST_API_UNAUTHORIZED,
-    ) = range(34)
+        ERROR_NOTIFICATION_IN_DISCORD_USER_NOT_IN_DISCORD,
+        ERROR_NOTIFICATION_IN_DISCORD_ALERT_GROUP_MESSAGE_NOT_FOUND,
+        ERROR_NOTIFICATION_IN_DISCORD_API_TOKEN_INVALID,
+        ERROR_NOTIFICATION_IN_DISCORD_API_UNAUTHORIZED,
+    ) = range(38)
 
     # for this errors we want to send message to general log channel
     ERRORS_TO_SEND_IN_SLACK_CHANNEL = [
@@ -332,6 +336,13 @@ class UserNotificationPolicyLogRecord(models.Model):
                 == UserNotificationPolicyLogRecord.ERROR_NOTIFICATION_IN_MATTERMOST_USER_NOT_IN_MATTERMOST
             ):
                 result += f"failed to notify {user_verbal} in Mattermost, because {user_verbal} is not in Mattermost"
+            elif (
+                self.notification_error_code
+                == UserNotificationPolicyLogRecord.ERROR_NOTIFICATION_IN_DISCORD_USER_NOT_IN_DISCORD
+            ):
+                result += (
+                    f"failed to notify {user_verbal} in Discord, because {user_verbal} has not linked a Discord account"
+                )
             else:
                 # TODO: handle specific backend errors
                 try:
