@@ -20,27 +20,43 @@ BUTTON_LINK = 5
 
 # How a card reads for each state an alert group can be in: the emoji leads the title so a channel list shows the
 # current state without opening anything, and the colour is the embed's left border.
-ALERT, ACKNOWLEDGED, SILENCED, RESOLVED = "alert", "acknowledged", "silenced", "resolved"
+ALERT, WARNING, ACKNOWLEDGED, SILENCED, RESOLVED = "alert", "warning", "acknowledged", "silenced", "resolved"
 CARD_STYLE = {
     ALERT: ("🚨", 0xA30200),
+    WARNING: ("⚠️", 0xE67E22),
     ACKNOWLEDGED: ("🟡", 0xDAA038),
     SILENCED: ("🔕", 0xDDDDDD),
     RESOLVED: ("✅", 0x2EB886),
 }
+
+# What a route may declare an alert group to be. Severity says how loud a still-open group reads; it is a property of
+# the route rather than of the payload, because which label means "wake somebody" differs per deployment and OnCall
+# already asks a route to decide where an alert goes and who it pages.
+SEVERITIES = (ALERT, WARNING)
 
 
 def truncate(value: str, limit: int) -> str:
     return value if len(value) <= limit else value[: limit - 1].rstrip() + "…"
 
 
+def route_severity(alert_group: AlertGroup) -> str:
+    from apps.discord.backend import DiscordBackend  # To avoid circular import
+
+    backends = getattr(alert_group.channel_filter, "notification_backends", None) or {}
+    severity = (backends.get(DiscordBackend.backend_id) or {}).get("severity")
+    return severity if severity in SEVERITIES else ALERT
+
+
 def card_state(alert_group: AlertGroup) -> str:
+    # An acknowledgement outranks severity: once somebody owns the group, who owns it is the more useful thing for
+    # the channel to show.
     if alert_group.resolved:
         return RESOLVED
     if alert_group.acknowledged:
         return ACKNOWLEDGED
     if alert_group.silenced:
         return SILENCED
-    return ALERT
+    return route_severity(alert_group)
 
 
 class AlertDiscordTemplater(AlertTemplater):

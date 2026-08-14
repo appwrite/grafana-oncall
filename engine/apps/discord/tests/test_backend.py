@@ -4,6 +4,7 @@ from unittest.mock import patch
 import jwt
 import pytest
 from django.utils import timezone
+from rest_framework import serializers
 
 from apps.alerts.models import AlertReceiveChannel
 from apps.base.models import UserNotificationPolicy, UserNotificationPolicyLogRecord
@@ -158,3 +159,21 @@ def test_relinking_an_account_moves_it_off_the_previous_user(make_organization_a
 
     assert not DiscordUser.objects.filter(user=previous).exists()
     assert DiscordUser.objects.get(discord_user_id="1300000000000000042").user == current
+
+
+@pytest.mark.django_db
+@pytest.mark.parametrize("severity", ["alert", "warning"])
+def test_validate_channel_filter_severity(make_organization, severity):
+    organization = make_organization()
+
+    validated = DiscordBackend().validate_channel_filter_data(organization, {"severity": severity})
+
+    assert validated == {"severity": severity}
+
+
+@pytest.mark.django_db
+def test_validate_channel_filter_rejects_an_unknown_severity(make_organization):
+    organization = make_organization()
+
+    with pytest.raises(serializers.ValidationError):
+        DiscordBackend().validate_channel_filter_data(organization, {"severity": "catastrophe"})

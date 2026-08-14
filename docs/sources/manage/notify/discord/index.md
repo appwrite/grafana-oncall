@@ -61,6 +61,21 @@ and paste it in.
 **Make default** marks the channel alert groups are posted to. A route can override it: on an integration's route,
 switch on **Post to Discord channel** and pick another one.
 
+## Split alerts from warnings
+
+A route also chooses how loud its alert groups read. Set it to **⚠️ Warning** and a still-open group from that route
+is amber rather than red:
+
+![A warning alert group, amber rather than red](img/alert-warning.png)
+
+Severity lives on the route rather than in the payload, because which label means "wake somebody up" differs per
+deployment — `severity=critical`, `incident=true`, a label of your own — and the route already decides where an
+alert goes and who it pages. So a route matching `{{ payload.commonLabels.severity == "warning" }}` can post to
+`#alerts-low`, read as a warning and skip escalation entirely, while everything else keeps the default channel and
+an escalation chain.
+
+Acknowledging outranks severity: once somebody owns the group, the card turns 🟡 whichever route it came in on.
+
 ## Register the slash command
 
 Linking a Discord account to an OnCall user is done with a slash command, which has to be registered with the

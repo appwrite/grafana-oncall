@@ -1,7 +1,8 @@
 import React, { useCallback } from 'react';
 
 import { cx } from '@emotion/css';
-import { InlineSwitch, Stack, useStyles2 } from '@grafana/ui';
+import { SelectableValue } from '@grafana/data';
+import { InlineSwitch, Select, Stack, useStyles2 } from '@grafana/ui';
 import { UserActions } from 'helpers/authorization/authorization';
 import { StackSize } from 'helpers/consts';
 import { observer } from 'mobx-react';
@@ -13,6 +14,11 @@ import { DiscordChannel } from 'models/discord/discord.types';
 import { useStore } from 'state/useStore';
 
 import { getConnectorsStyles } from './Connectors.styles';
+
+const SEVERITY_OPTIONS = [
+  { value: 'alert', label: '🚨 Alert' },
+  { value: 'warning', label: '⚠️ Warning' },
+];
 
 interface DiscordConnectorProps {
   channelFilterId: ChannelFilter['id'];
@@ -47,6 +53,14 @@ export const DiscordConnector = observer((props: DiscordConnectorProps) => {
     });
   }, []);
 
+  // How loud a still-open alert group from this route reads in Discord: an alert is red, a warning amber. Which
+  // payloads count as either is what the route itself already decides.
+  const handleSeverityChange = useCallback((option: SelectableValue<string>) => {
+    alertReceiveChannelStore.saveChannelFilter(channelFilterId, {
+      notification_backends: { DISCORD: { severity: option?.value || 'alert' } },
+    });
+  }, []);
+
   return (
     <div className={styles.root}>
       <Stack wrap="wrap" gap={StackSize.sm}>
@@ -73,6 +87,16 @@ export const DiscordConnector = observer((props: DiscordConnectorProps) => {
             placeholder="Select Discord Channel"
             value={channelFilter.notification_backends?.DISCORD?.channel}
             onChange={handleDiscordChannelChange}
+          />
+        </WithPermissionControlTooltip>
+        as
+        <WithPermissionControlTooltip userAction={UserActions.IntegrationsWrite}>
+          <Select
+            className={cx('select', 'control')}
+            options={SEVERITY_OPTIONS}
+            value={channelFilter.notification_backends?.DISCORD?.severity || 'alert'}
+            onChange={handleSeverityChange}
+            aria-label="Discord severity"
           />
         </WithPermissionControlTooltip>
       </Stack>

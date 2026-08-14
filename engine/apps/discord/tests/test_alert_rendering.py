@@ -111,3 +111,61 @@ def test_templater_fixes_up_the_shared_web_defaults(
 
     assert templated.title == "🔥 Down"
     assert templated.message == "Status: firing 🔥\nView in AlertManager"
+
+
+@pytest.mark.django_db
+@pytest.mark.parametrize(
+    "notification_backends,emoji",
+    [
+        ({"DISCORD": {"severity": "warning", "enabled": True}}, "⚠️"),
+        ({"DISCORD": {"severity": "alert", "enabled": True}}, "🚨"),
+        # A route that says nothing about severity, or says something unknown, is an alert.
+        ({"DISCORD": {"enabled": True}}, "🚨"),
+        ({"DISCORD": {"severity": "whatever", "enabled": True}}, "🚨"),
+        (None, "🚨"),
+    ],
+)
+def test_route_severity_sets_how_a_firing_card_reads(
+    make_organization,
+    make_alert_receive_channel,
+    make_channel_filter,
+    make_alert_group,
+    make_alert,
+    notification_backends,
+    emoji,
+):
+    organization = make_organization()
+    alert_receive_channel = make_alert_receive_channel(
+        organization, integration=AlertReceiveChannel.INTEGRATION_GRAFANA
+    )
+    channel_filter = make_channel_filter(alert_receive_channel, notification_backends=notification_backends)
+    alert_group = make_alert_group(alert_receive_channel=alert_receive_channel, channel_filter=channel_filter)
+    make_alert(alert_group=alert_group, raw_request_data=alert_receive_channel.config.example_payload)
+
+    payload = DiscordMessageRenderer(alert_group).render_alert_group_message()
+
+    assert payload["embeds"][0]["title"].startswith(emoji)
+
+
+@pytest.mark.django_db
+def test_acknowledging_a_warning_outranks_its_severity(
+    make_organization, make_alert_receive_channel, make_channel_filter, make_alert_group, make_alert
+):
+    organization = make_organization()
+    alert_receive_channel = make_alert_receive_channel(
+        organization, integration=AlertReceiveChannel.INTEGRATION_GRAFANA
+    )
+    channel_filter = make_channel_filter(
+        alert_receive_channel, notification_backends={"DISCORD": {"severity": "warning", "enabled": True}}
+    )
+    alert_group = make_alert_group(
+        alert_receive_channel=alert_receive_channel,
+        channel_filter=channel_filter,
+        acknowledged=True,
+        acknowledged_at=timezone.now(),
+    )
+    make_alert(alert_group=alert_group, raw_request_data=alert_receive_channel.config.example_payload)
+
+    payload = DiscordMessageRenderer(alert_group).render_alert_group_message()
+
+    assert payload["embeds"][0]["title"].startswith("🟡")

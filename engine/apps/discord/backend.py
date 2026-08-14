@@ -1,6 +1,7 @@
 from rest_framework import serializers
 
 from apps.base.messaging import BaseMessagingBackend
+from apps.discord.alert_rendering import SEVERITIES
 from apps.discord.models import DiscordChannel
 from apps.discord.tasks import notify_user_about_alert_async
 
@@ -48,6 +49,11 @@ class DiscordBackend(BaseMessagingBackend):
 
         if "enabled" in data:
             notification_data["enabled"] = bool(data["enabled"])
+
+        if "severity" in data:
+            if data["severity"] not in SEVERITIES:
+                raise serializers.ValidationError([f"Severity must be one of {', '.join(SEVERITIES)}"])
+            notification_data["severity"] = data["severity"]
 
         if "channel" not in data:
             return notification_data
