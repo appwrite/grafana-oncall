@@ -198,8 +198,8 @@ web_image_url = None
 # Discord
 #
 # A card is read in a chat channel rather than opened as a page, so it keeps every label and annotation the alert
-# carries — the sender chose them — and spends less room saying them: one line of `key=value` instead of a bullet
-# per label under three headings.
+# carries — the sender chose them — and drops the three headings and the bullets that made a page of them. One
+# entry per line: a long line of joined pairs wraps into something nobody can scan on a phone.
 #
 # Only what is genuinely said twice is dropped. `alertname` is the card's title and `severity` is its title emoji
 # and its forum tag; `value_string` is the long form of `values`, so the compact one is kept; and a key that
@@ -215,23 +215,21 @@ discord_message = """\
 {% set labels = [] -%}
 {% for key, value in groupLabels.items() if key not in ["alertname", "severity"] -%}
 {% set _ = said.update({key: value}) -%}
-{% set _ = labels.append(key ~ "=" ~ value) -%}
+{% set _ = labels.append(key ~ ": " ~ value) -%}
 {% endfor -%}
 {% for key, value in commonLabels.items() if key not in ["alertname", "severity"] and said.get(key) != value -%}
 {% set _ = said.update({key: value}) -%}
-{% set _ = labels.append(key ~ "=" ~ value) -%}
+{% set _ = labels.append(key ~ ": " ~ value) -%}
 {% endfor -%}
 
 {% if annotations.get("summary") -%}
 {{ annotations.summary }}
 {% elif annotations.get("description") -%}
 {{ annotations.description }}
-{% endif -%}
-
-{% if labels -%}
-`{{ labels | join(" · ") }}`
-{% endif -%}
-
+{% endif %}
+{% for entry in labels -%}
+{{ entry }}
+{% endfor %}
 {# Anything wrapped in double underscores is Grafana's own, reserved and hidden in its own UI. -#}
 {% for key, value in annotations.items()
    if key not in ["summary", "description", "runbook_url", "runbook_url_internal", "value_string"]

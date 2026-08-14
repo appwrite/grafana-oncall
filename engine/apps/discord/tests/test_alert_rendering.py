@@ -487,15 +487,17 @@ def test_a_card_keeps_every_label_and_drops_what_is_said_twice(integration):
 
     assert "Synthetic test failed two consecutive runs." in rendered
     # Every label the alert carries, named, so a reader can tell which is which.
+    # One per line, named, so a reader can scan them rather than unpick a wrapped line of pairs.
+    lines = rendered.splitlines()
     for label in (
-        "name=backups-tor",
-        "cluster=assets-fra1-prod",
-        "kind=PlaywrightTest",
-        "service=backups",
-        "team=databases",
-        "alert_rule_uid=afsxq6b2qb85cb",
+        "name: backups-tor",
+        "cluster: assets-fra1-prod",
+        "kind: PlaywrightTest",
+        "service: backups",
+        "team: databases",
+        "alert_rule_uid: afsxq6b2qb85cb",
     ):
-        assert label in rendered, f"{label} should survive"
+        assert label in lines, f"{label} should be a line of its own"
     # Annotations that are not duplicates, and a runbook.
     assert "orgId: 1" in rendered
     assert 'values: {"A":0}' in rendered
@@ -503,8 +505,8 @@ def test_a_card_keeps_every_label_and_drops_what_is_said_twice(integration):
 
     # alertname is the card's title, severity is its title emoji and its tag, value_string is the long form of
     # values, and alert_rule_namespace_uid is in the labels with the same value.
-    assert "alertname=" not in rendered
-    assert "severity=" not in rendered
+    assert "alertname: " not in rendered
+    assert "severity: " not in rendered
     assert "value_string" not in rendered
     # Grafana reserves the double-underscore names for itself and hides them in its own UI.
     assert "__dashboardUid__" not in rendered
@@ -527,4 +529,4 @@ def test_a_card_says_something_when_the_alert_carries_no_annotations():
         integration_name="Alertmanager",
     )
 
-    assert "instance=localhost:8082" in rendered
+    assert "instance: localhost:8082" in rendered.splitlines()
