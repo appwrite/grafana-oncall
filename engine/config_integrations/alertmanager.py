@@ -195,6 +195,61 @@ slack_image_url = None
 
 web_image_url = None
 
+# Discord
+#
+# A card is read in a chat channel rather than opened as a page, so it keeps every label and annotation the alert
+# carries — the sender chose them — and spends less room saying them: one line of `key=value` instead of a bullet
+# per label under three headings.
+#
+# Only what is genuinely said twice is dropped. `alertname` is the card's title and `severity` is its title emoji
+# and its forum tag; `value_string` is the long form of `values`, so the compact one is kept; and a key that
+# appears in both the labels and the annotations with the same value is printed once.
+discord_title = web_title
+
+discord_message = """\
+{% set annotations = payload.get("commonAnnotations", {}) -%}
+{% set groupLabels = payload.get("groupLabels", {}) -%}
+{% set commonLabels = payload.get("commonLabels", {}) -%}
+
+{% set said = {} -%}
+{% set labels = [] -%}
+{% for key, value in groupLabels.items() if key not in ["alertname", "severity"] -%}
+{% set _ = said.update({key: value}) -%}
+{% set _ = labels.append(key ~ "=" ~ value) -%}
+{% endfor -%}
+{% for key, value in commonLabels.items() if key not in ["alertname", "severity"] and said.get(key) != value -%}
+{% set _ = said.update({key: value}) -%}
+{% set _ = labels.append(key ~ "=" ~ value) -%}
+{% endfor -%}
+
+{% if annotations.get("summary") -%}
+{{ annotations.summary }}
+{% elif annotations.get("description") -%}
+{{ annotations.description }}
+{% endif -%}
+
+{% if labels -%}
+`{{ labels | join(" · ") }}`
+{% endif -%}
+
+{# Anything wrapped in double underscores is Grafana's own, reserved and hidden in its own UI. -#}
+{% for key, value in annotations.items()
+   if key not in ["summary", "description", "runbook_url", "runbook_url_internal", "value_string"]
+   and not key.startswith("__")
+   and said.get(key) != value -%}
+{{ key }}: {{ value }}
+{% endfor -%}
+
+{% if annotations.get("runbook_url") -%}
+[:book: Runbook]({{ annotations.runbook_url }})
+{% endif -%}
+{% if annotations.get("runbook_url_internal") -%}
+[:closed_book: Runbook (internal)]({{ annotations.runbook_url_internal }})
+{% endif -%}
+"""  # noqa
+
+discord_image_url = web_image_url
+
 # SMS
 sms_title = web_title
 

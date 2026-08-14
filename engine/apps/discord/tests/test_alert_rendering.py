@@ -1,8 +1,11 @@
+from importlib import import_module
+
 import pytest
 from django.utils import timezone
 
 from apps.alerts.models import AlertGroup, AlertReceiveChannel
 from apps.discord.alert_rendering import CARD_STYLE, RESOLVED, STRING_SELECT, DiscordMessageRenderer
+from common.jinja_templater import apply_jinja_template
 
 
 @pytest.fixture()
@@ -437,3 +440,91 @@ def test_the_timeline_reads_by_status_whatever_the_severity(
     assert timeline(payload).startswith("🔥 Fired")
     # The severity still leads the title, so nothing about it is lost.
     assert payload["embeds"][0]["title"].startswith(CARD_STYLE[severity][0])
+
+
+ALERTMANAGER_PAYLOAD = {
+    "status": "firing",
+    "groupLabels": {"alertname": "Test failing", "name": "backups-tor", "severity": "critical"},
+    "commonLabels": {
+        "alertname": "Test failing",
+        "alert_rule_namespace_uid": "terraform-alerts",
+        "alert_rule_uid": "afsxq6b2qb85cb",
+        "cluster": "assets-fra1-prod",
+        "kind": "PlaywrightTest",
+        "name": "backups-tor",
+        "service": "backups",
+        "severity": "critical",
+        "team": "databases",
+    },
+    "commonAnnotations": {
+        "alert_rule_namespace_uid": "terraform-alerts",
+        "orgId": "1",
+        "value_string": "[ var='A' labels={name=backups-tor} type='query' value=0 ]",
+        "values": '{"A":0}',
+        "summary": "Synthetic test failed two consecutive runs.",
+        "runbook_url": "https://runbooks.example/synthetics",
+        "__dashboardUid__": "synthetics-PlaywrightTest",
+        "__panelId__": "3",
+    },
+    "alerts": [{"status": "firing", "labels": {}, "annotations": {}, "generatorURL": ""}],
+}
+
+
+@pytest.mark.parametrize("integration", ["alertmanager", "grafana_alerting"])
+def test_a_card_keeps_every_label_and_drops_what_is_said_twice(integration):
+    """The web template ends with three headings and a bullet per label, which is a page rather than a message.
+
+    A card says the same things in a few lines. Nothing is dropped for being uninteresting — only what the card
+    already says elsewhere, and the long form of a value the payload also gives compactly.
+    """
+    config = import_module(f"config_integrations.{integration}")
+    rendered = apply_jinja_template(
+        config.discord_message,
+        payload=ALERTMANAGER_PAYLOAD,
+        source_link="https://alertmanager.example/#/alerts",
+        integration_name="Alertmanager",
+    )
+
+    assert "Synthetic test failed two consecutive runs." in rendered
+    # Every label the alert carries, named, so a reader can tell which is which.
+    for label in (
+        "name=backups-tor",
+        "cluster=assets-fra1-prod",
+        "kind=PlaywrightTest",
+        "service=backups",
+        "team=databases",
+        "alert_rule_uid=afsxq6b2qb85cb",
+    ):
+        assert label in rendered, f"{label} should survive"
+    # Annotations that are not duplicates, and a runbook.
+    assert "orgId: 1" in rendered
+    assert 'values: {"A":0}' in rendered
+    assert "https://runbooks.example/synthetics" in rendered
+
+    # alertname is the card's title, severity is its title emoji and its tag, value_string is the long form of
+    # values, and alert_rule_namespace_uid is in the labels with the same value.
+    assert "alertname=" not in rendered
+    assert "severity=" not in rendered
+    assert "value_string" not in rendered
+    # Grafana reserves the double-underscore names for itself and hides them in its own UI.
+    assert "__dashboardUid__" not in rendered
+    assert "__panelId__" not in rendered
+    assert rendered.count("terraform-alerts") == 1
+
+    # The headings that made it a page.
+    for heading in ("Severity:", "Status:", "CommonLabels", "GroupLabels", "Annotations:"):
+        assert heading not in rendered, f"{heading} should not reach a card"
+
+    assert len(rendered) < len(config.web_message)
+
+
+def test_a_card_says_something_when_the_alert_carries_no_annotations():
+    """A bare payload still has to render, and to say what the alert is about."""
+    rendered = apply_jinja_template(
+        import_module("config_integrations.alertmanager").discord_message,
+        payload={"groupLabels": {"alertname": "InstanceDown", "instance": "localhost:8082"}, "commonLabels": {}},
+        source_link="",
+        integration_name="Alertmanager",
+    )
+
+    assert "instance=localhost:8082" in rendered
