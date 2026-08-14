@@ -227,7 +227,7 @@ def test_a_full_card_stays_within_discord_row_limits(
     assert len(payload["components"]) <= 5
     for row in payload["components"]:
         assert len(row["components"]) <= 5
-    assert button_labels(payload) == ["Acknowledge", "Resolve", "Unsilence", "Dashboard", "Add note"]
+    assert button_labels(payload) == ["Acknowledge", "Resolve", "Unsilence", "Source", "Add note"]
     assert [c["label"] for c in payload["components"][1]["components"]] == ["OnCall"]
 
 
@@ -392,9 +392,9 @@ def test_a_grafana_alert_gets_a_dashboard_button(
 
     payload = DiscordMessageRenderer(alert_group).render_alert_group_message()
 
-    dashboard = [c for c in payload["components"][0]["components"] if c.get("label") == "Dashboard"]
-    assert dashboard, button_labels(payload)
-    assert dashboard[0]["url"] == "https://telemetry.appwrite.systems/d/abc/disk"
+    source = [c for c in payload["components"][0]["components"] if c.get("label") == "Source"]
+    assert source, button_labels(payload)
+    assert source[0]["url"] == "https://telemetry.appwrite.systems/d/abc/disk"
 
 
 @pytest.mark.django_db
@@ -530,3 +530,69 @@ def test_a_card_says_something_when_the_alert_carries_no_annotations():
     )
 
     assert "instance: localhost:8082" in rendered.splitlines()
+
+
+@pytest.mark.django_db
+def test_a_dashboard_annotation_becomes_a_button_of_its_own(
+    make_organization, make_user_for_organization, make_alert_receive_channel, make_alert_group, make_alert
+):
+    """An alert's source and its dashboard are two different places, so they are two different buttons.
+
+    For a Grafana-managed rule the source link opens the rule itself, which is why calling that button
+    "Dashboard" was wrong: the dashboard is an annotation, and it used to be reachable only by copying a URL
+    out of the card's body.
+    """
+    organization = make_organization()
+    make_user_for_organization(organization, username="loks0n")
+    alert_receive_channel = make_alert_receive_channel(
+        organization, integration=AlertReceiveChannel.INTEGRATION_ALERTMANAGER
+    )
+    alert_group = make_alert_group(alert_receive_channel=alert_receive_channel)
+    make_alert(
+        alert_group=alert_group,
+        raw_request_data={
+            "status": "firing",
+            "groupLabels": {"alertname": "Test failing"},
+            "commonAnnotations": {"dashboard_url": "https://grafana.example/d/synthetics"},
+            "alerts": [{"status": "firing", "generatorURL": "https://grafana.example/alerting/grafana/abc/view"}],
+        },
+    )
+
+    payload = DiscordMessageRenderer(alert_group).render_alert_group_message()
+    buttons = {
+        component["label"]: component.get("url")
+        for row in payload["components"]
+        for component in row["components"]
+        if component.get("label")
+    }
+
+    assert buttons["Source"] == "https://grafana.example/alerting/grafana/abc/view"
+    assert buttons["Dashboard"] == "https://grafana.example/d/synthetics"
+    # And the body does not repeat a link that is a button.
+    assert "dashboard_url" not in payload["embeds"][0].get("description", "")
+
+
+@pytest.mark.django_db
+def test_a_dashboard_annotation_matching_the_source_link_gets_one_button(
+    make_organization, make_user_for_organization, make_alert_receive_channel, make_alert_group, make_alert
+):
+    organization = make_organization()
+    make_user_for_organization(organization, username="loks0n")
+    alert_receive_channel = make_alert_receive_channel(
+        organization, integration=AlertReceiveChannel.INTEGRATION_ALERTMANAGER
+    )
+    alert_group = make_alert_group(alert_receive_channel=alert_receive_channel)
+    make_alert(
+        alert_group=alert_group,
+        raw_request_data={
+            "status": "firing",
+            "groupLabels": {"alertname": "Test failing"},
+            "commonAnnotations": {"dashboard_url": "https://grafana.example/d/synthetics"},
+            "alerts": [{"status": "firing", "generatorURL": "https://grafana.example/d/synthetics"}],
+        },
+    )
+
+    payload = DiscordMessageRenderer(alert_group).render_alert_group_message()
+
+    assert button_labels(payload).count("Dashboard") == 0
+    assert button_labels(payload).count("Source") == 1

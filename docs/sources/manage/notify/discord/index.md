@@ -23,7 +23,8 @@ At the moment, this integration is only available for OSS installations.
 
 The card carries the same controls Slack's does: acknowledge and resolve, a **Silence** menu of durations, a
 **Page a responder** menu that adds somebody to the escalation, and **Add note** for a resolution note. Where the
-alert carries a source link, a **Dashboard** button opens it. The footer says which integration the alert came from,
+alert carries a source link, a **Source** button opens it, and an alert whose annotations name a dashboard gets a
+**Dashboard** button too. The footer says which integration the alert came from,
 which alert group it is, and how many alerts the group holds.
 
 The **Timeline** field is written in Discord's own timestamps, so everyone reads it on their own clock and in their

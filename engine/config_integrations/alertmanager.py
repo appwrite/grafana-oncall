@@ -230,9 +230,11 @@ discord_message = """\
 {% for entry in labels -%}
 {{ entry }}
 {% endfor %}
-{# Anything wrapped in double underscores is Grafana's own, reserved and hidden in its own UI. -#}
+{# Anything wrapped in double underscores is Grafana's own, reserved and hidden in its own UI. The dashboard and
+   runbook links are buttons on the card, so they are not repeated as lines to copy out of. -#}
 {% for key, value in annotations.items()
-   if key not in ["summary", "description", "runbook_url", "runbook_url_internal", "value_string"]
+   if key not in ["summary", "description", "runbook_url", "runbook_url_internal", "value_string",
+                  "dashboard_url", "dashboardURL"]
    and not key.startswith("__")
    and said.get(key) != value -%}
 {{ key }}: {{ value }}
