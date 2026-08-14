@@ -156,7 +156,13 @@ class EscalationPolicyView(
                 step in EscalationPolicy.IMPORTANT_STEPS_SET or step in EscalationPolicy.DEFAULT_STEPS_SET
             )
             slack_integration_required = step in EscalationPolicy.SLACK_INTEGRATION_REQUIRED_STEPS
-            if slack_integration_required and not settings.FEATURE_SLACK_INTEGRATION_ENABLED:
+            # Notifying a whole channel is the one of these steps another chat integration can serve, so it is
+            # offered when Discord is enabled too. The user-group steps point at a Slack user group.
+            served_by_discord = step == EscalationPolicy.STEP_FINAL_NOTIFYALL
+            if slack_integration_required and not (
+                settings.FEATURE_SLACK_INTEGRATION_ENABLED
+                or (served_by_discord and settings.FEATURE_DISCORD_INTEGRATION_ENABLED)
+            ):
                 continue
 
             if step == EscalationPolicy.STEP_DECLARE_INCIDENT and not grafana_declare_incident_enabled:

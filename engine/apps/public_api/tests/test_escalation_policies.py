@@ -503,3 +503,32 @@ def test_create_escalation_policy_declare_incident(
     response_data = response.json()
     assert response_data["type"] == EscalationPolicy.PUBLIC_STEP_CHOICES_MAP[EscalationPolicy.STEP_DECLARE_INCIDENT]
     assert response_data["severity"] == "critical"
+
+
+@pytest.mark.django_db
+def test_notify_whole_channel_needs_something_that_can(
+    make_organization_and_user_with_token,
+    escalation_policies_setup,
+):
+    """The step addresses a whole channel, so it is refused when no chat integration can serve it.
+
+    Accepting it would put a step in the chain that does nothing at the moment nobody has answered.
+    """
+    organization, user, token = make_organization_and_user_with_token()
+    escalation_chain, _, _ = escalation_policies_setup(organization, user)
+    assert organization.slack_team_identity is None
+
+    client = APIClient()
+    response = client.post(
+        reverse("api-public:escalation_policies-list"),
+        data={
+            "escalation_chain_id": escalation_chain.public_primary_key,
+            "type": EscalationPolicy.PUBLIC_STEP_CHOICES_MAP[EscalationPolicy.STEP_FINAL_NOTIFYALL],
+            "position": 0,
+        },
+        format="json",
+        HTTP_AUTHORIZATION=token,
+    )
+
+    assert response.status_code == status.HTTP_400_BAD_REQUEST
+    assert "notifies a whole channel" in response.json()["detail"]

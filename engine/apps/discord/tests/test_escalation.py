@@ -106,13 +106,21 @@ def test_a_step_that_reaches_one_person_stays_quiet(escalate):
 
 
 @pytest.mark.django_db
-def test_a_route_with_no_role_stays_quiet(escalate):
+def test_a_route_with_no_role_still_tells_the_channel(escalate):
+    """A step that means "notify everyone" has to say something, ping or no ping.
+
+    The role is what makes it loud, not what makes it happen — and whether a route names one is not
+    knowable when the step is added to a chain, so silence here would be silence nobody could predict.
+    """
     alert_group, representative = escalate(notification_backends={"DISCORD": {"enabled": True}})
 
     with patch("apps.discord.alert_group_representative.DiscordClient.create_message") as create_message:
         representative.get_handler()(alert_group)
 
-    create_message.assert_not_called()
+    _, kwargs = create_message.call_args
+    assert "still unacknowledged" in kwargs["data"]["content"]
+    assert "<@&" not in kwargs["data"]["content"]
+    assert kwargs["data"]["allowed_mentions"] == {"parse": [], "roles": []}
 
 
 @pytest.mark.django_db
@@ -123,3 +131,71 @@ def test_an_already_acknowledged_alert_group_is_not_escalated(escalate):
         representative.get_handler()(alert_group)
 
     create_message.assert_not_called()
+
+
+@pytest.mark.django_db
+def test_the_public_api_accepts_notify_whole_channel_for_a_discord_organization(
+    make_organization_and_user_with_token,
+    make_discord_channel,
+):
+    """A connected forum is something that can be notified, so the step can be provisioned.
+
+    The reconciler that owns the escalation chain writes it through the public API, which used to refuse
+    this step to anyone without Slack — leaving a chain that pages on-call and then stops.
+    """
+    from django.urls import reverse
+    from rest_framework import status
+    from rest_framework.test import APIClient
+
+    organization, _, token = make_organization_and_user_with_token()
+    escalation_chain = organization.escalation_chains.create(name="test_chain")
+    assert organization.slack_team_identity is None
+    make_discord_channel(organization=organization, is_default_channel=True)
+
+    response = APIClient().post(
+        reverse("api-public:escalation_policies-list"),
+        data={
+            "escalation_chain_id": escalation_chain.public_primary_key,
+            "type": EscalationPolicy.PUBLIC_STEP_CHOICES_MAP[EscalationPolicy.STEP_FINAL_NOTIFYALL],
+            "position": 0,
+        },
+        format="json",
+        HTTP_AUTHORIZATION=token,
+    )
+
+    assert response.status_code == status.HTTP_201_CREATED
+    assert EscalationPolicy.objects.get(public_primary_key=response.json()["id"]).step == (
+        EscalationPolicy.STEP_FINAL_NOTIFYALL
+    )
+
+
+@pytest.mark.django_db
+def test_a_discord_organization_still_cannot_use_the_slack_user_group_steps(
+    make_organization_and_user_with_plugin_token,
+    make_discord_channel,
+    make_user_auth_headers,
+):
+    """Notifying a Slack user group is served by a task that gives up without Slack.
+
+    A connected forum makes "notify whole channel" serviceable; it does not conjure a user group.
+    """
+    from django.urls import reverse
+    from rest_framework import status
+    from rest_framework.test import APIClient
+
+    organization, user, token = make_organization_and_user_with_plugin_token()
+    escalation_chain = organization.escalation_chains.create(name="test_chain")
+    make_discord_channel(organization=organization, is_default_channel=True)
+
+    response = APIClient().post(
+        reverse("api-internal:escalation_policy-list"),
+        data={
+            "escalation_chain": escalation_chain.public_primary_key,
+            "step": EscalationPolicy.STEP_NOTIFY_GROUP,
+        },
+        format="json",
+        **make_user_auth_headers(user, token),
+    )
+
+    assert response.status_code == status.HTTP_400_BAD_REQUEST
+    assert "Slack-specific" in str(response.json())
