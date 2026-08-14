@@ -5,6 +5,7 @@ import pytest
 from django.core.cache import cache
 from django.utils import timezone
 
+from apps.discord.client import FORUM_CHANNEL
 from apps.discord.exceptions import DiscordAPIException
 from apps.discord.shifts import announce_shift_starts_for_all_schedules, announce_shift_starts_for_schedule
 from apps.schedules.models import CustomOnCallShift, OnCallScheduleWeb
@@ -55,6 +56,24 @@ def test_shift_start_is_announced_once(make_schedule_with_shift, make_discord_ch
     assert discord_user.mention_username in kwargs["data"]["content"]
     assert "Primary" in kwargs["data"]["content"]
     assert kwargs["data"]["allowed_mentions"] == {"parse": [], "users": [discord_user.discord_user_id]}
+
+
+@pytest.mark.django_db
+def test_forum_announcement_opens_a_post(make_schedule_with_shift, make_discord_channel, make_discord_user):
+    """A forum channel takes posts, not messages, so an announcement there has to open one."""
+    organization, user, schedule = make_schedule_with_shift()
+    channel = make_discord_channel(organization=organization, is_default_channel=True, channel_type=FORUM_CHANNEL)
+    discord_user = make_discord_user(user)
+
+    with patch("apps.discord.shifts.DiscordClient.create_thread") as create_thread:
+        with patch("apps.discord.shifts.DiscordClient.create_message") as create_message:
+            announce_shift_starts_for_schedule(schedule.pk)
+
+    create_message.assert_not_called()
+    _, kwargs = create_thread.call_args
+    assert kwargs["channel_id"] == channel.channel_id
+    assert "Primary" in kwargs["name"]
+    assert discord_user.mention_username in kwargs["data"]["content"]
 
 
 @pytest.mark.django_db

@@ -8,6 +8,7 @@ from apps.discord.alert_rendering import DiscordMessageRenderer
 from apps.discord.client import DiscordClient
 from apps.discord.exceptions import DiscordAPIException, DiscordAPITokenInvalid
 from apps.discord.tasks import on_alert_group_action_triggered_async, on_create_alert_async
+from apps.discord.utils import beside_card
 
 logger = logging.getLogger(__name__)
 
@@ -77,11 +78,8 @@ class AlertGroupDiscordRepresentative(AlertGroupAbstractRepresentative):
             # The role being escalated to, and nothing else the alert text happens to name.
             "allowed_mentions": {"parse": [], "roles": [role]},
         }
-        if discord_message.thread_id:
-            channel_id = discord_message.thread_id
-        else:
-            channel_id = discord_message.channel_id
-            payload["message_reference"] = {"message_id": discord_message.message_id, "fail_if_not_exists": False}
+        channel_id, reference = beside_card(discord_message)
+        payload.update(reference)
 
         try:
             DiscordClient().create_message(

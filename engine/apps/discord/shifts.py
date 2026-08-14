@@ -86,15 +86,22 @@ def announce_shift_starts_for_schedule(schedule_pk) -> None:
         if not names:
             continue
 
+        payload = {
+            "content": f"📅 {names} — your **{schedule.name}** on-call shift just started.",
+            # A schedule name is user-supplied text, so only the users going on call may be pinged.
+            "allowed_mentions": {"parse": [], "users": user_ids},
+        }
+
         try:
-            DiscordClient().create_message(
-                channel_id=channel.channel_id,
-                data={
-                    "content": f"📅 {names} — your **{schedule.name}** on-call shift just started.",
-                    # A schedule name is user-supplied text, so only the users going on call may be pinged.
-                    "allowed_mentions": {"parse": [], "users": user_ids},
-                },
-            )
+            if channel.is_forum:
+                # A forum channel takes posts, not messages, so the announcement becomes a post of its own.
+                DiscordClient().create_thread(
+                    channel_id=channel.channel_id,
+                    name=f"📅 {schedule.name} — shift change",
+                    data=payload,
+                )
+            else:
+                DiscordClient().create_message(channel_id=channel.channel_id, data=payload)
         except DiscordAPITokenInvalid:
             logger.error(f"Discord bot token is invalid, could not announce shifts for schedule {schedule_pk}")
             return

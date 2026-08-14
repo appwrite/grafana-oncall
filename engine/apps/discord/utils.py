@@ -15,6 +15,20 @@ logger = logging.getLogger(__name__)
 VERIFICATION_CODE_TTL = datetime.timedelta(minutes=10)
 
 
+def beside_card(discord_message) -> typing.Tuple[str, dict]:
+    """Where a follow-up to a card goes, and what it takes to sit beside it.
+
+    A forum card is a post, so a follow-up is just a message in that post. A card in a text channel shares the
+    channel with everything else, so a follow-up has to quote it to read as a reply. Posting to a forum channel
+    itself is not a thing Discord allows at all ("Cannot send messages in a non-text channel").
+    """
+    if discord_message.thread_id:
+        return discord_message.thread_id, {}
+    return discord_message.channel_id, {
+        "message_reference": {"message_id": discord_message.message_id, "fail_if_not_exists": False}
+    }
+
+
 def create_verification_code(user: User) -> str:
     """A short-lived proof that whoever holds it is signed in to OnCall as `user`.
 
