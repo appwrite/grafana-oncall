@@ -1,7 +1,11 @@
 import datetime
+import os
+import subprocess
+import sys
 from unittest.mock import patch
 
 import pytest
+from django.conf import settings
 from django.core.cache import cache
 from django.utils import timezone
 
@@ -140,3 +144,28 @@ def test_fan_out_skips_organizations_without_a_channel(make_schedule_with_shift,
     with patch("apps.discord.shifts.announce_shift_starts_for_schedule.apply_async") as apply_async:
         announce_shift_starts_for_all_schedules()
     assert (schedule.pk,) in [call.args[0] for call in apply_async.call_args_list]
+
+
+def test_the_tasks_are_registered_by_autodiscovery():
+    """Beat publishes a task by name, and a name the worker does not know is dropped with an error nobody reads.
+
+    Autodiscovery imports each app's `tasks` module and nothing else, so this asks a fresh interpreter what the
+    worker would end up with. Importing the module here instead would register the tasks and prove nothing.
+    """
+    program = (
+        "import django; django.setup();"
+        "from celery import current_app;"
+        "current_app.loader.import_default_modules();"
+        "print(' '.join(current_app.tasks))"
+    )
+    result = subprocess.run(
+        [sys.executable, "-c", program],
+        capture_output=True,
+        text=True,
+        env={**os.environ, "DJANGO_SETTINGS_MODULE": settings.SETTINGS_MODULE},
+    )
+
+    assert result.returncode == 0, result.stderr
+    registered = set(result.stdout.split())
+    assert "apps.discord.shifts.announce_shift_starts_for_all_schedules" in registered
+    assert "apps.discord.shifts.announce_shift_starts_for_schedule" in registered
