@@ -648,8 +648,10 @@ def test_a_card_says_both_the_summary_and_the_description(integration):
     )
 
     lines = rendered.splitlines()
-    assert "Disk is nearly full" in lines
-    assert "Writes will fail within the hour at the current rate." in lines
+    summary_at = lines.index("Disk is nearly full")
+    # A blank line between them, or the two read as one run-on paragraph.
+    assert lines[summary_at + 1] == ""
+    assert lines[summary_at + 2] == "Writes will fail within the hour at the current rate."
 
 
 @pytest.mark.parametrize("integration", ["alertmanager", "grafana_alerting"])

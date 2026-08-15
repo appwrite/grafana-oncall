@@ -253,8 +253,9 @@ discord_message = """\
 {% if summary -%}
 {{ summary }}
 {% endif -%}
-{# Both, when a rule bothered to write both: a summary says what happened and a description says what it means. -#}
-{% if description and description != summary -%}
+{# Both, when a rule bothered to write both: a summary says what happened and a description says what it means.
+   The blank line before it is deliberate: run together, the two read as one run-on paragraph. -#}
+{% if description and description != summary %}
 {{ description }}
 {% endif -%}
 
