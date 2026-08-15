@@ -15,6 +15,13 @@ from apps.user_management.models import User
 from common.custom_celery_tasks import shared_dedicated_queue_retry_task
 from common.utils import OkToRetry, task_lock
 
+# Autodiscovery imports `tasks` and nothing else, so a task defined anywhere else in the app is never registered and
+# the beat entry that names it is dropped by the worker. Re-exported here the way apps.mobile_app.tasks does it.
+from apps.discord.shifts import (  # noqa: F401  isort:skip
+    announce_shift_starts_for_all_schedules,
+    announce_shift_starts_for_schedule,
+)
+
 logger = get_task_logger(__name__)
 logger.setLevel(logging.DEBUG)
 
