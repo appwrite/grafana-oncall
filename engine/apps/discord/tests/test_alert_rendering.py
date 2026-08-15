@@ -648,8 +648,26 @@ def test_a_card_says_both_the_summary_and_the_description(integration):
     )
 
     lines = rendered.splitlines()
-    assert "Disk is nearly full" in lines
-    assert "Writes will fail within the hour at the current rate." in lines
+    summary_at = lines.index("Disk is nearly full")
+    # A blank line between them, or the two read as one run-on paragraph.
+    assert lines[summary_at + 1] == ""
+    assert lines[summary_at + 2] == "Writes will fail within the hour at the current rate."
+
+
+@pytest.mark.parametrize("integration", ["alertmanager", "grafana_alerting"])
+def test_a_description_alone_starts_the_card(integration):
+    """The blank line parts a description from a summary, so without one there is nothing to part it from."""
+    rendered = apply_jinja_template(
+        import_module(f"config_integrations.{integration}").discord_message,
+        payload={
+            "groupLabels": {"alertname": "DiskSpaceLow"},
+            "commonAnnotations": {"description": "Writes will fail within the hour at the current rate."},
+        },
+        source_link="",
+        integration_name="Alertmanager",
+    )
+
+    assert rendered.startswith("Writes will fail within the hour at the current rate.")
 
 
 @pytest.mark.parametrize("integration", ["alertmanager", "grafana_alerting"])
