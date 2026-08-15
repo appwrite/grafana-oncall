@@ -158,12 +158,14 @@ def test_the_tasks_are_registered_by_autodiscovery():
         "current_app.loader.import_default_modules();"
         "print(' '.join(current_app.tasks))"
     )
-    result = subprocess.run(
-        [sys.executable, "-c", program],
-        capture_output=True,
-        text=True,
-        env={**os.environ, "DJANGO_SETTINGS_MODULE": settings.SETTINGS_MODULE},
-    )
+    # The child reads DJANGO_SETTINGS_MODULE from the environment, the same as the worker does. pytest-django
+    # leaves `settings.SETTINGS_MODULE` empty, so it is a fallback for a run that has no variable set, never an
+    # override: putting its None in the environment is a TypeError before the child even starts.
+    env = dict(os.environ)
+    if not env.get("DJANGO_SETTINGS_MODULE") and settings.SETTINGS_MODULE:
+        env["DJANGO_SETTINGS_MODULE"] = settings.SETTINGS_MODULE
+
+    result = subprocess.run([sys.executable, "-c", program], capture_output=True, text=True, env=env)
 
     assert result.returncode == 0, result.stderr
     registered = set(result.stdout.split())
