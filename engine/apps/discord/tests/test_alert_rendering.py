@@ -592,7 +592,7 @@ def test_a_card_names_each_instance_a_group_holds(integration):
     )
     lines = rendered.splitlines()
 
-    assert "**Instances**" in lines
+    assert "**Summaries**" in lines
     for instance in (
         "- The `builds` queue on `cloud-fra1-prod` gained 2384 failed jobs in an hour.",
         "- The `domains` queue on `cloud-syd1-prod` gained 12825 failed jobs in an hour.",
@@ -626,7 +626,7 @@ def test_a_card_does_not_list_the_one_instance_it_already_describes():
         integration_name="Grafana Alerting",
     )
 
-    assert "**Instances**" not in rendered.splitlines()
+    assert "**Summaries**" not in rendered.splitlines()
     # Said once, by the summary that a group of one puts in commonAnnotations.
     assert rendered.count("The `builds` queue gained 12 failed jobs in an hour.") == 1
 
@@ -678,7 +678,7 @@ def test_a_card_lists_the_one_instance_of_a_group_that_says_anything(integration
     )
     lines = rendered.splitlines()
 
-    assert "**Instances**" in lines
+    assert "**Summaries**" in lines
     assert "- The `builds` queue on `cloud-fra1-prod` has failed 2384 more jobs." in lines
     # The names the group does not share, which no other line on the card carries.
     for name in ("builds", "cloud-fra1-prod"):
@@ -742,7 +742,7 @@ def test_a_card_names_instances_a_shared_sentence_does_not(integration):
     )
     lines = [line for line in rendered.splitlines() if line.startswith("- ")]
 
-    assert "**Instances**" in rendered.splitlines()
+    assert "**Summaries**" in rendered.splitlines()
     # One line per alert, and each names the instance its sentence did not.
     for region, node in (("fra", "node-1"), ("syd", "node-2"), ("tor", "node-3")):
         assert any(f"region: `{region}`" in line and f"instance: `{node}`" in line for line in lines), (
@@ -812,6 +812,56 @@ def test_an_instance_line_does_not_repeat_what_its_summary_already_says(integrat
     assert "- The `domains` queue on `cloud-syd1-prod` has failed 12 more jobs." in lines
     # The labels the sentence already carries are not appended to it.
     assert not any("service_name:" in line for line in lines)
+
+
+@pytest.mark.parametrize("integration", ["alertmanager", "grafana_alerting"])
+def test_a_card_keeps_what_the_route_grouped_by_apart_from_what_the_alerts_share(integration):
+    """Two questions, two headings.
+
+    `groupLabels` says why these alerts arrived as one card; `commonLabels` says what they turned out to have in
+    common once they had. Merged under one heading a reader cannot tell which is which, and the label that
+    explains the grouping is buried among labels that merely happen to agree.
+    """
+    rendered = apply_jinja_template(
+        import_module(f"config_integrations.{integration}").discord_message,
+        payload={
+            # The default Grafana policy: group_by = [grafana_folder, alertname].
+            "groupLabels": {"grafana_folder": "Utopia", "alertname": "Queue has failed jobs"},
+            "commonLabels": {
+                "alertname": "Queue has failed jobs",
+                "grafana_folder": "Utopia",
+                "deployment_cluster_name": "cloud",
+                "severity": "warning",
+                "team": "cloud",
+            },
+            "commonAnnotations": {"description": "A queue is holding more failed jobs than it was."},
+            "alerts": [
+                {
+                    "status": "firing",
+                    "labels": {"alertname": "Queue has failed jobs", "grafana_folder": "Utopia",
+                               "deployment_cluster_name": "cloud", "severity": "warning", "team": "cloud",
+                               "service_name": service},
+                    "annotations": {"summary": f"The `{service}` queue has failed 12 more jobs."},
+                }
+                for service in ("builds", "domains")
+            ],
+        },
+        source_link="",
+        integration_name="Grafana Alerting",
+    )
+    lines = rendered.splitlines()
+
+    assert "**Group**" in lines
+    assert "**Labels**" in lines
+    group = lines.index("**Group**")
+    labels = lines.index("**Labels**")
+    # What the route grouped by, under Group. alertname is the card's title, so it is not a line.
+    assert "- grafana_folder: `Utopia`" in lines[group:labels]
+    assert not any("alertname:" in line for line in lines)
+    # What they merely share, under Labels, and not repeated under Group.
+    assert "- deployment_cluster_name: `cloud`" in lines[labels:]
+    assert "- team: `cloud`" in lines[labels:]
+    assert rendered.count("grafana_folder") == 1, "a label belongs to one heading, not both"
 
 
 @pytest.mark.django_db

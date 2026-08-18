@@ -210,13 +210,13 @@ discord_title = web_title
 
 discord_message = """\
 {# A webhook carries one authoritative thing: `alerts`, every instance the group holds, each with its own labels
-   and annotations. `groupLabels`, `commonLabels` and `commonAnnotations` are views Alertmanager derives from
-   them — the part the instances agree on. The legacy integration sends no `alerts` and puts a single instance's
-   labels and annotations at the top level, so it is read here as a group of one and nothing below this block has
-   to know which shape arrived.
+   and annotations. Everything else is a view Alertmanager derives from them — `groupLabels` is what the route
+   grouped by, `commonLabels` and `commonAnnotations` are what the instances happen to agree on. The legacy
+   integration sends no `alerts` and puts a single instance's labels and annotations at the top level, so it is
+   read here as a group of one and nothing after this block has to know which shape arrived.
 
-   A card says the agreed part once, and names the instances when there is more than one, because what sets them
-   apart is exactly what the agreed part cannot carry. -#}
+   A card says the agreed part once, and lists a summary per instance when it holds more than one, because what
+   sets the instances apart is exactly what the agreed part cannot carry. -#}
 {% macro pair(key, value) -%}
 {% set flat = (value | string).split() | join(" ") -%}
 {% if "`" in flat -%}
@@ -230,25 +230,26 @@ discord_message = """\
    Grafana wraps its own identifiers in double underscores and hides them in its own UI. -#}
 {% set said_elsewhere = ["alertname", "severity"] -%}
 {% set instances = payload.get("alerts") or [{"labels": payload.get("labels", {}), "annotations": payload.get("annotations", {})}] -%}
-{% set agreed = payload.get("commonAnnotations") or payload.get("annotations", {}) -%}
-{% set shared = {} -%}
-{% for source in [payload.get("groupLabels", {}), payload.get("commonLabels", {}), payload.get("labels", {})] -%}
+{% set grouped_by = payload.get("groupLabels", {}) -%}
+{% set annotations = payload.get("commonAnnotations") or payload.get("annotations", {}) -%}
+{% set agreed = {} -%}
+{% for source in [grouped_by, payload.get("commonLabels", {}), payload.get("labels", {})] -%}
 {% for key, value in source.items()
-   if key not in shared
+   if key not in agreed
    and key not in said_elsewhere
    and not key.startswith("__") -%}
-{% set _ = shared.update({key: value}) -%}
+{% set _ = agreed.update({key: value}) -%}
 {% endfor -%}
 {% endfor -%}
 
-{% set summary = agreed.get("summary") -%}
-{% set description = agreed.get("description") -%}
+{% set summary = annotations.get("summary") -%}
+{% set description = annotations.get("description") -%}
 
-{# What identifies an instance is the labels the group does not share; a summary is prose that usually names
-   them and is not required to. So an instance says its own summary when its rule wrote one that is not already
-   the summary above, and then adds whichever of its own labels that sentence does not carry. A rule that writes
+{# What identifies an instance is the labels the group does not share; a summary is prose that usually names them
+   and is not required to. So an instance says its own summary when its rule wrote one that is not already the
+   summary above, and then adds whichever of its own labels that sentence does not carry. A rule that writes
    every instance the same sentence identifies none of them, and then the labels are all a line has to go on. -#}
-{% set listed = [] -%}
+{% set summaries = [] -%}
 {% for instance in instances -%}
 {% set own = instance.get("annotations", {}).get("summary") -%}
 {% if own and own != summary -%}
@@ -260,7 +261,7 @@ discord_message = """\
 {% for key, value in instance.get("labels", {}).items()
    if key not in said_elsewhere
    and not key.startswith("__")
-   and shared.get(key) != value
+   and agreed.get(key) != value
    and (value | string) not in prose -%}
 {% set _ = apart.append(pair(key, value) | trim) -%}
 {% endfor -%}
@@ -272,20 +273,20 @@ discord_message = """\
 {% set line = apart | join(", ") -%}
 {% endif -%}
 {# Two instances reduced to the same line are the same instance as far as a reader can tell. -#}
-{% if line and line not in listed -%}
-{% set _ = listed.append(line) -%}
+{% if line and line not in summaries -%}
+{% set _ = summaries.append(line) -%}
 {% endif -%}
 {% endfor -%}
 
 {# The prose above and the link buttons are not repeated as lines to copy out of. `value_string` is the long form
    of `values`, dropped only when there is a `values` to read instead of it. -#}
 {% set spoken = ["summary", "description", "runbook_url", "runbook_url_internal", "dashboard_url", "dashboardURL"] -%}
-{% set spoken = spoken + ["value_string"] if agreed.get("values") else spoken -%}
+{% set spoken = spoken + ["value_string"] if annotations.get("values") else spoken -%}
 {% set notes = [] -%}
-{% for key, value in agreed.items()
+{% for key, value in annotations.items()
    if key not in spoken
    and not key.startswith("__")
-   and shared.get(key) != value -%}
+   and agreed.get(key) != value -%}
 {% set _ = notes.append(pair(key, value) | trim) -%}
 {% endfor -%}
 
@@ -300,21 +301,31 @@ discord_message = """\
 {{ description }}
 {% endif -%}
 
-{# A group of one has said everything it has above. A group of many says what is in it, even when only one of
-   them turned out to carry anything of its own: that line is then the only thing naming what failed. -#}
-{% if listed and (instances | length) > 1 %}
-**Instances**
-{% for line in listed[:20] -%}
+{# A group of one has said its summary above. A group of many says one per instance, even when only one of them
+   turned out to carry anything of its own: that line is then the only thing naming what failed. -#}
+{% if summaries and (instances | length) > 1 %}
+**Summaries**
+{% for line in summaries[:20] -%}
 - {{ line }}
 {% endfor -%}
-{% if listed | length > 20 -%}
-- and {{ listed | length - 20 }} more
+{% if summaries | length > 20 -%}
+- and {{ summaries | length - 20 }} more
 {% endif -%}
 {% endif -%}
 
-{% if shared %}
+{# What the route grouped by, and then what the instances turned out to share beyond it. Kept apart because they
+   answer different questions: the first is why these alerts arrived as one card, the second is what they have in
+   common once they had. -#}
+{% if agreed.keys() | select("in", grouped_by) | list %}
+**Group**
+{% for key, value in agreed.items() if key in grouped_by -%}
+- {{ pair(key, value) | trim }}
+{% endfor -%}
+{% endif -%}
+
+{% if agreed.keys() | reject("in", grouped_by) | list %}
 **Labels**
-{% for key, value in shared.items() -%}
+{% for key, value in agreed.items() if key not in grouped_by -%}
 - {{ pair(key, value) | trim }}
 {% endfor -%}
 {% endif -%}
@@ -326,11 +337,11 @@ discord_message = """\
 {% endfor -%}
 {% endif -%}
 
-{% if agreed.get("runbook_url") -%}
-[:book: Runbook]({{ agreed.runbook_url }})
+{% if annotations.get("runbook_url") -%}
+[:book: Runbook]({{ annotations.runbook_url }})
 {% endif -%}
-{% if agreed.get("runbook_url_internal") -%}
-[:closed_book: Runbook (internal)]({{ agreed.runbook_url_internal }})
+{% if annotations.get("runbook_url_internal") -%}
+[:closed_book: Runbook (internal)]({{ annotations.runbook_url_internal }})
 {% endif -%}
 """  # noqa
 
