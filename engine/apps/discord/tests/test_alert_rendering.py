@@ -535,6 +535,102 @@ def test_a_card_says_something_when_the_alert_carries_no_annotations():
     assert "- instance: `localhost:8082`" in rendered.splitlines()
 
 
+# The default Grafana route groups by grafana_folder and alertname only, so one rule watching many workers in many
+# regions arrives as a single group. service_name differs between the instances, which keeps it out of
+# commonLabels, and each summary is written from it, which keeps every summary out of commonAnnotations.
+QUEUE_FAILURES_PAYLOAD = {
+    "status": "firing",
+    "groupLabels": {"alertname": "Queue has failed jobs"},
+    "commonLabels": {
+        "alertname": "Queue has failed jobs",
+        "deployment_cluster_name": "cloud",
+        "grafana_folder": "Utopia",
+        "severity": "warning",
+        "team": "cloud",
+    },
+    "commonAnnotations": {"description": "This alert starts when a queue is holding more failed jobs than it was."},
+    "alerts": [
+        {
+            "status": "firing",
+            "labels": {
+                "alertname": "Queue has failed jobs",
+                "deployment_region_name": "fra",
+                "k8s_cluster_name": "cloud-fra1-prod",
+                "service_name": "builds",
+                "severity": "warning",
+            },
+            "annotations": {"summary": "The `builds` queue on `cloud-fra1-prod` gained 2384 failed jobs in an hour."},
+        },
+        {
+            "status": "firing",
+            "labels": {
+                "alertname": "Queue has failed jobs",
+                "deployment_region_name": "syd",
+                "k8s_cluster_name": "cloud-syd1-prod",
+                "service_name": "domains",
+                "severity": "warning",
+            },
+            "annotations": {"summary": "The `domains` queue on `cloud-syd1-prod` gained 12825 failed jobs in an hour."},
+        },
+    ],
+}
+
+
+@pytest.mark.parametrize("integration", ["alertmanager", "grafana_alerting"])
+def test_a_card_names_each_instance_a_group_holds(integration):
+    """A group of many says what is in it.
+
+    The card can only print what the instances share, and what they share is the part that does not identify
+    them. Without a line per instance the reader is told a queue somewhere has failed jobs and not which queue.
+    """
+    config = import_module(f"config_integrations.{integration}")
+    rendered = apply_jinja_template(
+        config.discord_message,
+        payload=QUEUE_FAILURES_PAYLOAD,
+        source_link="https://grafana.example/alerting/list",
+        integration_name="Grafana Alerting",
+    )
+    lines = rendered.splitlines()
+
+    assert "**Instances**" in lines
+    for instance in (
+        "- The `builds` queue on `cloud-fra1-prod` gained 2384 failed jobs in an hour.",
+        "- The `domains` queue on `cloud-syd1-prod` gained 12825 failed jobs in an hour.",
+    ):
+        assert instance in lines, f"{instance} should be a line of its own"
+    # The names that only the instances carry, which is the whole reason the card lists them.
+    for name in ("builds", "domains", "cloud-fra1-prod", "cloud-syd1-prod"):
+        assert name in rendered, f"{name} is in no common label and would be lost"
+    # What they do share is still said once, above.
+    assert "This alert starts when a queue is holding more failed jobs than it was." in rendered
+    assert "- team: `cloud`" in lines
+
+
+def test_a_card_does_not_list_the_one_instance_it_already_describes():
+    """A group of one has its labels and its summary in the lines above, so a list of it repeats them."""
+    rendered = apply_jinja_template(
+        import_module("config_integrations.grafana_alerting").discord_message,
+        payload={
+            "groupLabels": {"alertname": "Queue has failed jobs", "service_name": "builds"},
+            "commonLabels": {"alertname": "Queue has failed jobs", "service_name": "builds"},
+            "commonAnnotations": {"summary": "The `builds` queue gained 12 failed jobs in an hour."},
+            "alerts": [
+                {
+                    "status": "firing",
+                    "labels": {"alertname": "Queue has failed jobs", "service_name": "builds"},
+                    "annotations": {"summary": "The `builds` queue gained 12 failed jobs in an hour."},
+                }
+            ],
+        },
+        source_link="",
+        integration_name="Grafana Alerting",
+    )
+
+    assert "**Instances**" not in rendered.splitlines()
+    # Said once, by the summary that a group of one puts in commonAnnotations.
+    assert rendered.count("The `builds` queue gained 12 failed jobs in an hour.") == 1
+
+
 @pytest.mark.django_db
 def test_a_dashboard_annotation_becomes_a_button_of_its_own(
     make_organization, make_user_for_organization, make_alert_receive_channel, make_alert_group, make_alert

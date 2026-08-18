@@ -261,6 +261,40 @@ discord_message = """\
 {{ description }}
 {% endif -%}
 
+{# One group can hold an instance per worker, region or host, and the route decides what they share: a label that
+   differs between them is in neither commonLabels nor commonAnnotations, and neither is a summary written from
+   it. Grouped by alertname alone, a card would name none of the things that are actually failing, so each
+   instance says itself — by its own summary, or by the labels that set it apart from the group. -#}
+{% set instances = [] -%}
+{% for alert in payload.get("alerts", []) -%}
+{% set own = alert.get("annotations", {}).get("summary") -%}
+{% if own -%}
+{% set _ = instances.append((own | string).split() | join(" ")) -%}
+{% else -%}
+{% set apart = [] -%}
+{% for key, value in alert.get("labels", {}).items()
+   if key not in ["alertname", "severity"]
+   and not key.startswith("__")
+   and commonLabels.get(key) != value -%}
+{% set _ = apart.append(key ~ ": `" ~ value ~ "`") -%}
+{% endfor -%}
+{% if apart -%}
+{% set _ = instances.append(apart | join(", ")) -%}
+{% endif -%}
+{% endif -%}
+{% endfor -%}
+
+{# A group of one already says everything it has in the lines above. -#}
+{% if instances | length > 1 %}
+**Instances**
+{% for entry in instances[:20] -%}
+- {{ entry }}
+{% endfor -%}
+{% if instances | length > 20 -%}
+- and {{ instances | length - 20 }} more
+{% endif -%}
+{% endif -%}
+
 {% if labels %}
 **Labels**
 {% for entry in labels -%}
