@@ -631,6 +631,84 @@ def test_a_card_does_not_list_the_one_instance_it_already_describes():
     assert rendered.count("The `builds` queue gained 12 failed jobs in an hour.") == 1
 
 
+@pytest.mark.parametrize("integration", ["alertmanager", "grafana_alerting"])
+def test_a_card_lists_the_one_instance_of_a_group_that_says_anything(integration):
+    """Whether a group is listed is decided by how many alerts it holds, not by how many of them had something
+    to say.
+
+    An instance whose labels are all common to the group and whose rule wrote no summary adds no line. Counting
+    lines rather than alerts, a pair like that read as a group of one and threw away the only line naming what
+    had failed.
+    """
+    rendered = apply_jinja_template(
+        import_module(f"config_integrations.{integration}").discord_message,
+        payload={
+            "groupLabels": {"alertname": "Queue has failed jobs"},
+            "commonLabels": {
+                "alertname": "Queue has failed jobs",
+                "deployment_region_name": "fra",
+                "team": "cloud",
+            },
+            "commonAnnotations": {"description": "This alert starts when a queue is holding more failed jobs."},
+            "alerts": [
+                {
+                    "status": "firing",
+                    "labels": {
+                        "alertname": "Queue has failed jobs",
+                        "deployment_region_name": "fra",
+                        "k8s_cluster_name": "cloud-fra1-prod",
+                        "service_name": "builds",
+                        "team": "cloud",
+                    },
+                    "annotations": {"summary": "The `builds` queue on `cloud-fra1-prod` has failed 2384 more jobs."},
+                },
+                {
+                    "status": "firing",
+                    "labels": {
+                        "alertname": "Queue has failed jobs",
+                        "deployment_region_name": "fra",
+                        "team": "cloud",
+                    },
+                    "annotations": {},
+                },
+            ],
+        },
+        source_link="",
+        integration_name="Grafana Alerting",
+    )
+    lines = rendered.splitlines()
+
+    assert "**Instances**" in lines
+    assert "- The `builds` queue on `cloud-fra1-prod` has failed 2384 more jobs." in lines
+    # The names the group does not share, which no other line on the card carries.
+    for name in ("builds", "cloud-fra1-prod"):
+        assert name in rendered, f"{name} is in no common label and is on no other line"
+
+
+@pytest.mark.parametrize("integration", ["alertmanager", "grafana_alerting"])
+def test_a_card_says_an_instance_line_once(integration):
+    """A group whose alerts were all written the same sentence has that sentence in commonAnnotations already,
+    and a list of it repeats one line per alert."""
+    shared = "A queue is holding more failed jobs than it was."
+    rendered = apply_jinja_template(
+        import_module(f"config_integrations.{integration}").discord_message,
+        payload={
+            "groupLabels": {"alertname": "Queue has failed jobs"},
+            "commonLabels": {"alertname": "Queue has failed jobs", "team": "cloud"},
+            "commonAnnotations": {"summary": shared},
+            "alerts": [
+                {"status": "firing", "labels": {"alertname": "Queue has failed jobs", "team": "cloud"},
+                 "annotations": {"summary": shared}}
+                for _ in range(3)
+            ],
+        },
+        source_link="",
+        integration_name="Grafana Alerting",
+    )
+
+    assert rendered.count(shared) == 1
+
+
 @pytest.mark.django_db
 def test_a_dashboard_annotation_becomes_a_button_of_its_own(
     make_organization, make_user_for_organization, make_alert_receive_channel, make_alert_group, make_alert

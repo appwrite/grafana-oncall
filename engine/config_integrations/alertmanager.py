@@ -266,24 +266,29 @@ discord_message = """\
 {% set instances = [] -%}
 {% for alert in payload.get("alerts", []) -%}
 {% set own = alert.get("annotations", {}).get("summary") -%}
-{% if own -%}
-{% set _ = instances.append((own | string).split() | join(" ")) -%}
-{% else -%}
 {% set apart = [] -%}
+{% if not own -%}
 {% for key, value in alert.get("labels", {}).items()
    if key not in ["alertname", "severity"]
    and not key.startswith("__")
    and commonLabels.get(key) != value -%}
 {% set _ = apart.append(key ~ ": `" ~ value ~ "`") -%}
 {% endfor -%}
-{% if apart -%}
-{% set _ = instances.append(apart | join(", ")) -%}
 {% endif -%}
+{% if own -%}
+{% set entry = (own | string).split() | join(" ") -%}
+{% else -%}
+{% set entry = apart | join(", ") -%}
+{% endif -%}
+{# Said once: not the summary the card has already printed above, and not another instance's line. -#}
+{% if entry and entry != summary and entry not in instances -%}
+{% set _ = instances.append(entry) -%}
 {% endif -%}
 {% endfor -%}
 
-{# A group of one already says everything it has in the lines above. -#}
-{% if instances | length > 1 %}
+{# A group of one says everything it has in the lines above. A group of many says what is in it, even when only
+   one of them turned out to carry anything of its own: that one line is the only thing naming what failed. -#}
+{% if instances and (payload.get("alerts", []) | length) > 1 %}
 **Instances**
 {% for entry in instances[:20] -%}
 - {{ entry }}
