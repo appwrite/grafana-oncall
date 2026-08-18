@@ -244,25 +244,35 @@ discord_message = """\
 {% set summary = agreed.get("summary") -%}
 {% set description = agreed.get("description") -%}
 
-{# An instance says its own summary when its rule wrote one, because a sentence naming the thing reads better
-   than the labels the sentence was built from. Otherwise it names itself by the labels the group does not
-   share. Either way it is said once: not the summary already above, and not a line another instance has said. -#}
+{# What identifies an instance is the labels the group does not share; a summary is prose that usually names
+   them and is not required to. So an instance says its own summary when its rule wrote one that is not already
+   the summary above, and then adds whichever of its own labels that sentence does not carry. A rule that writes
+   every instance the same sentence identifies none of them, and then the labels are all a line has to go on. -#}
 {% set listed = [] -%}
 {% for instance in instances -%}
 {% set own = instance.get("annotations", {}).get("summary") -%}
+{% if own and own != summary -%}
+{% set prose = (own | string).split() | join(" ") -%}
+{% else -%}
+{% set prose = "" -%}
+{% endif -%}
 {% set apart = [] -%}
 {% for key, value in instance.get("labels", {}).items()
    if key not in said_elsewhere
    and not key.startswith("__")
-   and shared.get(key) != value -%}
+   and shared.get(key) != value
+   and (value | string) not in prose -%}
 {% set _ = apart.append(pair(key, value) | trim) -%}
 {% endfor -%}
-{% if own -%}
-{% set line = (own | string).split() | join(" ") -%}
+{% if prose and apart -%}
+{% set line = prose ~ " — " ~ (apart | join(", ")) -%}
+{% elif prose -%}
+{% set line = prose -%}
 {% else -%}
 {% set line = apart | join(", ") -%}
 {% endif -%}
-{% if line and line != summary and line not in listed -%}
+{# Two instances reduced to the same line are the same instance as far as a reader can tell. -#}
+{% if line and line not in listed -%}
 {% set _ = listed.append(line) -%}
 {% endif -%}
 {% endfor -%}
