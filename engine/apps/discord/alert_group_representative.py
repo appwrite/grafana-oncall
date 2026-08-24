@@ -4,10 +4,10 @@ from rest_framework import status
 
 from apps.alerts.models import AlertGroup
 from apps.alerts.representative import AlertGroupAbstractRepresentative
-from apps.discord.alert_rendering import DiscordMessageRenderer
+from apps.discord.alert_rendering import DiscordMessageRenderer, render_resolution_note
 from apps.discord.client import DiscordClient
 from apps.discord.exceptions import DiscordAPIException, DiscordAPITokenInvalid
-from apps.discord.tasks import on_alert_group_action_triggered_async, on_create_alert_async
+from apps.discord.tasks import on_alert_group_action_triggered_async, on_create_alert_async, on_resolution_note_async
 from apps.discord.utils import beside_card
 
 logger = logging.getLogger(__name__)
@@ -131,6 +131,83 @@ class AlertGroupDiscordRepresentative(AlertGroupAbstractRepresentative):
             if ex.status not in [status.HTTP_401_UNAUTHORIZED, status.HTTP_403_FORBIDDEN, status.HTTP_404_NOT_FOUND]:
                 raise ex
 
+    @classmethod
+    def post_resolution_note(cls, alert_group: AlertGroup, resolution_note):
+        """Create, update, or delete the Discord message synchronized with a resolution note."""
+        from apps.discord.models import DiscordMessage, DiscordResolutionNoteMessage
+
+        if resolution_note is None:
+            return
+
+        note_message = DiscordResolutionNoteMessage.objects.filter(resolution_note_id=resolution_note.pk).first()
+        if resolution_note.deleted_at:
+            if note_message is None:
+                return
+            try:
+                client = DiscordClient()
+                if note_message.thread_id:
+                    client.update_thread(thread_id=note_message.thread_id, archived=False)
+                client.delete_message(channel_id=note_message.channel_id, message_id=note_message.message_id)
+            except DiscordAPITokenInvalid:
+                logger.error(
+                    f"Discord bot token is invalid, could not delete resolution note for alert group {alert_group.pk}"
+                )
+                raise
+            except DiscordAPIException as ex:
+                logger.error(f"Discord API error {ex}")
+                if ex.status != status.HTTP_404_NOT_FOUND:
+                    raise ex
+            note_message.delete()
+            return
+
+        discord_message = None
+        if note_message is None:
+            discord_message = (
+                alert_group.discord_messages.filter(message_type=DiscordMessage.ALERT_GROUP_MESSAGE)
+                .order_by("created_at")
+                .first()
+            )
+            if discord_message is None:
+                return
+
+        payload = render_resolution_note(resolution_note)
+
+        try:
+            client = DiscordClient()
+            thread_id = note_message.thread_id if note_message else discord_message.thread_id
+            if thread_id:
+                client.update_thread(thread_id=thread_id, archived=False)
+            if note_message:
+                client.update_message(
+                    channel_id=note_message.channel_id,
+                    message_id=note_message.message_id,
+                    data=payload,
+                )
+            else:
+                channel_id, reference = beside_card(discord_message)
+                payload.update(reference)
+                posted = client.create_message(
+                    channel_id=channel_id,
+                    data=payload,
+                    nonce=f"rn-{resolution_note.pk}",
+                )
+                DiscordResolutionNoteMessage.objects.update_or_create(
+                    resolution_note=resolution_note,
+                    defaults={
+                        "channel_id": posted.channel_id,
+                        "message_id": posted.message_id,
+                        "thread_id": discord_message.thread_id,
+                    },
+                )
+        except DiscordAPITokenInvalid:
+            logger.error(
+                f"Discord bot token is invalid, could not synchronize resolution note for alert group {alert_group.pk}"
+            )
+        except DiscordAPIException as ex:
+            logger.error(f"Discord API error {ex}")
+            if ex.status not in [status.HTTP_401_UNAUTHORIZED, status.HTTP_403_FORBIDDEN, status.HTTP_404_NOT_FOUND]:
+                raise ex
+
     @staticmethod
     def on_create_alert(**kwargs):
         on_create_alert_async.apply_async((kwargs["alert"],))
@@ -142,6 +219,13 @@ class AlertGroupDiscordRepresentative(AlertGroupAbstractRepresentative):
         log_record = kwargs["log_record"]
         log_record_id = log_record.pk if isinstance(log_record, AlertGroupLogRecord) else log_record
         on_alert_group_action_triggered_async.apply_async((log_record_id,))
+
+    @staticmethod
+    def on_alert_group_update_resolution_note(**kwargs):
+        resolution_note = kwargs.get("resolution_note")
+        if resolution_note is None:
+            return
+        on_resolution_note_async.apply_async((resolution_note.pk,))
 
     def get_handler(self):
         handler_name = self.get_handler_name()

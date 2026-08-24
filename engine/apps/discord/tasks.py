@@ -9,7 +9,7 @@ from apps.discord.alert_rendering import AlertGroupDiscordRenderer, DiscordMessa
 from apps.discord.client import DiscordClient
 from apps.discord.client import DiscordMessage as DiscordAPIMessage
 from apps.discord.exceptions import DiscordAPIException, DiscordAPITokenInvalid
-from apps.discord.models import DiscordChannel, DiscordMessage
+from apps.discord.models import DiscordChannel, DiscordMessage, DiscordResolutionNoteMessage
 from apps.discord.utils import beside_card
 from apps.user_management.models import User
 from common.custom_celery_tasks import shared_dedicated_queue_retry_task
@@ -119,6 +119,7 @@ def on_create_alert_async(self, alert_pk):
                     message=discord_message,
                     message_type=DiscordMessage.ALERT_GROUP_MESSAGE,
                     thread_id=thread_id,
+                    guild_id=discord_channel.guild_id,
                 )
 
 
@@ -151,6 +152,48 @@ def on_alert_group_action_triggered_async(log_record_id):
     representative = AlertGroupDiscordRepresentative(log_record)
     if representative.is_applicable():
         representative.get_handler()(log_record.alert_group)
+
+
+@shared_dedicated_queue_retry_task(
+    autoretry_for=(Exception,), retry_backoff=True, max_retries=1 if settings.DEBUG else None
+)
+def on_resolution_note_async(resolution_note_pk):
+    """Synchronize a resolution note beside the Discord card once that card exists."""
+    lock_id = f"discord-resolution-note-{resolution_note_pk}"
+    lock_owner = on_resolution_note_async.request.id or f"resolution-note-{resolution_note_pk}"
+    with task_lock(lock_id, lock_owner) as acquired:
+        if not acquired:
+            # Do not drop a concurrent edit or delete. Raising lets Celery retry after the task holding the lock
+            # has recorded its placement, and the retry reads the note's latest state from the database.
+            raise RuntimeError(f"Another task is synchronizing resolution note {resolution_note_pk}")
+        _synchronize_resolution_note(resolution_note_pk)
+
+
+def _synchronize_resolution_note(resolution_note_pk):
+    from apps.alerts.models import ResolutionNote
+    from apps.discord.alert_group_representative import AlertGroupDiscordRepresentative
+
+    try:
+        resolution_note = ResolutionNote.objects_with_deleted.get(pk=resolution_note_pk)
+    except ResolutionNote.DoesNotExist as e:
+        logger.warning(
+            f"Discord representative: resolution note {resolution_note_pk} never created or has been deleted"
+        )
+        raise e
+
+    alert_group = resolution_note.alert_group
+    note_was_posted = DiscordResolutionNoteMessage.objects.filter(resolution_note_id=resolution_note_pk).exists()
+    if not resolution_note.deleted_at and not note_was_posted:
+        try:
+            alert_group.discord_messages.get(message_type=DiscordMessage.ALERT_GROUP_MESSAGE)
+        except DiscordMessage.DoesNotExist as e:
+            if on_resolution_note_async.request.retries >= 10:
+                logger.error(f"Discord message not created for {alert_group.pk}. Stop retrying resolution note")
+                return
+            raise e
+
+    logger.info(f"Start discord on_resolution_note for alert_group {alert_group.pk}, note {resolution_note_pk}")
+    AlertGroupDiscordRepresentative.post_resolution_note(alert_group, resolution_note)
 
 
 @shared_dedicated_queue_retry_task(

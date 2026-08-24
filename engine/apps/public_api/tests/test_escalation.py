@@ -71,6 +71,7 @@ def test_escalation_new_alert_group(
             "slack": None,
             "slack_app": None,
             "telegram": None,
+            "discord": None,
             "web": f"a/{PluginID.ONCALL}/alert-groups/{ag.public_primary_key}",
         },
         "silenced_at": None,

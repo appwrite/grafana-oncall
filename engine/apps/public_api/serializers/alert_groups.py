@@ -1,3 +1,4 @@
+from django.conf import settings
 from django.db.models import Prefetch
 from rest_framework import serializers
 
@@ -47,6 +48,18 @@ class AlertGroupSerializer(EagerLoadingMixin, serializers.ModelSerializer):
             to_attr="prefetched_telegram_messages",
         ),
     ]
+    if settings.FEATURE_DISCORD_INTEGRATION_ENABLED:
+        from apps.discord.models import DiscordMessage
+
+        PREFETCH_RELATED = PREFETCH_RELATED + [
+            Prefetch(
+                "discord_messages",
+                queryset=DiscordMessage.objects.filter(message_type=DiscordMessage.ALERT_GROUP_MESSAGE).order_by(
+                    "created_at"
+                )[:1],
+                to_attr="prefetched_discord_messages",
+            ),
+        ]
 
     class Meta:
         model = AlertGroup

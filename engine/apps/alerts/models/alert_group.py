@@ -100,6 +100,7 @@ class Permalinks(typing.TypedDict):
     slack: typing.Optional[str]
     slack_app: typing.Optional[str]
     telegram: typing.Optional[str]
+    discord: typing.Optional[str]
     web: str
 
 
@@ -545,11 +546,48 @@ class AlertGroup(AlertGroupSlackRenderingMixin, EscalationSnapshotMixin, models.
         return main_telegram_message.link if main_telegram_message else None
 
     @property
+    def discord_permalink(self) -> typing.Optional[str]:
+        """A Discord URL for the card, or None when Discord is off or the card was never posted.
+
+        A forum post is itself a channel, so the thread id is the destination. A card in a text
+        channel needs the message id as well, or the link opens the channel rather than the card.
+        """
+        if not settings.FEATURE_DISCORD_INTEGRATION_ENABLED:
+            return None
+
+        from apps.discord.models import DiscordChannel, DiscordMessage
+
+        try:
+            discord_message = self.prefetched_discord_messages[0] if self.prefetched_discord_messages else None
+        except AttributeError:
+            discord_message = (
+                self.discord_messages.filter(message_type=DiscordMessage.ALERT_GROUP_MESSAGE)
+                .order_by("created_at")
+                .first()
+            )
+        if discord_message is None:
+            return None
+
+        guild_id = discord_message.guild_id
+        if not guild_id:
+            channel = DiscordChannel.objects.filter(
+                organization=self.channel.organization, channel_id=discord_message.channel_id
+            ).first()
+            guild_id = channel.guild_id if channel else None
+        if not guild_id:
+            return None
+
+        if discord_message.thread_id:
+            return f"https://discord.com/channels/{guild_id}/{discord_message.thread_id}"
+        return f"https://discord.com/channels/{guild_id}/{discord_message.channel_id}/{discord_message.message_id}"
+
+    @property
     def permalinks(self) -> Permalinks:
         return {
             "slack": self.slack_permalink,
             "slack_app": self.slack_app_link,
             "telegram": self.telegram_permalink,
+            "discord": self.discord_permalink,
             "web": self.web_link,
         }
 

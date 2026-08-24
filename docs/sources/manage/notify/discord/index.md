@@ -124,6 +124,10 @@ This is deliberately only the loud part. Reaching the right people is still the 
 their own notification policies, so that who gets woken respects who is actually on call. Nothing is posted if the
 alert group has already been acknowledged, silenced or resolved by the time the step runs.
 
+A resolution note created from the OnCall UI or the public API is posted the same way: beside the card, in the
+forum post or as a reply in a text channel. Mentions stay off. The alert group's `permalinks.discord` is a URL
+to that card.
+
 ## Split critical alerts from the rest
 
 A route also chooses how loud its alert groups read: **🚨 Critical**, **⚠️ Warning** or **📘 Info**. Set it to
