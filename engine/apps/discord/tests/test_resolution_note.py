@@ -192,6 +192,25 @@ def test_a_deleted_note_removes_the_existing_message(posted_note, thread_id, mis
 
 
 @pytest.mark.django_db
+def test_a_failed_note_deletion_is_retried(posted_note):
+    alert_group, note, message, _ = posted_note()
+    note_message = DiscordResolutionNoteMessage.objects.create(
+        resolution_note=note,
+        channel_id=message.channel_id,
+        message_id="1300000000000000010",
+    )
+    note.delete()
+    note = ResolutionNote.objects_with_deleted.get(pk=note.pk)
+    error = DiscordAPIException(status=403, url="unused", method="DELETE")
+
+    with patch("apps.discord.alert_group_representative.DiscordClient.delete_message", side_effect=error):
+        with pytest.raises(DiscordAPIException):
+            AlertGroupDiscordRepresentative.post_resolution_note(alert_group, note)
+
+    assert DiscordResolutionNoteMessage.objects.filter(pk=note_message.pk).exists()
+
+
+@pytest.mark.django_db
 def test_a_deleted_note_is_not_posted(posted_note):
     alert_group, note, _, _ = posted_note(deleted=True)
 

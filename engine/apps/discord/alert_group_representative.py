@@ -152,13 +152,11 @@ class AlertGroupDiscordRepresentative(AlertGroupAbstractRepresentative):
                 logger.error(
                     f"Discord bot token is invalid, could not delete resolution note for alert group {alert_group.pk}"
                 )
-                return
+                raise
             except DiscordAPIException as ex:
                 logger.error(f"Discord API error {ex}")
                 if ex.status != status.HTTP_404_NOT_FOUND:
-                    if ex.status not in [status.HTTP_401_UNAUTHORIZED, status.HTTP_403_FORBIDDEN]:
-                        raise ex
-                    return
+                    raise ex
             note_message.delete()
             return
 
