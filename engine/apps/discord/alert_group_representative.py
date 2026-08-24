@@ -7,11 +7,7 @@ from apps.alerts.representative import AlertGroupAbstractRepresentative
 from apps.discord.alert_rendering import DiscordMessageRenderer, render_resolution_note
 from apps.discord.client import DiscordClient
 from apps.discord.exceptions import DiscordAPIException, DiscordAPITokenInvalid
-from apps.discord.tasks import (
-    on_alert_group_action_triggered_async,
-    on_create_alert_async,
-    on_resolution_note_async,
-)
+from apps.discord.tasks import on_alert_group_action_triggered_async, on_create_alert_async, on_resolution_note_async
 from apps.discord.utils import beside_card
 
 logger = logging.getLogger(__name__)
@@ -137,41 +133,77 @@ class AlertGroupDiscordRepresentative(AlertGroupAbstractRepresentative):
 
     @classmethod
     def post_resolution_note(cls, alert_group: AlertGroup, resolution_note):
-        """Post a resolution note beside the card, the same place escalation pings land.
+        """Create, update, or delete the Discord message synchronized with a resolution note."""
+        from apps.discord.models import DiscordMessage, DiscordResolutionNoteMessage
 
-        A quiet forum post is archived by Discord and will not accept a message, so the
-        post is unarchived first. Mentions stay off: the note is whoever wrote it, not
-        a page.
-        """
-        from apps.discord.models import DiscordMessage
-
-        if resolution_note is None or resolution_note.deleted_at:
+        if resolution_note is None:
             return
 
-        discord_message = (
-            alert_group.discord_messages.filter(message_type=DiscordMessage.ALERT_GROUP_MESSAGE)
-            .order_by("created_at")
-            .first()
-        )
-        if discord_message is None:
+        note_message = DiscordResolutionNoteMessage.objects.filter(resolution_note_id=resolution_note.pk).first()
+        if resolution_note.deleted_at:
+            if note_message is None:
+                return
+            try:
+                client = DiscordClient()
+                if note_message.thread_id:
+                    client.update_thread(thread_id=note_message.thread_id, archived=False)
+                client.delete_message(channel_id=note_message.channel_id, message_id=note_message.message_id)
+            except DiscordAPITokenInvalid:
+                logger.error(
+                    f"Discord bot token is invalid, could not delete resolution note for alert group {alert_group.pk}"
+                )
+                return
+            except DiscordAPIException as ex:
+                logger.error(f"Discord API error {ex}")
+                if ex.status != status.HTTP_404_NOT_FOUND:
+                    if ex.status not in [status.HTTP_401_UNAUTHORIZED, status.HTTP_403_FORBIDDEN]:
+                        raise ex
+                    return
+            note_message.delete()
             return
+
+        discord_message = None
+        if note_message is None:
+            discord_message = (
+                alert_group.discord_messages.filter(message_type=DiscordMessage.ALERT_GROUP_MESSAGE)
+                .order_by("created_at")
+                .first()
+            )
+            if discord_message is None:
+                return
 
         payload = render_resolution_note(resolution_note)
-        channel_id, reference = beside_card(discord_message)
-        payload.update(reference)
 
         try:
             client = DiscordClient()
-            if discord_message.thread_id:
-                client.update_thread(thread_id=discord_message.thread_id, archived=False)
-            client.create_message(
-                channel_id=channel_id,
-                data=payload,
-                nonce=f"rn-{resolution_note.pk}",
-            )
+            thread_id = note_message.thread_id if note_message else discord_message.thread_id
+            if thread_id:
+                client.update_thread(thread_id=thread_id, archived=False)
+            if note_message:
+                client.update_message(
+                    channel_id=note_message.channel_id,
+                    message_id=note_message.message_id,
+                    data=payload,
+                )
+            else:
+                channel_id, reference = beside_card(discord_message)
+                payload.update(reference)
+                posted = client.create_message(
+                    channel_id=channel_id,
+                    data=payload,
+                    nonce=f"rn-{resolution_note.pk}",
+                )
+                DiscordResolutionNoteMessage.objects.update_or_create(
+                    resolution_note=resolution_note,
+                    defaults={
+                        "channel_id": posted.channel_id,
+                        "message_id": posted.message_id,
+                        "thread_id": discord_message.thread_id,
+                    },
+                )
         except DiscordAPITokenInvalid:
             logger.error(
-                f"Discord bot token is invalid, could not post resolution note for alert group {alert_group.pk}"
+                f"Discord bot token is invalid, could not synchronize resolution note for alert group {alert_group.pk}"
             )
         except DiscordAPIException as ex:
             logger.error(f"Discord API error {ex}")

@@ -568,17 +568,18 @@ class AlertGroup(AlertGroupSlackRenderingMixin, EscalationSnapshotMixin, models.
         if discord_message is None:
             return None
 
-        channel = DiscordChannel.objects.filter(
-            organization=self.channel.organization, channel_id=discord_message.channel_id
-        ).first()
-        if channel is None:
+        guild_id = discord_message.guild_id
+        if not guild_id:
+            channel = DiscordChannel.objects.filter(
+                organization=self.channel.organization, channel_id=discord_message.channel_id
+            ).first()
+            guild_id = channel.guild_id if channel else None
+        if not guild_id:
             return None
 
         if discord_message.thread_id:
-            return f"https://discord.com/channels/{channel.guild_id}/{discord_message.thread_id}"
-        return (
-            f"https://discord.com/channels/{channel.guild_id}/{discord_message.channel_id}/{discord_message.message_id}"
-        )
+            return f"https://discord.com/channels/{guild_id}/{discord_message.thread_id}"
+        return f"https://discord.com/channels/{guild_id}/{discord_message.channel_id}/{discord_message.message_id}"
 
     @property
     def permalinks(self) -> Permalinks:

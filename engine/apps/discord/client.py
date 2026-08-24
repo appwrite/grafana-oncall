@@ -86,7 +86,7 @@ class DiscordClient:
             )
         except requests.RequestException as ex:
             raise DiscordAPIException(status=None, url=url, msg=str(ex), method=method)
-        return response.json()
+        return response.json() if response.content else None
 
     def get_channel(self, channel_id: str) -> DiscordChannel:
         data = self._request("GET", f"{self.base_url}/channels/{channel_id}")
@@ -175,6 +175,9 @@ class DiscordClient:
     def update_message(self, channel_id: str, message_id: str, data: dict) -> DiscordMessage:
         response = self._request("PATCH", f"{self.base_url}/channels/{channel_id}/messages/{message_id}", data=data)
         return DiscordMessage(message_id=response["id"], channel_id=response["channel_id"])
+
+    def delete_message(self, channel_id: str, message_id: str) -> None:
+        self._request("DELETE", f"{self.base_url}/channels/{channel_id}/messages/{message_id}")
 
 
 def _acts_on(message: dict, marker: str) -> bool:

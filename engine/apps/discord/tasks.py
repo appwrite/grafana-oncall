@@ -9,7 +9,7 @@ from apps.discord.alert_rendering import AlertGroupDiscordRenderer, DiscordMessa
 from apps.discord.client import DiscordClient
 from apps.discord.client import DiscordMessage as DiscordAPIMessage
 from apps.discord.exceptions import DiscordAPIException, DiscordAPITokenInvalid
-from apps.discord.models import DiscordChannel, DiscordMessage
+from apps.discord.models import DiscordChannel, DiscordMessage, DiscordResolutionNoteMessage
 from apps.discord.utils import beside_card
 from apps.user_management.models import User
 from common.custom_celery_tasks import shared_dedicated_queue_retry_task
@@ -119,6 +119,7 @@ def on_create_alert_async(self, alert_pk):
                     message=discord_message,
                     message_type=DiscordMessage.ALERT_GROUP_MESSAGE,
                     thread_id=thread_id,
+                    guild_id=discord_channel.guild_id,
                 )
 
 
@@ -157,33 +158,28 @@ def on_alert_group_action_triggered_async(log_record_id):
     autoretry_for=(Exception,), retry_backoff=True, max_retries=1 if settings.DEBUG else None
 )
 def on_resolution_note_async(resolution_note_pk):
-    """Post a resolution note beside the Discord card once that card exists.
-
-    The card is written by another task, so a note that arrives first has to wait.
-    A deleted note is a no-op: we do not store the Discord message id, so there is
-    nothing to take down.
-    """
+    """Synchronize a resolution note beside the Discord card once that card exists."""
     from apps.alerts.models import ResolutionNote
     from apps.discord.alert_group_representative import AlertGroupDiscordRepresentative
 
     try:
         resolution_note = ResolutionNote.objects_with_deleted.get(pk=resolution_note_pk)
     except ResolutionNote.DoesNotExist as e:
-        logger.warning(f"Discord representative: resolution note {resolution_note_pk} never created or has been deleted")
+        logger.warning(
+            f"Discord representative: resolution note {resolution_note_pk} never created or has been deleted"
+        )
         raise e
 
     alert_group = resolution_note.alert_group
-    if resolution_note.deleted_at:
-        logger.info(f"Resolution note {resolution_note_pk} was deleted, not posting it to discord")
-        return
-
-    try:
-        alert_group.discord_messages.get(message_type=DiscordMessage.ALERT_GROUP_MESSAGE)
-    except DiscordMessage.DoesNotExist as e:
-        if on_resolution_note_async.request.retries >= 10:
-            logger.error(f"Discord message not created for {alert_group.pk}. Stop retrying resolution note")
-            return
-        raise e
+    note_was_posted = DiscordResolutionNoteMessage.objects.filter(resolution_note_id=resolution_note_pk).exists()
+    if not resolution_note.deleted_at and not note_was_posted:
+        try:
+            alert_group.discord_messages.get(message_type=DiscordMessage.ALERT_GROUP_MESSAGE)
+        except DiscordMessage.DoesNotExist as e:
+            if on_resolution_note_async.request.retries >= 10:
+                logger.error(f"Discord message not created for {alert_group.pk}. Stop retrying resolution note")
+                return
+            raise e
 
     logger.info(f"Start discord on_resolution_note for alert_group {alert_group.pk}, note {resolution_note_pk}")
     AlertGroupDiscordRepresentative.post_resolution_note(alert_group, resolution_note)
