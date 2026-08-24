@@ -223,6 +223,20 @@ def test_the_task_retries_until_the_card_exists(
 
 
 @pytest.mark.django_db
+def test_the_task_retries_when_another_note_sync_holds_the_lock(posted_note):
+    _, note, _, _ = posted_note()
+
+    with patch("apps.discord.tasks.task_lock") as lock, patch(
+        "apps.discord.alert_group_representative.AlertGroupDiscordRepresentative.post_resolution_note"
+    ) as post_resolution_note:
+        lock.return_value.__enter__.return_value = False
+        with pytest.raises(RuntimeError):
+            on_resolution_note_async(note.pk)
+
+    post_resolution_note.assert_not_called()
+
+
+@pytest.mark.django_db
 def test_the_signal_queues_the_note_task(posted_note):
     _, note, _, _ = posted_note()
 

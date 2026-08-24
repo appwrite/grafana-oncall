@@ -159,6 +159,17 @@ def on_alert_group_action_triggered_async(log_record_id):
 )
 def on_resolution_note_async(resolution_note_pk):
     """Synchronize a resolution note beside the Discord card once that card exists."""
+    lock_id = f"discord-resolution-note-{resolution_note_pk}"
+    lock_owner = on_resolution_note_async.request.id or f"resolution-note-{resolution_note_pk}"
+    with task_lock(lock_id, lock_owner) as acquired:
+        if not acquired:
+            # Do not drop a concurrent edit or delete. Raising lets Celery retry after the task holding the lock
+            # has recorded its placement, and the retry reads the note's latest state from the database.
+            raise RuntimeError(f"Another task is synchronizing resolution note {resolution_note_pk}")
+        _synchronize_resolution_note(resolution_note_pk)
+
+
+def _synchronize_resolution_note(resolution_note_pk):
     from apps.alerts.models import ResolutionNote
     from apps.discord.alert_group_representative import AlertGroupDiscordRepresentative
 
