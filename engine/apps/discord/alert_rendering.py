@@ -6,7 +6,7 @@ from emoji import emojize
 
 from apps.alerts.incident_appearance.renderers.base_renderer import AlertBaseRenderer, AlertGroupBaseRenderer
 from apps.alerts.incident_appearance.templaters.alert_templater import AlertTemplater
-from apps.alerts.models import Alert, AlertGroup
+from apps.alerts.models import Alert, AlertGroup, ResolutionNote
 from apps.discord.client import THREAD_NAME_LIMIT
 from common.utils import is_string_with_visible_characters, str_or_backup
 
@@ -93,6 +93,26 @@ def stamp(moment) -> str:
     """A moment as Discord renders it: the reader's own clock, and how long ago in their own words."""
     seconds = int(moment.timestamp())
     return f"<t:{seconds}:t> (<t:{seconds}:R>)"
+
+
+def render_resolution_note(resolution_note: ResolutionNote) -> dict:
+    """A resolution note as a follow-up beside the card.
+
+    The note is already capped at 3000 characters in OnCall, which fits an embed
+    description. Mentions are never resolved: the text is attacker-adjacent the
+    same way an alert annotation is.
+    """
+    author = resolution_note.author.username if resolution_note.author else "OnCall"
+    return {
+        "embeds": [
+            {
+                "title": "Investigation",
+                "description": truncate(resolution_note.text or "", EMBED_DESCRIPTION_LIMIT),
+                "footer": {"text": truncate(f"Note from {author}", EMBED_FOOTER_LIMIT)},
+            }
+        ],
+        "allowed_mentions": {"parse": []},
+    }
 
 
 def route_config(alert_group: AlertGroup) -> dict:

@@ -156,6 +156,42 @@ def on_alert_group_action_triggered_async(log_record_id):
 @shared_dedicated_queue_retry_task(
     autoretry_for=(Exception,), retry_backoff=True, max_retries=1 if settings.DEBUG else None
 )
+def on_resolution_note_async(resolution_note_pk):
+    """Post a resolution note beside the Discord card once that card exists.
+
+    The card is written by another task, so a note that arrives first has to wait.
+    A deleted note is a no-op: we do not store the Discord message id, so there is
+    nothing to take down.
+    """
+    from apps.alerts.models import ResolutionNote
+    from apps.discord.alert_group_representative import AlertGroupDiscordRepresentative
+
+    try:
+        resolution_note = ResolutionNote.objects_with_deleted.get(pk=resolution_note_pk)
+    except ResolutionNote.DoesNotExist as e:
+        logger.warning(f"Discord representative: resolution note {resolution_note_pk} never created or has been deleted")
+        raise e
+
+    alert_group = resolution_note.alert_group
+    if resolution_note.deleted_at:
+        logger.info(f"Resolution note {resolution_note_pk} was deleted, not posting it to discord")
+        return
+
+    try:
+        alert_group.discord_messages.get(message_type=DiscordMessage.ALERT_GROUP_MESSAGE)
+    except DiscordMessage.DoesNotExist as e:
+        if on_resolution_note_async.request.retries >= 10:
+            logger.error(f"Discord message not created for {alert_group.pk}. Stop retrying resolution note")
+            return
+        raise e
+
+    logger.info(f"Start discord on_resolution_note for alert_group {alert_group.pk}, note {resolution_note_pk}")
+    AlertGroupDiscordRepresentative.post_resolution_note(alert_group, resolution_note)
+
+
+@shared_dedicated_queue_retry_task(
+    autoretry_for=(Exception,), retry_backoff=True, max_retries=1 if settings.DEBUG else None
+)
 def notify_user_about_alert_async(user_pk, alert_group_pk, notification_policy_pk):
     from apps.base.models import UserNotificationPolicy, UserNotificationPolicyLogRecord
 

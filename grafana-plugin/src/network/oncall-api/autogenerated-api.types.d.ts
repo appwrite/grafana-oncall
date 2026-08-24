@@ -1547,6 +1547,7 @@ export interface components {
         slack: string | null;
         slack_app: string | null;
         telegram: string | null;
+        discord: string | null;
         web: string;
       };
       readonly alerts: components['schemas']['Alert'][];
@@ -1659,6 +1660,7 @@ export interface components {
         slack: string | null;
         slack_app: string | null;
         telegram: string | null;
+        discord: string | null;
         web: string;
       };
     };

@@ -21,7 +21,7 @@ alert_group_action_triggered_signal = django.dispatch.Signal()
 # when alert group state is changed
 alert_group_update_log_report_signal = django.dispatch.Signal()
 
-# Signal to rerender alert group's resolution note in all connected integrations (Slack)
+# Signal to rerender alert group's resolution note in all connected integrations (Slack, Discord)
 alert_group_update_resolution_note_signal = django.dispatch.Signal()
 
 # Signal to post acknowledge reminder message (Slack)
