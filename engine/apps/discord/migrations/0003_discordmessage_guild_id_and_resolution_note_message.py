@@ -47,7 +47,7 @@ class Migration(migrations.Migration):
                 ),
             ],
             options={
-                "indexes": [models.Index(fields=["channel_id", "message_id"], name="discord_dis_channel_8e256c_idx")],
+                "indexes": [models.Index(fields=["channel_id", "message_id"], name="discord_dis_channel_51254e_idx")],
             },
         ),
     ]
