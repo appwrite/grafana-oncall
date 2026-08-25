@@ -639,10 +639,13 @@ def test_create_ical_schedule(make_organization_and_user_with_token):
         "type": "ical",
     }
 
-    with patch(
-        "apps.public_api.serializers.schedules_ical.ScheduleICalSerializer.validate_ical_url_primary",
-        return_value=ICAL_URL,
-    ), patch("apps.schedules.tasks.refresh_ical_final_schedule.apply_async") as mock_refresh_final:
+    with (
+        patch(
+            "apps.public_api.serializers.schedules_ical.ScheduleICalSerializer.validate_ical_url_primary",
+            return_value=ICAL_URL,
+        ),
+        patch("apps.schedules.tasks.refresh_ical_final_schedule.apply_async") as mock_refresh_final,
+    ):
         response = client.post(url, data=data, format="json", HTTP_AUTHORIZATION=token)
     schedule = OnCallSchedule.objects.get(public_primary_key=response.data["id"])
 
@@ -1106,9 +1109,7 @@ def test_oncall_shifts_export_from_ical_schedule(
         SUMMARY:{}
         END:VEVENT
         END:VCALENDAR
-    """.format(
-            user1.username, user2.username
-        )
+    """.format(user1.username, user2.username)
     )
     schedule = make_schedule(organization, schedule_class=OnCallScheduleICal, cached_ical_file_primary=ical_data)
 

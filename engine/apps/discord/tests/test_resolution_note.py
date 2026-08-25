@@ -101,9 +101,12 @@ def test_a_note_in_a_forum_post_needs_no_reply(posted_note):
     alert_group, note, message, _ = posted_note(thread_id="1300000000000000009")
     posted = DiscordAPIMessage(message_id="1300000000000000010", channel_id=message.thread_id)
 
-    with patch(
-        "apps.discord.alert_group_representative.DiscordClient.create_message", return_value=posted
-    ) as create_message, patch("apps.discord.alert_group_representative.DiscordClient.update_thread") as update_thread:
+    with (
+        patch(
+            "apps.discord.alert_group_representative.DiscordClient.create_message", return_value=posted
+        ) as create_message,
+        patch("apps.discord.alert_group_representative.DiscordClient.update_thread") as update_thread,
+    ):
         AlertGroupDiscordRepresentative.post_resolution_note(alert_group, note)
 
     update_thread.assert_called_once_with(thread_id="1300000000000000009", archived=False)
@@ -123,9 +126,12 @@ def test_a_note_in_a_text_channel_quotes_the_card(posted_note):
     alert_group, note, message, _ = posted_note()
     posted = DiscordAPIMessage(message_id="1300000000000000010", channel_id=message.channel_id)
 
-    with patch(
-        "apps.discord.alert_group_representative.DiscordClient.create_message", return_value=posted
-    ) as create_message, patch("apps.discord.alert_group_representative.DiscordClient.update_thread") as update_thread:
+    with (
+        patch(
+            "apps.discord.alert_group_representative.DiscordClient.create_message", return_value=posted
+        ) as create_message,
+        patch("apps.discord.alert_group_representative.DiscordClient.update_thread") as update_thread,
+    ):
         AlertGroupDiscordRepresentative.post_resolution_note(alert_group, note)
 
     update_thread.assert_not_called()
@@ -148,9 +154,11 @@ def test_an_edited_note_updates_the_existing_message_without_the_card_record(pos
     note.message_text = "The queue recovered."
     note.save(update_fields=["message_text"])
 
-    with patch("apps.discord.alert_group_representative.DiscordClient.update_message") as update_message, patch(
-        "apps.discord.alert_group_representative.DiscordClient.create_message"
-    ) as create_message, patch("apps.discord.alert_group_representative.DiscordClient.update_thread") as update_thread:
+    with (
+        patch("apps.discord.alert_group_representative.DiscordClient.update_message") as update_message,
+        patch("apps.discord.alert_group_representative.DiscordClient.create_message") as create_message,
+        patch("apps.discord.alert_group_representative.DiscordClient.update_thread") as update_thread,
+    ):
         on_resolution_note_async(note.pk)
 
     create_message.assert_not_called()
@@ -178,9 +186,12 @@ def test_a_deleted_note_removes_the_existing_message(posted_note, thread_id, mis
     note = ResolutionNote.objects_with_deleted.get(pk=note.pk)
     error = DiscordAPIException(status=404, url="unused", method="DELETE") if missing_remotely else None
 
-    with patch(
-        "apps.discord.alert_group_representative.DiscordClient.delete_message", side_effect=error
-    ) as delete_message, patch("apps.discord.alert_group_representative.DiscordClient.update_thread") as update_thread:
+    with (
+        patch(
+            "apps.discord.alert_group_representative.DiscordClient.delete_message", side_effect=error
+        ) as delete_message,
+        patch("apps.discord.alert_group_representative.DiscordClient.update_thread") as update_thread,
+    ):
         AlertGroupDiscordRepresentative.post_resolution_note(alert_group, note)
 
     delete_message.assert_called_once_with(channel_id=note_message.channel_id, message_id=note_message.message_id)
@@ -245,9 +256,12 @@ def test_the_task_retries_until_the_card_exists(
 def test_the_task_retries_when_another_note_sync_holds_the_lock(posted_note):
     _, note, _, _ = posted_note()
 
-    with patch("apps.discord.tasks.task_lock") as lock, patch(
-        "apps.discord.alert_group_representative.AlertGroupDiscordRepresentative.post_resolution_note"
-    ) as post_resolution_note:
+    with (
+        patch("apps.discord.tasks.task_lock") as lock,
+        patch(
+            "apps.discord.alert_group_representative.AlertGroupDiscordRepresentative.post_resolution_note"
+        ) as post_resolution_note,
+    ):
         lock.return_value.__enter__.return_value = False
         with pytest.raises(RuntimeError):
             on_resolution_note_async(note.pk)

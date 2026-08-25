@@ -489,7 +489,7 @@ class IncidentLogBuilder:
 
                 else:
                     plan_line = (
-                        f'escalation step "{escalation_policy_snapshot.step_display}" with no recipients. ' f"Skipping"
+                        f'escalation step "{escalation_policy_snapshot.step_display}" with no recipients. Skipping'
                     )
 
                 escalation_plan.setdefault(timedelta, []).append({"plan_lines": [plan_line]})
@@ -536,7 +536,7 @@ class IncidentLogBuilder:
                     )
                 else:
                     plan_line = (
-                        f'escalation step "{escalation_policy_snapshot.step_display}" is Slack specific. ' f"Skipping"
+                        f'escalation step "{escalation_policy_snapshot.step_display}" is Slack specific. Skipping'
                     )
 
                 escalation_plan.setdefault(timedelta, []).append({"plan_lines": [plan_line]})

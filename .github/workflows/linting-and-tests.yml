@@ -337,17 +337,17 @@ jobs:
         working-directory: tools/migrators
         run: pytest -x
 
-  mypy:
-    name: "mypy"
+  ty:
+    name: "ty"
     runs-on: ubuntu-latest
     steps:
       - name: Checkout project
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       - name: Setup Python
         uses: ./.github/actions/setup-python
-      - name: mypy Static Type Checking
+      - name: ty Static Type Checking
         working-directory: engine
-        run: mypy .
+        run: ty check --exit-zero-on-warning
 
   end-to-end-tests:
     name: Standard e2e tests

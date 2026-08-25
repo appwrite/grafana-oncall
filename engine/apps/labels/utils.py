@@ -1,7 +1,7 @@
 import logging
 import typing
 
-from django.apps import apps  # noqa: I251
+from django.apps import apps  # noqa: TID251
 from django.conf import settings
 
 if typing.TYPE_CHECKING:

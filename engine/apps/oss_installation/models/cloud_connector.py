@@ -80,7 +80,7 @@ class CloudConnector(models.Model):
                     users_fetched = False
                     break
                 data = r.json()
-                matching_users.extend(list(filter(lambda u: (u["email"] in existing_emails), data["results"])))
+                matching_users.extend(list(filter(lambda u: u["email"] in existing_emails, data["results"])))
                 page += 1
                 if data["next"] is None:
                     fetch_next_page = False

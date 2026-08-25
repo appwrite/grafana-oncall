@@ -1,6 +1,7 @@
 """
 https://docs.celeryq.dev/en/v5.3.2/userguide/testing.html
 """
+
 import pytest
 from celery import shared_task
 

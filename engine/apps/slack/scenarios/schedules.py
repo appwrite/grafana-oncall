@@ -268,7 +268,7 @@ class EditScheduleShiftNotifyStep(scenario_step.ScenarioStep):
                 if shift["start"].day == shift["end"].day:
                     all_day_text = shift["start"].strftime("%b %d")
                 else:
-                    all_day_text = f'{shift["start"].strftime("%b %d")} - {shift["end"].strftime("%b %d")}'
+                    all_day_text = f"{shift['start'].strftime('%b %d')} - {shift['end'].strftime('%b %d')}"
                 user_notification += f' {all_day_text} _All-day event in timezone "UTC"_\n'
             else:
                 shift_start_timestamp = shift["start"].astimezone(pytz.UTC).timestamp()

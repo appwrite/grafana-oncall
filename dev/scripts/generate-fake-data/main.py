@@ -38,7 +38,7 @@ class GrafanaAPIUser(typing.TypedDict):
 
 def _generate_unique_email() -> str:
     user = fake.profile()
-    return f'{uuid.uuid4()}-{user["mail"]}'
+    return f"{uuid.uuid4()}-{user['mail']}"
 
 
 async def _grafana_api_request(
@@ -113,7 +113,7 @@ def generate_user(
         await _grafana_api_request(
             http_session,
             "PATCH",
-            f'/api/org/users/{grafana_user["id"]}',
+            f"/api/org/users/{grafana_user['id']}",
             json={"role": "Admin"},
         )
 

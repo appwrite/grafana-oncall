@@ -1,53 +1,14 @@
 repos:
-  - repo: https://github.com/pycqa/isort
-    rev: 5.12.0
+  - repo: https://github.com/astral-sh/ruff-pre-commit
+    rev: v0.16.4
     hooks:
-      - id: isort
-        files: ^engine
-        args: [--settings-file=engine/pyproject.toml, --filter-files]
-      - id: isort
-        name: isort - migrators
-        files: ^tools/migrators
-        args: [--settings-file=tools/migrators/.isort.cfg, --filter-files]
-      - id: isort
-        name: isort - dev/scripts
-        files: ^dev/scripts
-        args: [--settings-file=dev/scripts/.isort.cfg, --filter-files]
-
-  - repo: https://github.com/psf/black
-    rev: 23.7.0
-    hooks:
-      - id: black
-        files: ^engine
-        args: [--config=engine/pyproject.toml]
-      - id: black
-        name: black - migrators
-        files: ^tools/migrators
-      - id: black
-        name: black - dev/scripts
-        files: ^dev/scripts
-
-  - repo: https://github.com/pycqa/flake8
-    rev: 7.0.0
-    hooks:
-      - id: flake8
-        files: ^engine
-        args: [--config=engine/tox.ini]
-        additional_dependencies:
-          - flake8-bugbear
-          - flake8-tidy-imports
-      - id: flake8
-        name: flake8 - migrators
-        files: ^tools/migrators
-        # Make sure config is compatible with black
-        # https://black.readthedocs.io/en/stable/guides/using_black_with_other_tools.html#flake8
-        args: ["--max-line-length=88", "--extend-ignore=E203,E501"]
-      - id: flake8
-        name: flake8 - dev/scripts
-        files: ^dev/scripts
-        # Make sure config is compatible with black
-        # https://black.readthedocs.io/en/stable/guides/using_black_with_other_tools.html#flake8
-        args: ["--max-line-length=88", "--extend-ignore=E203,E501"]
+      # Each directory carries its own config: engine/pyproject.toml, tools/migrators/ruff.toml,
+      # dev/scripts/ruff.toml. Ruff discovers the nearest one per file.
+      - id: ruff-check
+        args: [--fix]
+        files: ^(engine|tools/migrators|dev/scripts)/
+      - id: ruff-format
+        files: ^(engine|tools/migrators|dev/scripts)/
 
   - repo: https://github.com/pre-commit/mirrors-eslint
     rev: v8.25.0

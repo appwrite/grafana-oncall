@@ -89,11 +89,9 @@ class HttpMethod(typing.Protocol):
     """
 
     @property
-    def __name__(self) -> str:
-        ...
+    def __name__(self) -> str: ...
 
-    def __call__(self, *args, **kwargs) -> requests.Response:
-        ...
+    def __call__(self, *args, **kwargs) -> requests.Response: ...
 
 
 class APIClient:

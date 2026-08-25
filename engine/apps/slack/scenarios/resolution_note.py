@@ -374,7 +374,7 @@ class ResolutionNoteModalStep(AlertGroupActionsMixin, scenario_step.ScenarioStep
         slack_team_identity: "SlackTeamIdentity",
         payload: EventPayload,
         # TODO: data is incompatible override, parent class has a different set of arguments
-        data: ScenarioData | None = None,  # type: ignore
+        data: ScenarioData | None = None,
     ) -> None:
         if data:
             # Argument "data" is used when step is called from other step, e.g. AddRemoveThreadMessageStep

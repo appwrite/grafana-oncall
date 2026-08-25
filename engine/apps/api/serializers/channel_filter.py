@@ -206,5 +206,4 @@ class ChannelFilterUpdateResponseSerializer(ChannelFilterUpdateSerializer):
 
     slack_channel = serializers.SerializerMethodField()
 
-    def get_slack_channel(self, obj) -> SlackChannelDetails | None:
-        ...
+    def get_slack_channel(self, obj) -> SlackChannelDetails | None: ...

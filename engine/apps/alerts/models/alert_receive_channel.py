@@ -404,7 +404,7 @@ class AlertReceiveChannel(IntegrationOptionsMixin, MaintainableObject):
             channel = cls(**kwargs)
             smile_code = number_to_smiles_translator(other_channels.count())
             verbal_name = (
-                kwargs.get("verbal_name") or f"{dict(cls.INTEGRATION_CHOICES)[kwargs['integration']]}" f" {smile_code}"
+                kwargs.get("verbal_name") or f"{dict(cls.INTEGRATION_CHOICES)[kwargs['integration']]} {smile_code}"
             )
             channel.smile_code = smile_code
             channel.verbal_name = verbal_name
@@ -526,7 +526,7 @@ class AlertReceiveChannel(IntegrationOptionsMixin, MaintainableObject):
                 grafana_alerting_entities=[
                     {
                         "alertmanager_name": f"""
-                        {'Grafana' if contact_point.datasource_name == 'grafana' else contact_point.datasource_name}
+                        {"Grafana" if contact_point.datasource_name == "grafana" else contact_point.datasource_name}
                         """,
                         "contact_point_url": f"/alerting/notifications/receivers/{self.emojized_verbal_name}/"
                         f"edit?alertmanager={contact_point.datasource_name}",
@@ -569,8 +569,7 @@ class AlertReceiveChannel(IntegrationOptionsMixin, MaintainableObject):
             return self.verbal_name
         else:
             return (
-                f"{self.verbal_name} - {self.get_integration_display()}"
-                f"{'' if self.deleted_at is None else '(Deleted)'}"
+                f"{self.verbal_name} - {self.get_integration_display()}{'' if self.deleted_at is None else '(Deleted)'}"
             )
 
     @property

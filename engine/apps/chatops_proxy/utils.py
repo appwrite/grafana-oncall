@@ -1,6 +1,7 @@
 """
 Set of utils to handle oncall and chatops-proxy interaction.
 """
+
 import logging
 import typing
 
@@ -42,7 +43,7 @@ def get_installation_link_from_chatops_proxy(user: "User") -> typing.Optional[st
         if api_exc.status == 409:
             return None
         logger.exception(
-            "Error while getting installation link from chatops proxy: " "error=%s",
+            "Error while getting installation link from chatops proxy: error=%s",
             api_exc,
         )
         raise api_exc
@@ -119,8 +120,7 @@ def link_slack_team(service_tenant_id: str, slack_team_id: str):
         client.link_slack_team(service_tenant_id, slack_team_id, APP_TYPE_ONCALL)
     except Exception as e:
         logger.error(
-            f'msg="Failed to link slack team: {e}"'
-            f"service_tenant_id={service_tenant_id} slack_team_id={slack_team_id}"
+            f'msg="Failed to link slack team: {e}"service_tenant_id={service_tenant_id} slack_team_id={slack_team_id}'
         )
         link_slack_team_async.apply_async(
             kwargs={
@@ -156,7 +156,7 @@ def uninstall_slack(stack_id: int, grafana_user_id: int) -> bool:
         if api_exc.status == 404:
             return True
         logger.exception(
-            "uninstall_slack: error trying to install slack from chatops-proxy: " "error=%s",
+            "uninstall_slack: error trying to install slack from chatops-proxy: error=%s",
             api_exc,
         )
         return False

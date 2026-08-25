@@ -43,8 +43,7 @@ class GrafanaAlertingSyncManager:
                 f"on instance? {response_info}"
             )
             return (
-                "Failed to create the integration with current Grafana Alerting. "
-                "Please reach out to our support team"
+                "Failed to create the integration with current Grafana Alerting. Please reach out to our support team"
             )
 
         return None

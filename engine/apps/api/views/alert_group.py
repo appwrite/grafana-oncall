@@ -447,7 +447,7 @@ class AlertGroupView(
         MAX_COUNT = 100001
         alert_groups = self.filter_queryset(self.get_queryset())[:MAX_COUNT]
         count = alert_groups.count()
-        count = f"{MAX_COUNT-1}+" if count == MAX_COUNT else str(count)
+        count = f"{MAX_COUNT - 1}+" if count == MAX_COUNT else str(count)
         return Response({"count": count})
 
     @extend_schema(responses=AlertGroupSerializer)

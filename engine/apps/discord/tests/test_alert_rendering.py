@@ -782,9 +782,9 @@ def test_a_card_names_instances_when_every_summary_is_the_same(integration):
     lines = [line for line in rendered.splitlines() if line.startswith("- ")]
 
     for region, node in (("fra", "node-1"), ("syd", "node-2"), ("tor", "node-3")):
-        assert any(
-            f"region: `{region}`" in line and f"instance: `{node}`" in line for line in lines
-        ), f"{region}/{node} is named nowhere on the card"
+        assert any(f"region: `{region}`" in line and f"instance: `{node}`" in line for line in lines), (
+            f"{region}/{node} is named nowhere on the card"
+        )
     # Said once, at the top, rather than again on every line below it.
     assert rendered.count("Disk is nearly full.") == 1
 

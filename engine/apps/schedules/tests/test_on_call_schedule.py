@@ -2034,9 +2034,7 @@ def test_refresh_ical_final_schedule_cancelled_not_updated(
         STATUS:CANCELLED
         END:VEVENT
         END:VCALENDAR
-    """.format(
-            u1.username, u2.username, last_week_timestamp, last_week_timestamp, last_week_timestamp
-        )
+    """.format(u1.username, u2.username, last_week_timestamp, last_week_timestamp, last_week_timestamp)
     )
 
     schedule = make_schedule(
@@ -2087,9 +2085,7 @@ def test_refresh_ical_final_schedule_event_in_the_past(
         LAST-MODIFIED;VALUE=DATE-TIME:20220414T190951Z
         END:VEVENT
         END:VCALENDAR
-    """.format(
-            u1.username
-        )
+    """.format(u1.username)
     )
 
     schedule = make_schedule(
@@ -2131,9 +2127,7 @@ def test_refresh_ical_final_schedule_all_day_date_event(
         LAST-MODIFIED;VALUE=DATE-TIME:20220414T190951Z
         END:VEVENT
         END:VCALENDAR
-    """.format(
-            u1.username
-        )
+    """.format(u1.username)
     )
 
     schedule = make_schedule(

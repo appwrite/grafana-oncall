@@ -435,7 +435,7 @@ def _update_service_dependencies(
 
 
 def _transform_service(
-    service: Union[TechnicalService, BusinessService]
+    service: Union[TechnicalService, BusinessService],
 ) -> Dict[str, Any]:
     """
     Transform a PagerDuty service (technical or business) into a Backstage Component.
@@ -474,9 +474,9 @@ def _transform_service(
 
     # Add PagerDuty URLs to annotations
     if service.html_url:
-        component["metadata"]["annotations"][
-            "pagerduty.com/html-url"
-        ] = service.html_url
+        component["metadata"]["annotations"]["pagerduty.com/html-url"] = (
+            service.html_url
+        )
     if service.self_url:
         component["metadata"]["annotations"]["pagerduty.com/api-url"] = service.self_url
 

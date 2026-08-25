@@ -29,7 +29,6 @@ class AlterFieldSkipMySQL(migrations.AlterField):
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
         ("fcm_django", "0009_alter_fcmdevice_user"),
     ]

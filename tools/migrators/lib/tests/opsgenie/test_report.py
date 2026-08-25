@@ -152,7 +152,5 @@ def test_integration_report():
 
     report = integration_report(integrations)
     assert "✅ Prometheus Alerts (Prometheus)" in report
-    assert (
-        "⚠️ Datadog Alerts (Datadog) (existing integration will be deleted)" in report
-    )
+    assert "⚠️ Datadog Alerts (Datadog) (existing integration will be deleted)" in report
     assert "❌ Custom Integration (Custom) — unsupported integration type" in report

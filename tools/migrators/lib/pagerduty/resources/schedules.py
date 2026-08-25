@@ -22,7 +22,7 @@ from lib.utils import dt_to_oncall_datetime, duration_to_frequency_and_interval
 
 
 def filter_schedules(
-    schedules: typing.List[typing.Dict[str, typing.Any]]
+    schedules: typing.List[typing.Dict[str, typing.Any]],
 ) -> typing.List[typing.Dict[str, typing.Any]]:
     """
     Filter schedules based on configured filters.

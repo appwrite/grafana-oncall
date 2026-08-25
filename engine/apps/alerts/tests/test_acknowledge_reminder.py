@@ -89,7 +89,7 @@ def test_start_ack_reminder_invokes_acknowledge_reminder_task(ack_reminder_test_
     organization, alert_group, user = ack_reminder_test_setup()
 
     # make sure celery_uuid returns a string to be passed to the task
-    assert type(celery_uuid()) == str
+    assert isinstance(celery_uuid(), str)
 
     with patch.object(acknowledge_reminder_task, "apply_async") as mock_acknowledge_reminder_task:
         with patch("apps.alerts.models.alert_group.celery_uuid", return_value=TASK_ID):

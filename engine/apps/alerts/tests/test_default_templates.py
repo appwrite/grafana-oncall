@@ -67,7 +67,7 @@ def test_default_templates(
 
             rendered_attr = getattr(rendered_alert, attr)
             assert rendered_attr == expected, (
-                f"{alert_receive_channel}'s {notification_channel} {attr} " f"is not equal to expected"
+                f"{alert_receive_channel}'s {notification_channel} {attr} is not equal to expected"
             )
 
 
@@ -117,9 +117,9 @@ def test_is_demo_alert_enabled(config):
 
     # example_payload must be defined
     try:
-        assert config.example_payload is None or isinstance(
-            config.example_payload, dict
-        ), "example_payload must be dict or None"
+        assert config.example_payload is None or isinstance(config.example_payload, dict), (
+            "example_payload must be dict or None"
+        )
     except AttributeError:
         pytest.fail("example_payload must be defined")
 
