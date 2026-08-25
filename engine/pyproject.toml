@@ -21,80 +21,34 @@ ban-relative-imports = "parents"
 "jinja2.Template".msg = "Use apply_jinja_template instead"
 "django.apps.apps".msg = "Import models directly instead"
 
-[tool.mypy]
-mypy_path = "$MYPY_CONFIG_FILE_DIR/type_stubs"
-implicit_reexport = true
-plugins = [
-    "mypy_django_plugin.main",
-    "mypy_drf_plugin.main",
-]
-exclude = [
-    # TOML's double-quoted strings require escaping backslashes
-    "tests/test_.*\\.py$",    # test files
-    "migrations/\\d*.*\\.py",  # migration files
-]
-disable_error_code = [
-    "abstract",
-    "annotation-unchecked",
-    "arg-type",
-    "assignment",
-    "attr-defined",
-    "call-arg",
-    "call-overload",
-    "has-type",
-    "index",
-    "misc",
-    "name-defined",
-    "operator",
-    "return-value",
-    "typeddict-item",
-    "union-attr",
-]
+[tool.ty.environment]
+extra-paths = ["type_stubs"]
 
-# mypy per-module options
-[[tool.mypy.overrides]]
-module = [
-    # the following setting should eventually be removed, one module at a time.
-    # It's only being added to temporarily surpress the:
-    # "module is installed, but missing library stubs or py.typed marker" errors
-    # we can slowly either start to add library stubs ourselves, or try and upgrade these libraries to see if
-    # a newer version includes type stubs
-    "anymail.*",
-    "celery.utils.debug",
-    "debug_toolbar.*",
-    "django_deprecate_fields.*",
-    "django_migration_linter",
-    "django_sns_view.*",
-    "factory.*",
-    "fcm_django.*",
-    "firebase_admin.*",
-    "google.auth.exceptions.*",
-    "googleapiclient.discovery.*",
-    "googleapiclient.errors.*",
-    "google.oauth2.credentials.*",
-    "humanize.*",
-    "ipware.*",
-    "markdown2.*",
-    "mirage.*",
-    "ordered_model.*",
-    "phonenumbers.*",
-    "polymorphic.*",
-    "pyroscope.*",
-    "ratelimit.*",
-    "regex.*",
-    "recurring_ical_events.*",
-    "responses.*",
-    "rest_polymorphic.*",
-    "slackclient.*",
-    "slackviewer.*",
-    "social_core.*",
-    "social_django.*",
-    "twilio.*",
-    "uwsgidecorators.*",
-    "whitenoise.*",
-    "uwsgi.*",
-]
-ignore_missing_imports = true
+[tool.ty.src]
+exclude = ["**/tests/", "**/test_*.py", "**/migrations/"]
 
-[tool.django-stubs]
-django_settings_module = "settings.dev"
+# Django builds managers, related descriptors, and settings at runtime; without a plugin for that, these
+# rules read as noise here the same way their mypy counterparts did (its disable_error_code list). Lift
+# them one at a time as annotations catch up.
+[tool.ty.rules]
+call-non-callable = "ignore"
+invalid-argument-type = "ignore"
+invalid-assignment = "ignore"
+invalid-attribute-override = "ignore"
+invalid-key = "ignore"
+invalid-method-override = "ignore"
+# QuerySet["User"] et al. — generic only in the django-stubs this replaced, not at runtime.
+invalid-type-form = "ignore"
+invalid-parameter-default = "ignore"
+invalid-return-type = "ignore"
+invalid-typed-dict-field = "ignore"
+missing-argument = "ignore"
+missing-typed-dict-key = "ignore"
+no-matching-overload = "ignore"
+not-iterable = "ignore"
+not-subscriptable = "ignore"
+too-many-positional-arguments = "ignore"
+unknown-argument = "ignore"
+unresolved-attribute = "ignore"
+unresolved-import = "ignore"
+unsupported-operator = "ignore"

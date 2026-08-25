@@ -1,7 +1,7 @@
 import datetime
 import logging
 import typing
-import urllib
+import urllib.parse
 from collections import namedtuple
 from functools import partial
 

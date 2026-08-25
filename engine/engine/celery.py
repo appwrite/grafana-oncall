@@ -2,7 +2,7 @@ import logging
 import os
 import time
 
-import celery
+import celery.signals
 from celery import Celery
 from celery.app.log import TaskFormatter
 from celery.utils.debug import memdump, sample_mem
