@@ -700,8 +700,11 @@ def test_a_card_says_an_instance_line_once(integration):
             "commonLabels": {"alertname": "Queue has failed jobs", "team": "cloud"},
             "commonAnnotations": {"summary": shared},
             "alerts": [
-                {"status": "firing", "labels": {"alertname": "Queue has failed jobs", "team": "cloud"},
-                 "annotations": {"summary": shared}}
+                {
+                    "status": "firing",
+                    "labels": {"alertname": "Queue has failed jobs", "team": "cloud"},
+                    "annotations": {"summary": shared},
+                }
                 for _ in range(3)
             ],
         },
@@ -779,9 +782,9 @@ def test_a_card_names_instances_when_every_summary_is_the_same(integration):
     lines = [line for line in rendered.splitlines() if line.startswith("- ")]
 
     for region, node in (("fra", "node-1"), ("syd", "node-2"), ("tor", "node-3")):
-        assert any(f"region: `{region}`" in line and f"instance: `{node}`" in line for line in lines), (
-            f"{region}/{node} is named nowhere on the card"
-        )
+        assert any(
+            f"region: `{region}`" in line and f"instance: `{node}`" in line for line in lines
+        ), f"{region}/{node} is named nowhere on the card"
     # Said once, at the top, rather than again on every line below it.
     assert rendered.count("Disk is nearly full.") == 1
 
@@ -798,8 +801,12 @@ def test_an_instance_line_does_not_repeat_what_its_summary_already_says(integrat
             "alerts": [
                 {
                     "status": "firing",
-                    "labels": {"alertname": "Queue has failed jobs", "team": "cloud",
-                               "service_name": service, "k8s_cluster_name": cluster},
+                    "labels": {
+                        "alertname": "Queue has failed jobs",
+                        "team": "cloud",
+                        "service_name": service,
+                        "k8s_cluster_name": cluster,
+                    },
                     "annotations": {"summary": f"The `{service}` queue on `{cluster}` has failed 12 more jobs."},
                 }
                 for service, cluster in (("builds", "cloud-fra1-prod"), ("domains", "cloud-syd1-prod"))
@@ -831,8 +838,11 @@ def test_a_summary_carries_a_label_as_a_word_and_not_as_a_syllable(integration):
             "commonLabels": {"alertname": "Queue has failed jobs", "team": "cloud"},
             "commonAnnotations": {},
             "alerts": [
-                {"status": "firing", "labels": {"alertname": "Queue has failed jobs", "team": "cloud", "shard": shard},
-                 "annotations": {"summary": f"The queue gained 1{shard} failed jobs."}}
+                {
+                    "status": "firing",
+                    "labels": {"alertname": "Queue has failed jobs", "team": "cloud", "shard": shard},
+                    "annotations": {"summary": f"The queue gained 1{shard} failed jobs."},
+                }
                 for shard in ("1", "3")
             ],
         },
@@ -861,8 +871,11 @@ def test_a_lone_varying_label_gathers_onto_one_line(integration):
             "commonLabels": {"alertname": "Queue has failed jobs", "team": "cloud"},
             "commonAnnotations": {},
             "alerts": [
-                {"status": "firing", "labels": {"alertname": "Queue has failed jobs", "team": "cloud", "shard": shard},
-                 "annotations": {"summary": "The queue gained 12 failed jobs."}}
+                {
+                    "status": "firing",
+                    "labels": {"alertname": "Queue has failed jobs", "team": "cloud", "shard": shard},
+                    "annotations": {"summary": "The queue gained 12 failed jobs."},
+                }
                 for shard in ("1", "2")
             ],
         },
@@ -916,14 +929,24 @@ def test_a_summary_carries_a_label_even_wrapped_in_punctuation(integration):
             "commonLabels": {"alertname": "Queue has failed jobs"},
             "commonAnnotations": {},
             "alerts": [
-                {"status": "firing",
-                 "labels": {"alertname": "Queue has failed jobs", "service_name": "builds",
-                            "k8s_cluster_name": "cloud-fra1-prod"},
-                 "annotations": {"summary": "The `builds` queue failed on cloud-fra1-prod."}},
-                {"status": "firing",
-                 "labels": {"alertname": "Queue has failed jobs", "service_name": "domains",
-                            "k8s_cluster_name": "cloud-syd1-prod"},
-                 "annotations": {"summary": "The `domains` queue failed on cloud-syd1-prod."}},
+                {
+                    "status": "firing",
+                    "labels": {
+                        "alertname": "Queue has failed jobs",
+                        "service_name": "builds",
+                        "k8s_cluster_name": "cloud-fra1-prod",
+                    },
+                    "annotations": {"summary": "The `builds` queue failed on cloud-fra1-prod."},
+                },
+                {
+                    "status": "firing",
+                    "labels": {
+                        "alertname": "Queue has failed jobs",
+                        "service_name": "domains",
+                        "k8s_cluster_name": "cloud-syd1-prod",
+                    },
+                    "annotations": {"summary": "The `domains` queue failed on cloud-syd1-prod."},
+                },
             ],
         },
         source_link="",
@@ -962,9 +985,14 @@ def test_a_card_keeps_what_the_route_grouped_by_apart_from_what_the_alerts_share
             "alerts": [
                 {
                     "status": "firing",
-                    "labels": {"alertname": "Queue has failed jobs", "grafana_folder": "Utopia",
-                               "deployment_cluster_name": "cloud", "severity": "warning", "team": "cloud",
-                               "service_name": service},
+                    "labels": {
+                        "alertname": "Queue has failed jobs",
+                        "grafana_folder": "Utopia",
+                        "deployment_cluster_name": "cloud",
+                        "severity": "warning",
+                        "team": "cloud",
+                        "service_name": service,
+                    },
                     "annotations": {"summary": f"The `{service}` queue has failed 12 more jobs."},
                 }
                 for service in ("builds", "domains")
