@@ -370,10 +370,10 @@ class AlertReceiveChannelSerializer(
             obj = AlertReceiveChannel.objects.get(organization=organization, team=team, verbal_name=verbal_name)
         except AlertReceiveChannel.DoesNotExist:
             pass
-        except AlertReceiveChannel.MultipleObjectsReturned:
+        except AlertReceiveChannel.MultipleObjectsReturned as e:
             raise serializers.ValidationError(
                 {"verbal_name": "An integration with this name already exists for this team"}
-            )
+            ) from e
         else:
             if self.instance is None or obj.id != self.instance.id:
                 raise serializers.ValidationError(
@@ -404,8 +404,8 @@ class AlertReceiveChannelSerializer(
                 author=self.context["request"].user,
                 allow_source_based_resolving=is_able_to_autoresolve,
             )
-        except AlertReceiveChannel.DuplicateDirectPagingError:
-            raise BadRequest(detail=AlertReceiveChannel.DuplicateDirectPagingError.DETAIL)
+        except AlertReceiveChannel.DuplicateDirectPagingError as e:
+            raise BadRequest(detail=AlertReceiveChannel.DuplicateDirectPagingError.DETAIL) from e
 
         # Create label associations
         self.update_labels_association_if_needed(labels, instance, organization)
@@ -426,8 +426,8 @@ class AlertReceiveChannelSerializer(
 
         try:
             updated_instance = super().update(instance, validated_data)
-        except AlertReceiveChannel.DuplicateDirectPagingError:
-            raise BadRequest(detail=AlertReceiveChannel.DuplicateDirectPagingError.DETAIL)
+        except AlertReceiveChannel.DuplicateDirectPagingError as e:
+            raise BadRequest(detail=AlertReceiveChannel.DuplicateDirectPagingError.DETAIL) from e
 
         # update webhooks if needed, using updated instance
         if hasattr(instance.config, "update_default_webhooks"):
@@ -565,10 +565,10 @@ class AlertReceiveChannelTemplatesSerializer(EagerLoadingMixin, serializers.Mode
             alert_group_id = self.context["request"].query_params.get("alert_group_id")
             try:
                 return obj.alert_groups.get(public_primary_key=alert_group_id).alerts.first().raw_request_data
-            except AlertGroup.DoesNotExist:
-                raise serializers.ValidationError("Alert group doesn't exist for this integration")
-            except AttributeError:
-                raise serializers.ValidationError("Unable to retrieve example payload for this alert group")
+            except AlertGroup.DoesNotExist as e:
+                raise serializers.ValidationError("Alert group doesn't exist for this integration") from e
+            except AttributeError as e:
+                raise serializers.ValidationError("Unable to retrieve example payload for this alert group") from e
         else:
             try:
                 return obj.alert_groups.only("id").last().alerts.first().raw_request_data

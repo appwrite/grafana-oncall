@@ -113,11 +113,11 @@ class AlertGroupView(
                 elif choice == AlertGroup.RESOLVED:
                     status_filter = AlertGroup.get_resolved_state_filter()
                 queryset = queryset.filter(status_filter)
-            except IndexError:
+            except IndexError as e:
                 valid_choices_text = ", ".join(
                     [status_choice[1].lower() for status_choice in AlertGroup.STATUS_CHOICES]
                 )
-                raise BadRequest(detail={"state": f"Must be one of the following: {valid_choices_text}"})
+                raise BadRequest(detail={"state": f"Must be one of the following: {valid_choices_text}"}) from e
 
         # filter by alert group (static, applied) labels
         label_query = self.request.query_params.getlist("label", [])
@@ -140,8 +140,8 @@ class AlertGroupView(
             ).get(public_primary_key=public_primary_key)
             obj = self.enrich([obj])[0]
             return obj
-        except AlertGroup.DoesNotExist:
-            raise NotFound
+        except AlertGroup.DoesNotExist as e:
+            raise NotFound from e
 
     def destroy(self, request, *args, **kwargs):
         instance = self.get_object()
@@ -263,8 +263,8 @@ class AlertGroupView(
             raise BadRequest(detail="delay is required")
         try:
             delay = int(delay)
-        except ValueError:
-            raise BadRequest(detail="invalid delay value")
+        except ValueError as e:
+            raise BadRequest(detail="invalid delay value") from e
         if delay < -1:
             raise BadRequest(detail="invalid delay value")
 

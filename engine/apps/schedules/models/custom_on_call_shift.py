@@ -30,7 +30,7 @@ from apps.user_management.models import User
 from common.public_primary_keys import generate_public_primary_key, increase_public_primary_key_length
 
 if typing.TYPE_CHECKING:
-    from django.db.models.manager import RelatedManager
+    from django.db.models.fields.related_descriptors import RelatedManager
 
     from apps.schedules.models import OnCallSchedule
 
@@ -367,10 +367,11 @@ class CustomOnCallShift(models.Model):
         week_interval = (len(combinations) // len(self.by_day)) or 1
 
         counter = 1
-        for (user_group_id, day, _), start in itertools.zip_longest(combinations, starting_dates, fillvalue=None):
-            if not start:
+        for combination, start in itertools.zip_longest(combinations, starting_dates, fillvalue=None):
+            if not start or combination is None:
                 # means that rotation ended before next event starts, no more events to generate
                 break
+            user_group_id, day, _ = combination
             users = users_queue[user_group_id]
             for user_counter, user in enumerate(users, start=1):
                 # setup weekly events, for each user group/day combinations,

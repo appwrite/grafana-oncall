@@ -83,9 +83,9 @@ class DiscordClient:
                 url=url,
                 msg=_error_message(ex.response),
                 method=method,
-            )
+            ) from ex
         except requests.RequestException as ex:
-            raise DiscordAPIException(status=None, url=url, msg=str(ex), method=method)
+            raise DiscordAPIException(status=None, url=url, msg=str(ex), method=method) from ex
         return response.json() if response.content else None
 
     def get_channel(self, channel_id: str) -> DiscordChannel:

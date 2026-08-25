@@ -29,10 +29,10 @@ class OrganizationFilteredPrimaryKeyRelatedField(RelatedField):
     def to_internal_value(self, data):
         try:
             return self.get_queryset().get(public_primary_key=data)
-        except ObjectDoesNotExist:
-            raise ValidationError("Object does not exist")
-        except (TypeError, ValueError):
-            raise ValidationError("Invalid values")
+        except ObjectDoesNotExist as e:
+            raise ValidationError("Object does not exist") from e
+        except (TypeError, ValueError) as e:
+            raise ValidationError("Invalid values") from e
 
     def get_queryset(self):
         request = self.context.get("request", None)
@@ -62,10 +62,10 @@ class TeamPrimaryKeyRelatedField(RelatedField):
     def to_internal_value(self, data):
         try:
             return self.get_queryset().get(public_primary_key=data)
-        except ObjectDoesNotExist:
-            raise ValidationError("Object does not exist")
-        except (TypeError, ValueError):
-            raise ValidationError("Invalid values")
+        except ObjectDoesNotExist as e:
+            raise ValidationError("Object does not exist") from e
+        except (TypeError, ValueError) as e:
+            raise ValidationError("Invalid values") from e
 
     def get_queryset(self):
         request = self.context.get("request", None)
@@ -146,10 +146,10 @@ class _SlackObjectFilteredByOrganizationSlackWorkspaceField(RelatedField):
 
         try:
             return self.get_queryset().get(slack_id=slack_id.upper())
-        except ObjectDoesNotExist:
-            raise ValidationError(f"Slack {noun} does not exist")
-        except (TypeError, ValueError, AttributeError):
-            raise ValidationError(f"Invalid Slack {noun}")
+        except ObjectDoesNotExist as e:
+            raise ValidationError(f"Slack {noun} does not exist") from e
+        except (TypeError, ValueError, AttributeError) as e:
+            raise ValidationError(f"Invalid Slack {noun}") from e
 
     def to_representation(self, obj) -> str:
         return obj.public_primary_key
@@ -193,10 +193,10 @@ class IntegrationFilteredByOrganizationField(serializers.RelatedField):
     def to_internal_value(self, data):
         try:
             return self.get_queryset().get(public_primary_key=data)
-        except ObjectDoesNotExist:
-            raise ValidationError("Integration does not exist")
-        except (TypeError, ValueError):
-            raise ValidationError("Invalid integration")
+        except ObjectDoesNotExist as e:
+            raise ValidationError("Integration does not exist") from e
+        except (TypeError, ValueError) as e:
+            raise ValidationError("Invalid integration") from e
 
     def to_representation(self, value):
         return value.public_primary_key
@@ -206,8 +206,8 @@ class RouteIdField(fields.CharField):
     def to_internal_value(self, data):
         try:
             channel_filter = ChannelFilter.objects.get(public_primary_key=data)
-        except ChannelFilter.DoesNotExist:
-            raise BadRequest(detail="Route does not exist")
+        except ChannelFilter.DoesNotExist as e:
+            raise BadRequest(detail="Route does not exist") from e
         return channel_filter
 
     def to_representation(self, value):

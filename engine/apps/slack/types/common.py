@@ -197,8 +197,6 @@ class Channel(typing.TypedDict):
 
 
 class BaseEvent(typing.TypedDict):
-    type: PayloadType
-
     user: User
     """
     The user who interacted to trigger this request.

@@ -50,14 +50,14 @@ class TwilioPhoneProvider(PhoneProvider):
                 try_without_callback = True
             else:
                 logger.error(f"TwilioPhoneProvider.make_notification_call: failed {e}")
-                raise FailedToMakeCall(graceful_msg=self._get_graceful_msg(e, number))
+                raise FailedToMakeCall(graceful_msg=self._get_graceful_msg(e, number)) from e
 
         if try_without_callback:
             try:
                 response = self._call_create(twiml, number, with_callback=False)
             except TwilioRestException as e:
                 logger.error(f"TwilioPhoneProvider.make_notification_call: failed {e}")
-                raise FailedToMakeCall(graceful_msg=self._get_graceful_msg(e, number))
+                raise FailedToMakeCall(graceful_msg=self._get_graceful_msg(e, number)) from e
 
         if response and response.status and response.sid:
             return TwilioPhoneCall(
@@ -80,14 +80,14 @@ class TwilioPhoneProvider(PhoneProvider):
                 try_without_callback = True
             else:
                 logger.error(f"TwilioPhoneProvider.send_notification_sms: failed {e}")
-                raise FailedToSendSMS(graceful_msg=self._get_graceful_msg(e, number))
+                raise FailedToSendSMS(graceful_msg=self._get_graceful_msg(e, number)) from e
 
         if try_without_callback:
             try:
                 response = self._messages_create(number, message, with_callback=False)
             except TwilioRestException as e:
                 logger.error(f"TwilioPhoneProvider.send_notification_sms: failed {e}")
-                raise FailedToSendSMS(graceful_msg=self._get_graceful_msg(e, number))
+                raise FailedToSendSMS(graceful_msg=self._get_graceful_msg(e, number)) from e
 
         if response and response.status and response.sid:
             return TwilioSMS(
@@ -115,7 +115,7 @@ class TwilioPhoneProvider(PhoneProvider):
                     return normalized_number
             except TwilioRestException as e:
                 logger.error(f"TwilioPhoneProvider.finish_verification: failed to verify number {number}: {e}")
-                raise FailedToFinishVerification(graceful_msg=self._get_graceful_msg(e, number))
+                raise FailedToFinishVerification(graceful_msg=self._get_graceful_msg(e, number)) from e
         else:
             return None
 
@@ -152,14 +152,14 @@ class TwilioPhoneProvider(PhoneProvider):
             self._call_create(twiml, number, with_callback=False)
         except TwilioRestException as e:
             logger.error(f"TwilioPhoneProvider.make_call: failed {e}")
-            raise FailedToMakeCall(graceful_msg=self._get_graceful_msg(e, number))
+            raise FailedToMakeCall(graceful_msg=self._get_graceful_msg(e, number)) from e
 
     def send_sms(self, number: str, message: str):
         try:
             self._messages_create(number, message, with_callback=False)
         except TwilioRestException as e:
             logger.error(f"TwilioPhoneProvider.send_sms: failed {e}")
-            raise FailedToSendSMS(graceful_msg=self._get_graceful_msg(e, number))
+            raise FailedToSendSMS(graceful_msg=self._get_graceful_msg(e, number)) from e
 
     def _message_to_twiml_say(self, message: str) -> VoiceResponse:
         response = VoiceResponse()
@@ -221,7 +221,7 @@ class TwilioPhoneProvider(PhoneProvider):
             logger.info(f"TwilioPhoneProvider._send_verification_code: verification status {verification.status}")
         except TwilioRestException as e:
             logger.error(f"Twilio verification start error: {e} to number {number}")
-            raise FailedToStartVerification(graceful_msg=self._get_graceful_msg(e, number))
+            raise FailedToStartVerification(graceful_msg=self._get_graceful_msg(e, number)) from e
 
     def _normalize_phone_number(self, number: str):
         # TODO: phone_provider: is it best place to parse phone number?

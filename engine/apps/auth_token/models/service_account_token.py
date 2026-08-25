@@ -51,8 +51,8 @@ class ServiceAccountToken(BaseAuthToken):
         try:
             hashable_token = binascii.hexlify(token.encode()).decode()
             digest = hash_token_string(hashable_token)
-        except (TypeError, binascii.Error):
-            raise InvalidToken
+        except (TypeError, binascii.Error) as e:
+            raise InvalidToken from e
         for existing_token in cls.objects.filter(service_account__organization=organization, token_key=token_key):
             if compare_digest(digest, existing_token.digest):
                 validated_token = existing_token

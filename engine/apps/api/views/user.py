@@ -445,8 +445,8 @@ class UserView(
 
         try:
             queryset.get(public_primary_key=self.kwargs["pk"])
-        except ObjectDoesNotExist:
-            raise NotFound
+        except ObjectDoesNotExist as e:
+            raise NotFound from e
 
         general_team = Team(public_primary_key=None, name="General", email=None, avatar_url=None)
 
@@ -811,8 +811,8 @@ class UserView(
         if self.request.method == "GET":
             try:
                 token = UserScheduleExportAuthToken.objects.get(user=user)
-            except UserScheduleExportAuthToken.DoesNotExist:
-                raise NotFound
+            except UserScheduleExportAuthToken.DoesNotExist as e:
+                raise NotFound from e
 
             response = {
                 "created_at": token.created_at,
@@ -825,8 +825,8 @@ class UserView(
             try:
                 instance, token = UserScheduleExportAuthToken.create_auth_token(user, user.organization)
                 write_resource_insight_log(instance=instance, author=self.request.user, event=EntityEvent.CREATED)
-            except IntegrityError:
-                raise Conflict("Schedule export token for user already exists")
+            except IntegrityError as e:
+                raise Conflict("Schedule export token for user already exists") from e
 
             export_url = create_engine_url(
                 reverse("api-public:users-schedule-export", kwargs={"pk": user.public_primary_key})
@@ -841,8 +841,8 @@ class UserView(
                 token = UserScheduleExportAuthToken.objects.get(user=user)
                 write_resource_insight_log(instance=token, author=self.request.user, event=EntityEvent.DELETED)
                 token.delete()
-            except UserScheduleExportAuthToken.DoesNotExist:
-                raise NotFound
+            except UserScheduleExportAuthToken.DoesNotExist as e:
+                raise NotFound from e
             return Response(status=status.HTTP_204_NO_CONTENT)
         return Response(status=status.HTTP_405_METHOD_NOT_ALLOWED)
 

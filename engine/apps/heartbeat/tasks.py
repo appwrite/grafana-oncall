@@ -29,7 +29,7 @@ def check_heartbeats() -> str:
         if settings.DATABASES["default"]["ENGINE"] == f"django.db.backends.{DatabaseTypes.POSTGRESQL}":
             # DurationField: When used on PostgreSQL, the data type used is an interval
             # https://docs.djangoproject.com/en/3.2/ref/models/fields/#durationfield
-            return ExpressionWrapper(datetime.timedelta(seconds=1) * F("timeout_seconds"), output_field=DurationField())
+            return ExpressionWrapper(F("timeout_seconds") * datetime.timedelta(seconds=1), output_field=DurationField())
         else:
             # DurationField: ...Otherwise a bigint of microseconds is used...
             # microseconds = seconds * 10**6

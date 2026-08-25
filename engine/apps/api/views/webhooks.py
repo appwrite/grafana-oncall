@@ -163,8 +163,8 @@ class WebhooksView(TeamFilteringMixin, PublicPrimaryKeyMixin[Webhook], ModelView
         organization = self.request.auth.organization
         try:
             obj = organization.webhooks.filter(*self.available_teams_lookup_args).distinct().get(public_primary_key=pk)
-        except ObjectDoesNotExist:
-            raise NotFound
+        except ObjectDoesNotExist as e:
+            raise NotFound from e
 
         # May raise a permission denied
         self.check_object_permissions(self.request, obj)
@@ -262,8 +262,8 @@ class WebhooksView(TeamFilteringMixin, PublicPrimaryKeyMixin[Webhook], ModelView
         if isinstance(payload, str):
             try:
                 payload = json.loads(payload)
-            except json.JSONDecodeError:
-                raise BadRequest(detail={"payload": "Could not parse json"})
+            except json.JSONDecodeError as e:
+                raise BadRequest(detail={"payload": "Could not parse json"}) from e
 
         if template_body is None or template_name is None:
             response = {"preview": None}
@@ -331,8 +331,8 @@ class WebhooksView(TeamFilteringMixin, PublicPrimaryKeyMixin[Webhook], ModelView
             alert_groups = alert_groups.filter(channel_id__in=webhook.filtered_integrations.all())
         try:
             alert_group = alert_groups.get()
-        except ObjectDoesNotExist:
-            raise NotFound
+        except ObjectDoesNotExist as e:
+            raise NotFound from e
 
         execute_webhook.apply_async(
             (webhook.pk, alert_group.pk, user.pk, None), kwargs={"trigger_type": Webhook.TRIGGER_MANUAL}
@@ -393,8 +393,8 @@ class WebhooksView(TeamFilteringMixin, PublicPrimaryKeyMixin[Webhook], ModelView
                 public_primary_key=webhook_id,
                 trigger_type=Webhook.TRIGGER_PERSONAL_NOTIFICATION,
             )
-        except Webhook.DoesNotExist:
-            raise BadRequest(detail={"webhook": "Webhook not found."})
+        except Webhook.DoesNotExist as e:
+            raise BadRequest(detail={"webhook": "Webhook not found."}) from e
 
         context = request.data.get("context", None)
         if context is not None:
@@ -403,8 +403,8 @@ class WebhooksView(TeamFilteringMixin, PublicPrimaryKeyMixin[Webhook], ModelView
 
             try:
                 context = json.dumps(context)
-            except TypeError:
-                raise BadRequest(detail={"context": "Invalid context."})
+            except TypeError as e:
+                raise BadRequest(detail={"context": "Invalid context."}) from e
 
         # set or update personal webhook for user
         PersonalNotificationWebhook.objects.update_or_create(

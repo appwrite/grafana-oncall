@@ -1,0 +1,3 @@
+import logging
+
+class TaskFormatter(logging.Formatter): ...

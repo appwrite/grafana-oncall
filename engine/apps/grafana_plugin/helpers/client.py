@@ -388,7 +388,7 @@ class GcomAPIClient(APIClient):
                 previous_cursor = cursor
                 page, call_status = self.api_get(f"{query}&cursor={cursor}&pageSize={page_size}")
 
-                if "nextCursor" in page:
+                if page and "nextCursor" in page:
                     cursor = page["nextCursor"]
                     yield page
                 elif retry_count == MAX_RETRIES:

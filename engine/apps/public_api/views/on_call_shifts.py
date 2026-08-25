@@ -60,8 +60,8 @@ class CustomOnCallShiftView(RateLimitHeadersMixin, UpdateSerializerMixin, ModelV
             return CustomOnCallShift.objects.filter(
                 organization=self.request.auth.organization,
             ).get(public_primary_key=public_primary_key)
-        except CustomOnCallShift.DoesNotExist:
-            raise NotFound
+        except CustomOnCallShift.DoesNotExist as e:
+            raise NotFound from e
 
     def perform_create(self, serializer):
         serializer.save()

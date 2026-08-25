@@ -137,8 +137,8 @@ class ListUserSerializer(DynamicFieldsModelSerializer, EagerLoadingMixin):
                 try:
                     start = time.strptime(period["start"], "%H:%M:%S")
                     end = time.strptime(period["end"], "%H:%M:%S")
-                except ValueError:
-                    raise serializers.ValidationError("'start' and 'end' fields must be in '%H:%M:%S' format")
+                except ValueError as e:
+                    raise serializers.ValidationError("'start' and 'end' fields must be in '%H:%M:%S' format") from e
 
                 if start >= end:
                     raise serializers.ValidationError("'start' must be less than 'end'")

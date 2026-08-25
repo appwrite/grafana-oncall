@@ -289,5 +289,5 @@ class InboundEmailWebhookView(AlertChannelDefiningMixin, APIView):
                 f"get_sender_from_email_message: issue during parsing sender from email message, getting raw value "
                 f"instead. Exception: {e}"
             )
-            sender = ", ".join(email.get_all("From"))
+            sender = ", ".join(email.get_all("From") or [])
         return sender

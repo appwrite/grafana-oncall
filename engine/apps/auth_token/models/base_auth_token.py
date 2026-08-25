@@ -36,8 +36,8 @@ class BaseAuthToken(models.Model):
         for auth_token in cls.objects.filter(token_key=token[: constants.TOKEN_KEY_LENGTH]):
             try:
                 digest = hash_token_string(token)
-            except (TypeError, binascii.Error):
-                raise InvalidToken
+            except (TypeError, binascii.Error) as e:
+                raise InvalidToken from e
             if compare_digest(digest, auth_token.digest):
                 return auth_token
 

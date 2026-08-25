@@ -1,7 +1,6 @@
-from typing import Optional
+from typing import Callable, Optional
 
 from django.urls import URLPattern, re_path
-from django.views import View
 from rest_framework import routers
 
 
@@ -16,6 +15,6 @@ class OptionalSlashRouter(routers.SimpleRouter):
         self.trailing_slash = "/?"
 
 
-def optional_slash_path(route: str, view: View, name: Optional[str] = None) -> URLPattern:
+def optional_slash_path(route: str, view: Callable, name: Optional[str] = None) -> URLPattern:
     regex_route = "^{}/?$".format(route)
     return re_path(route=regex_route, view=view, name=name)

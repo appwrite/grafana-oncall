@@ -7,8 +7,6 @@ extend-exclude = ["migrations"]
 # The flake8 setup this replaces: pycodestyle/pyflakes defaults plus flake8-bugbear (B) and
 # flake8-tidy-imports (TID), with isort (I) folded in.
 select = ["E", "F", "W", "B", "I", "TID"]
-# Never enforced here before ruff; ~200 pre-existing sites. Lift when someone sweeps them.
-ignore = ["B904", "B905"]
 
 [tool.ruff.lint.pycodestyle]
 # The formatter wraps at 120; a line only it cannot split is tolerated up to here.
@@ -30,25 +28,17 @@ exclude = ["**/tests/", "**/test_*.py", "**/migrations/"]
 # Django builds managers, related descriptors, and settings at runtime; without a plugin for that, these
 # rules read as noise here the same way their mypy counterparts did (its disable_error_code list). Lift
 # them one at a time as annotations catch up.
+# Django builds managers, related descriptors, and settings at runtime; without a plugin for that,
+# these rules read as noise here (hundreds to thousands of sites each). Everything else ty checks is
+# enforced, with per-site `ty: ignore` comments where a library's types fall short. Lift these one at
+# a time as annotations catch up.
 [tool.ty.rules]
 call-non-callable = "ignore"
 invalid-argument-type = "ignore"
 invalid-assignment = "ignore"
-invalid-attribute-override = "ignore"
 invalid-key = "ignore"
 invalid-method-override = "ignore"
-# QuerySet["User"] et al. — generic only in the django-stubs this replaced, not at runtime.
-invalid-type-form = "ignore"
-invalid-parameter-default = "ignore"
 invalid-return-type = "ignore"
-invalid-typed-dict-field = "ignore"
-missing-argument = "ignore"
 missing-typed-dict-key = "ignore"
-no-matching-overload = "ignore"
-not-iterable = "ignore"
 not-subscriptable = "ignore"
-too-many-positional-arguments = "ignore"
-unknown-argument = "ignore"
 unresolved-attribute = "ignore"
-unresolved-import = "ignore"
-unsupported-operator = "ignore"

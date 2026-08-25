@@ -6,6 +6,7 @@ from urllib.parse import urlparse
 import requests
 from cryptography.exceptions import InvalidSignature
 from cryptography.hazmat.primitives.asymmetric.padding import PKCS1v15
+from cryptography.hazmat.primitives.asymmetric.rsa import RSAPublicKey
 from cryptography.hazmat.primitives.hashes import SHA1, SHA256
 from cryptography.x509 import NameOID, load_pem_x509_certificate
 from django.conf import settings
@@ -85,8 +86,12 @@ def validate_amazon_sns_message(message: dict) -> bool:
     else:
         logger.warning("Invalid SignatureVersion: %s", message["SignatureVersion"])
         return False
+    public_key = certificate.public_key()
+    if not isinstance(public_key, RSAPublicKey):
+        logger.warning("Certificate does not carry an RSA public key")
+        return False
     try:
-        certificate.public_key().verify(signature, canonical_message, PKCS1v15(), hash_algorithm)
+        public_key.verify(signature, canonical_message, PKCS1v15(), hash_algorithm)
     except InvalidSignature:
         logger.warning("Invalid signature")
         return False

@@ -554,7 +554,7 @@ def parse_priority_from_string(string: str) -> int:
     return priority
 
 
-def parse_event_uid(string: str, sequence: str = None, recurrence_id: str = None):
+def parse_event_uid(string: str, sequence: str | None = None, recurrence_id: str | None = None):
     pk = None
     source = None
     source_verbal = None
@@ -671,7 +671,7 @@ def ical_date_to_datetime(date, tz, start):
     all_day = False
     if type(date) is datetime.date:
         all_day = True
-        calendar_timezone_offset = datetime.datetime.now().astimezone(tz).utcoffset()
+        calendar_timezone_offset = datetime.datetime.now().astimezone(tz).utcoffset() or datetime.timedelta()
         date = datetime.datetime.combine(date, datetime_to_combine).astimezone(tz) - calendar_timezone_offset
         if not start:
             date -= datetime.timedelta(seconds=1)

@@ -84,8 +84,8 @@ class ChannelFilterSerializer(EagerLoadingMixin, serializers.ModelSerializer):
         if filtering_term_type == ChannelFilter.FILTERING_TERM_TYPE_JINJA2:
             try:
                 valid_jinja_template_for_serializer_method_field({"route_template": filtering_term})
-            except JinjaTemplateError:
-                raise serializers.ValidationError(["Jinja template is incorrect"])
+            except JinjaTemplateError as e:
+                raise serializers.ValidationError(["Jinja template is incorrect"]) from e
         elif filtering_term_type == ChannelFilter.FILTERING_TERM_TYPE_REGEX or filtering_term_type is None:
             if filtering_term is not None:
                 if not is_regex_valid(filtering_term):

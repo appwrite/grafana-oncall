@@ -52,8 +52,8 @@ class EscalationChainView(RateLimitHeadersMixin, ModelViewSet):
 
         try:
             return self.request.auth.organization.escalation_chains.get(public_primary_key=public_primary_key)
-        except EscalationChain.DoesNotExist:
-            raise NotFound
+        except EscalationChain.DoesNotExist as e:
+            raise NotFound from e
 
     def perform_create(self, serializer):
         serializer.save()

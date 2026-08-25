@@ -10,6 +10,7 @@ from telegram import Bot
 from twilio.base.exceptions import TwilioException
 from twilio.rest import Client
 
+from apps.telegram.utils import run_async
 from common.api_helpers.utils import create_engine_url
 
 
@@ -135,7 +136,7 @@ class LiveSettingValidator:
     def _check_telegram_token(cls, telegram_token):
         try:
             bot = Bot(telegram_token)
-            bot.get_me()
+            run_async(bot.get_me())
         except Exception as e:
             return f"Telegram error: {str(e)}"
 

@@ -82,8 +82,6 @@ class MobileAppVerificationToken(BaseAuthToken):
 
 
 class MobileAppAuthToken(BaseAuthToken):
-    objects: models.Manager["MobileAppAuthToken"]
-
     user = models.OneToOneField(to="user_management.User", null=False, blank=False, on_delete=models.CASCADE)
     organization = models.ForeignKey(
         to="user_management.Organization",

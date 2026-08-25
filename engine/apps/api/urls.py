@@ -114,10 +114,11 @@ urlpatterns += [
     # For some reason frontend is using url without / at the end. Hacking here to avoid 301's :(
     # TODO: I'm fairly certain this is not needed anymore, it looks like the frontend instead
     # makes calls w/ a trailing slash.. we can probably get rid of social-auth-with-no-slash
-    path(r"login/<backend>", auth.overridden_login_social_auth, name="social-auth-with-no-slash"),
-    path(r"login/<backend>/", auth.overridden_login_social_auth, name="social-auth"),
-    path(r"complete/<backend>/", auth.overridden_complete_social_auth, name="complete-social-auth"),
-    path(r"disconnect/<backend>", auth.overridden_disconnect_social_auth, name="disconnect-social-auth"),
+    # django-stubs types the decorated views as AsView[... -> Unknown], which path() overloads reject
+    path(r"login/<backend>", auth.overridden_login_social_auth, name="social-auth-with-no-slash"),  # ty: ignore[no-matching-overload]
+    path(r"login/<backend>/", auth.overridden_login_social_auth, name="social-auth"),  # ty: ignore[no-matching-overload]
+    path(r"complete/<backend>/", auth.overridden_complete_social_auth, name="complete-social-auth"),  # ty: ignore[no-matching-overload]
+    path(r"disconnect/<backend>", auth.overridden_disconnect_social_auth, name="disconnect-social-auth"),  # ty: ignore[no-matching-overload]
 ]
 
 urlpatterns += [

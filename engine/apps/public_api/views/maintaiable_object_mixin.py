@@ -30,13 +30,13 @@ class MaintainableObjectMixin(viewsets.ViewSet):
 
         try:
             duration = int(duration)  # We intentionally allow agile durations
-        except (ValueError, TypeError):
-            raise BadRequest(detail={"duration": ["Invalid duration"]})
+        except (ValueError, TypeError) as e:
+            raise BadRequest(detail={"duration": ["Invalid duration"]}) from e
 
         try:
             instance.start_maintenance(mode, duration, request.user)
         except MaintenanceCouldNotBeStartedError as e:
-            raise BadRequest(detail=str(e))
+            raise BadRequest(detail=str(e)) from e
 
         return self.retrieve(request, pk)
 

@@ -32,8 +32,8 @@ class TelegramChannelVerificationCode(models.Model):
     def uuid_without_org_id(cls, verification_code: str) -> str:
         try:
             return verification_code.split("_")[1]
-        except IndexError:
-            raise ValidationError("Invalid verification code format")
+        except IndexError as e:
+            raise ValidationError("Invalid verification code format") from e
 
     @classmethod
     def verify_channel_and_discussion_group(

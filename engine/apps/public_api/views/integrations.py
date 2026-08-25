@@ -66,8 +66,8 @@ class IntegrationView(
 
         try:
             return self.get_queryset().get(public_primary_key=public_primary_key)
-        except AlertReceiveChannel.DoesNotExist:
-            raise NotFound
+        except AlertReceiveChannel.DoesNotExist as e:
+            raise NotFound from e
 
     def perform_update(self, serializer):
         prev_state = serializer.instance.insight_logs_serialized

@@ -55,8 +55,8 @@ class TeamMemberMappingField(serializers.Field):
             raise serializers.ValidationError("Expected a dictionary")
         try:
             return {int(k): v for k, v in data.items()}
-        except ValueError:
-            raise serializers.ValidationError("All keys must be convertible to integers")
+        except ValueError as e:
+            raise serializers.ValidationError("All keys must be convertible to integers") from e
 
 
 class SyncOnCallSettingsSerializer(serializers.Serializer):

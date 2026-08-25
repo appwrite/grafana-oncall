@@ -100,8 +100,8 @@ class BaseChannelFilterSerializer(OrderedModelSerializer):
             organization = self.context["request"].auth.organization
             try:
                 telegram_channel = organization.telegram_channel.get(public_primary_key=telegram_channel_id)
-            except TelegramToOrganizationConnector.DoesNotExist:
-                raise BadRequest(detail="Telegram channel does not exist")
+            except TelegramToOrganizationConnector.DoesNotExist as e:
+                raise BadRequest(detail="Telegram channel does not exist") from e
             return telegram_channel
         return
 
@@ -177,8 +177,8 @@ class ChannelFilterSerializer(EagerLoadingMixin, BaseChannelFilterSerializer):
         if filtering_term_type == ChannelFilter.FILTERING_TERM_TYPE_JINJA2:
             try:
                 valid_jinja_template_for_serializer_method_field({"route_template": filtering_term})
-            except JinjaTemplateError:
-                raise serializers.ValidationError(["Jinja template is incorrect"])
+            except JinjaTemplateError as e:
+                raise serializers.ValidationError(["Jinja template is incorrect"]) from e
         elif filtering_term_type == ChannelFilter.FILTERING_TERM_TYPE_REGEX or filtering_term_type is None:
             if filtering_term is not None:
                 if not is_regex_valid(filtering_term):

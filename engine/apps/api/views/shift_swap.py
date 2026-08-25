@@ -39,10 +39,10 @@ class BaseShiftSwapViewSet(ModelViewSet):
 
         try:
             shift_swap.take(benefactor)
-        except exceptions.ShiftSwapRequestNotOpenForTaking:
-            raise BadRequest(detail="The shift swap request is not in a state which allows it to be taken")
-        except exceptions.BeneficiaryCannotTakeOwnShiftSwapRequest:
-            raise BadRequest(detail="A shift swap request cannot be created and taken by the same user")
+        except exceptions.ShiftSwapRequestNotOpenForTaking as e:
+            raise BadRequest(detail="The shift swap request is not in a state which allows it to be taken") from e
+        except exceptions.BeneficiaryCannotTakeOwnShiftSwapRequest as e:
+            raise BadRequest(detail="A shift swap request cannot be created and taken by the same user") from e
 
         write_resource_insight_log(
             instance=shift_swap,

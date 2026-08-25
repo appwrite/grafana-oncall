@@ -71,8 +71,8 @@ class ApiTokenAuthentication(BaseAuthentication):
         """
         try:
             auth_token = self.model.validate_token_string(token)
-        except InvalidToken:
-            raise exceptions.AuthenticationFailed("Invalid token.")
+        except InvalidToken as e:
+            raise exceptions.AuthenticationFailed("Invalid token.") from e
 
         if auth_token.organization.is_moved:
             raise OrganizationMovedException(auth_token.organization)
@@ -108,8 +108,8 @@ class BasePluginAuthentication(BaseAuthentication):
 
         try:
             context = dict(json.loads(context_string))
-        except (ValueError, TypeError):
-            raise exceptions.AuthenticationFailed("Instance context must be JSON dict.")
+        except (ValueError, TypeError) as e:
+            raise exceptions.AuthenticationFailed("Instance context must be JSON dict.") from e
 
         if "stack_id" not in context or "org_id" not in context:
             raise exceptions.AuthenticationFailed("Invalid instance context.")
@@ -118,8 +118,8 @@ class BasePluginAuthentication(BaseAuthentication):
             auth_token = check_token(token_string, context=context)
             if not auth_token.organization:
                 raise exceptions.AuthenticationFailed("No organization associated with token.")
-        except InvalidToken:
-            raise exceptions.AuthenticationFailed("Invalid token.")
+        except InvalidToken as e:
+            raise exceptions.AuthenticationFailed("Invalid token.") from e
 
         user = self._get_user(request, auth_token.organization)
         return user, auth_token
@@ -159,8 +159,8 @@ class PluginAuthentication(BasePluginAuthentication):
     def _get_user(request: Request, organization: Organization) -> User:
         try:
             context = dict(json.loads(request.headers.get("X-Grafana-Context")))
-        except (ValueError, TypeError):
-            raise exceptions.AuthenticationFailed("Grafana context must be JSON dict.")
+        except (ValueError, TypeError) as e:
+            raise exceptions.AuthenticationFailed("Grafana context must be JSON dict.") from e
 
         if context.get("IsServiceAccount", False):
             raise exceptions.AuthenticationFailed("Service accounts requests are not allowed.")
@@ -173,11 +173,11 @@ class PluginAuthentication(BasePluginAuthentication):
                 return organization.users.get(username=context["Login"])
             else:
                 raise exceptions.AuthenticationFailed("Grafana context must specify a User or UserID.")
-        except User.DoesNotExist:
+        except User.DoesNotExist as e:
             try:
                 user_data = dict(json.loads(request.headers.get("X-Oncall-User-Context")))
-            except (ValueError, TypeError):
-                raise exceptions.AuthenticationFailed("User context must be JSON dict.")
+            except (ValueError, TypeError) as e:
+                raise exceptions.AuthenticationFailed("User context must be JSON dict.") from e
             if user_data:
                 permissions = []
                 if user_data.get("permissions"):
@@ -197,7 +197,7 @@ class PluginAuthentication(BasePluginAuthentication):
                 return get_or_create_user(organization, user_sync_data)
             else:
                 logger.debug("Could not get user from grafana request.")
-                raise exceptions.AuthenticationFailed("Non-existent or anonymous user.")
+                raise exceptions.AuthenticationFailed("Non-existent or anonymous user.") from e
 
 
 class PluginAuthenticationSchema(OpenApiAuthenticationExtension):
@@ -246,8 +246,8 @@ class GrafanaIncidentStaticKeyAuth(BaseAuthentication):
     def authenticate_credentials(self, token_string: str, request: Request) -> typing.Tuple[GrafanaIncidentUser, None]:
         try:
             user = GrafanaIncidentUser()
-        except InvalidToken:
-            raise exceptions.AuthenticationFailed("Invalid token.")
+        except InvalidToken as e:
+            raise exceptions.AuthenticationFailed("Invalid token.") from e
 
         return user, None
 
@@ -305,8 +305,8 @@ class ScheduleExportAuthentication(BaseAuthentication):
     ) -> typing.Tuple[User, ScheduleExportAuthToken]:
         try:
             auth_token = self.model.validate_token_string(token_string)
-        except InvalidToken:
-            raise exceptions.AuthenticationFailed("Invalid token.")
+        except InvalidToken as e:
+            raise exceptions.AuthenticationFailed("Invalid token.") from e
 
         if auth_token.organization.is_moved:
             raise OrganizationMovedException(auth_token.organization)
@@ -340,8 +340,8 @@ class UserScheduleExportAuthentication(BaseAuthentication):
     ) -> typing.Tuple[User, UserScheduleExportAuthToken]:
         try:
             auth_token = self.model.validate_token_string(token_string)
-        except InvalidToken:
-            raise exceptions.AuthenticationFailed("Invalid token")
+        except InvalidToken as e:
+            raise exceptions.AuthenticationFailed("Invalid token") from e
 
         if auth_token.organization.is_moved:
             raise OrganizationMovedException(auth_token.organization)
@@ -410,8 +410,8 @@ class GrafanaServiceAccountAuthentication(BaseAuthentication):
     def authenticate_credentials(self, organization, token):
         try:
             user, auth_token = ServiceAccountToken.validate_token(organization, token)
-        except InvalidToken:
-            raise exceptions.AuthenticationFailed("Invalid token.")
+        except InvalidToken as e:
+            raise exceptions.AuthenticationFailed("Invalid token.") from e
 
         return user, auth_token
 
@@ -430,8 +430,8 @@ class IntegrationBacksyncAuthentication(BaseAuthentication):
     def authenticate_credentials(self, token_string: str) -> typing.Tuple[ServerUser, IntegrationBacksyncAuthToken]:
         try:
             auth_token = self.model.validate_token_string(token_string)
-        except InvalidToken:
-            raise exceptions.AuthenticationFailed("Invalid token")
+        except InvalidToken as e:
+            raise exceptions.AuthenticationFailed("Invalid token") from e
 
         if auth_token.organization.is_moved:
             raise OrganizationMovedException(auth_token.organization)

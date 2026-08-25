@@ -5,7 +5,7 @@ from rest_framework import status
 from rest_framework.decorators import action
 from rest_framework.exceptions import NotFound
 from rest_framework.permissions import IsAuthenticated
-from rest_framework.views import Response
+from rest_framework.response import Response
 from rest_framework.viewsets import ModelViewSet
 
 from apps.api.permissions import RBACPermission
@@ -82,8 +82,8 @@ class OnCallScheduleChannelView(RateLimitHeadersMixin, UpdateSerializerMixin, Mo
             return OnCallSchedule.objects.filter(
                 organization=self.request.auth.organization,
             ).get(public_primary_key=public_primary_key)
-        except OnCallSchedule.DoesNotExist:
-            raise NotFound
+        except OnCallSchedule.DoesNotExist as e:
+            raise NotFound from e
 
     def perform_create(self, serializer):
         serializer.save()

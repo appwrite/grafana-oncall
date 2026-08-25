@@ -28,7 +28,7 @@ from common.jinja_templater.apply_jinja_template import JinjaTemplateError, Jinj
 from common.public_primary_keys import generate_public_primary_key, increase_public_primary_key_length
 
 if typing.TYPE_CHECKING:
-    from django.db.models.manager import RelatedManager
+    from django.db.models.fields.related_descriptors import RelatedManager
 
     from apps.alerts.models import EscalationPolicy
 
@@ -218,9 +218,9 @@ class Webhook(models.Model):
                 )
                 request_kwargs["headers"] = json.loads(rendered_headers)
             except (JinjaTemplateError, JinjaTemplateWarning) as e:
-                raise InvalidWebhookHeaders(e.fallback_message)
-            except JSONDecodeError:
-                raise InvalidWebhookHeaders("Template did not result in json/dict")
+                raise InvalidWebhookHeaders(e.fallback_message) from e
+            except JSONDecodeError as e:
+                raise InvalidWebhookHeaders("Template did not result in json/dict") from e
 
         if self.authorization_header:
             request_kwargs["headers"]["Authorization"] = self.authorization_header
@@ -249,7 +249,7 @@ class Webhook(models.Model):
                         request_kwargs["data"] = rendered_data.encode("utf-8")
                 except (JinjaTemplateError, JinjaTemplateWarning) as e:
                     if raise_data_errors:
-                        raise InvalidWebhookData(e.fallback_message)
+                        raise InvalidWebhookData(e.fallback_message) from e
                     else:
                         request_kwargs["json"] = {"error": e.fallback_message}
 
@@ -262,7 +262,7 @@ class Webhook(models.Model):
                 **event_data,
             )
         except (JinjaTemplateError, JinjaTemplateWarning) as e:
-            raise InvalidWebhookUrl(e.fallback_message)
+            raise InvalidWebhookUrl(e.fallback_message) from e
 
         # raise if URL is not valid
         parse_url(url)
@@ -282,7 +282,7 @@ class Webhook(models.Model):
             result = apply_jinja_template(self.trigger_template, **event_data)
             return result.lower() in ["true", "1"], result
         except (JinjaTemplateError, JinjaTemplateWarning) as e:
-            raise InvalidWebhookTrigger(e.fallback_message)
+            raise InvalidWebhookTrigger(e.fallback_message) from e
 
     def make_request(self, url, request_kwargs):
         if self.http_method not in ("GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"):

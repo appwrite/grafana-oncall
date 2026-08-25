@@ -55,8 +55,8 @@ class EscalationPolicyView(RateLimitHeadersMixin, UpdateSerializerMixin, ModelVi
                 Q(escalation_chain__organization=self.request.auth.organization),
                 Q(step__in=EscalationPolicy.PUBLIC_STEP_CHOICES_MAP) | Q(step__isnull=True),
             ).get(public_primary_key=public_primary_key)
-        except EscalationPolicy.DoesNotExist:
-            raise NotFound
+        except EscalationPolicy.DoesNotExist as e:
+            raise NotFound from e
 
     def perform_create(self, serializer):
         serializer.save()

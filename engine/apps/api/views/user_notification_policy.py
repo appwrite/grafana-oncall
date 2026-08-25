@@ -103,8 +103,8 @@ class UserNotificationPolicyView(UpdateSerializerMixin, OrderedModelViewSet):
 
         try:
             obj = UserNotificationPolicy.objects.get(public_primary_key=pk, user__organization=organization)
-        except UserNotificationPolicy.DoesNotExist:
-            raise Http404
+        except UserNotificationPolicy.DoesNotExist as e:
+            raise Http404 from e
 
         self.check_object_permissions(self.request, obj)
         return obj

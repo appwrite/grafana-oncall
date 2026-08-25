@@ -14,7 +14,7 @@ class AlertGroupStateDict(typing.TypedDict):
 class AlertGroupsTotalMetricsDict(typing.TypedDict):
     integration_name: str
     team_name: str
-    team_id: int
+    team_id: typing.Union[int, str]
     org_id: int
     slug: str
     id: int
@@ -24,7 +24,7 @@ class AlertGroupsTotalMetricsDict(typing.TypedDict):
 class AlertGroupsResponseTimeMetricsDict(typing.TypedDict):
     integration_name: str
     team_name: str
-    team_id: int
+    team_id: typing.Union[int, str]
     org_id: int
     slug: str
     id: int
