@@ -593,13 +593,14 @@ def test_a_card_names_each_instance_a_group_holds(integration):
     lines = rendered.splitlines()
 
     assert "**Summaries**" in lines
-    # The sentence says the queue and the cluster as words of their own; the region hides in the cluster's name
-    # as a syllable, which is not saying it, so the line carries it.
     for instance in (
-        "- The `builds` queue on `cloud-fra1-prod` gained 2384 failed jobs in an hour. — deployment_region_name: `fra`",
-        "- The `domains` queue on `cloud-syd1-prod` gained 12825 failed jobs in an hour. — deployment_region_name: `syd`",
+        "- The `builds` queue on `cloud-fra1-prod` gained 2384 failed jobs in an hour.",
+        "- The `domains` queue on `cloud-syd1-prod` gained 12825 failed jobs in an hour.",
     ):
         assert instance in lines, f"{instance} should be a line of its own"
+    # The sentence says the queue and the cluster as words of their own; the region hides in the cluster's name
+    # as a syllable, which is not saying it, so it is kept — gathered by key rather than trailing the sentence.
+    assert "- deployment_region_name: `fra`, `syd`" in lines
     # The names that only the instances carry, which is the whole reason the card lists them.
     for name in ("builds", "domains", "cloud-fra1-prod", "cloud-syd1-prod"):
         assert name in rendered, f"{name} is in no common label and would be lost"
@@ -724,8 +725,9 @@ def test_a_card_names_instances_a_shared_sentence_does_not(integration):
     """A summary is prose, not an identity.
 
     A rule is free to write two instances the same sentence, and then that sentence identifies neither of them.
-    Taking the sentence as the instance's line collapsed the pair into one entry naming no region and no node,
-    so a card reported two full disks as one and named neither.
+    Taking the sentence as the whole of the instance's line, a card reported two full disks as one and named
+    neither. The sentences read as prose — repeated ones once — and every region and node the group holds is
+    counted in the gathered labels below.
     """
     rendered = apply_jinja_template(
         import_module(f"config_integrations.{integration}").discord_message,
@@ -742,16 +744,14 @@ def test_a_card_names_instances_a_shared_sentence_does_not(integration):
         source_link="",
         integration_name="Grafana Alerting",
     )
-    lines = [line for line in rendered.splitlines() if line.startswith("- ")]
+    lines = rendered.splitlines()
 
-    assert "**Summaries**" in rendered.splitlines()
-    # One line per alert, and each names the instance its sentence did not.
-    for region, node in (("fra", "node-1"), ("syd", "node-2"), ("tor", "node-3")):
-        assert any(f"region: `{region}`" in line and f"instance: `{node}`" in line for line in lines), (
-            f"{region}/{node} is named nowhere on the card"
-        )
-    # The sentence two of them share is still said against each of them, not collapsed into one entry.
-    assert len([line for line in lines if "Disk is nearly full." in line]) == 2
+    assert "**Summaries**" in lines
+    assert "- Disk is nearly full." in lines
+    assert "- Root volume is nearly full." in lines
+    # Every region and node the group holds, counted whether or not its sentence was its own.
+    assert "- region: `fra`, `syd`, `tor`" in lines
+    assert "- instance: `node-1`, `node-2`, `node-3`" in lines
 
 
 @pytest.mark.parametrize("integration", ["alertmanager", "grafana_alerting"])
@@ -841,8 +841,9 @@ def test_a_summary_carries_a_label_as_a_word_and_not_as_a_syllable(integration):
     )
     lines = rendered.splitlines()
 
-    assert "- The queue gained 11 failed jobs. — shard: `1`" in lines
-    assert "- The queue gained 13 failed jobs. — shard: `3`" in lines
+    assert "- The queue gained 11 failed jobs." in lines
+    assert "- The queue gained 13 failed jobs." in lines
+    assert "- shard: `1`, `3`" in lines
 
 
 @pytest.mark.parametrize("integration", ["alertmanager", "grafana_alerting"])

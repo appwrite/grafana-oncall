@@ -256,21 +256,23 @@ discord_message = """\
 {% endif -%}
 {% set description = annotations.get("description") -%}
 
-{# What identifies an instance is the labels the group does not share; a summary is prose that usually names them
-   and is not required to. So an instance says its own summary when its rule wrote one that is not already the
-   summary above, and then adds whichever of its own labels that sentence does not carry. A rule that writes
-   every instance the same sentence identifies none of them, and then the labels are all a line has to go on. -#}
-{% set summaries = [] -%}
-{% set apart_keys = [] -%}
-{% set apart_values = [] -%}
+{# What identifies an instance is its own summary and the labels the group does not share. A summary is prose:
+   it usually names its instance and is not required to, so the labels the sentence does not carry are kept too —
+   gathered by key under Labels rather than trailing the sentence, because prose reads as prose and
+   `fra`, `syd` reads as one fact about the group. -#}
 {% set prose_lines = [] -%}
+{% set tuple_lines = [] -%}
+{% set varied = {} -%}
 {% for instance in instances -%}
 {% set own = instance.get("annotations", {}).get("summary") -%}
 {% if own and own != summary -%}
 {% set prose = (own | string).split() | join(" ") -%}
-{% set _ = prose_lines.append(prose) -%}
 {% else -%}
 {% set prose = "" -%}
+{% endif -%}
+{# Two instances that wrote the same sentence read as one line; their labels below still count both. -#}
+{% if prose and prose not in prose_lines -%}
+{% set _ = prose_lines.append(prose) -%}
 {% endif -%}
 {# "Carries" means says as a word of its own: matching anywhere in the sentence read `shard: 1` into "12 jobs"
    and dropped the one label telling two shards apart. -#}
@@ -285,31 +287,25 @@ discord_message = """\
    and agreed.get(key) != value
    and (value | string) not in carried -%}
 {% set _ = apart.append(pair(key, value) | trim) -%}
-{% if key not in apart_keys -%}
-{% set _ = apart_keys.append(key) -%}
-{% endif -%}
 {% set flat = (value | string).split() | join(" ") -%}
-{% if flat not in apart_values -%}
-{% set _ = apart_values.append(flat) -%}
+{% if flat not in varied.get(key, []) -%}
+{% set _ = varied.update({key: varied.get(key, []) + [flat]}) -%}
 {% endif -%}
 {% endfor -%}
-{% if prose and apart -%}
-{% set line = prose ~ " — " ~ (apart | join(", ")) -%}
-{% elif prose -%}
-{% set line = prose -%}
-{% else -%}
-{% set line = apart | join(", ") -%}
-{% endif -%}
-{# Two instances reduced to the same line are the same instance as far as a reader can tell. -#}
-{% if line and line not in summaries -%}
-{% set _ = summaries.append(line) -%}
+{% if apart and (apart | join(", ")) not in tuple_lines -%}
+{% set _ = tuple_lines.append(apart | join(", ")) -%}
 {% endif -%}
 {% endfor -%}
 
-{# One label alone telling the instances apart gathers onto one line: a list of lines saying nothing but
-   `shard: 1` and `shard: 2` is a worse way to write `shard: 1, 2`. Two or more keys stay a line per
-   instance, because which value came with which is the information. -#}
-{% set gathered = (instances | length) > 1 and apart_keys | length == 1 and not prose_lines -%}
+{# Which value came with which is information the gathering loses, and when nothing else names the instances —
+   no prose, two or more keys — a line per instance keeps the pairing. Otherwise labels gather by key: prose
+   names its own instance, and one key has nothing to pair. -#}
+{% if not prose_lines and varied | length > 1 -%}
+{% set summaries = tuple_lines -%}
+{% set varied = {} -%}
+{% else -%}
+{% set summaries = prose_lines -%}
+{% endif -%}
 
 {# The prose above and the link buttons are not repeated as lines to copy out of. `value_string` is the long form
    of `values`, dropped only when there is a `values` to read instead of it. -#}
@@ -336,7 +332,7 @@ discord_message = """\
 
 {# A group of one has said its summary above. A group of many says one per instance, even when only one of them
    turned out to carry anything of its own: that line is then the only thing naming what failed. -#}
-{% if summaries and not gathered and (instances | length) > 1 %}
+{% if summaries and (instances | length) > 1 %}
 **Summaries**
 {% for line in summaries[:20] -%}
 - {{ line }}
@@ -356,17 +352,17 @@ discord_message = """\
 {% endfor -%}
 {% endif -%}
 
-{% if agreed.keys() | reject("in", grouped_by) | list or gathered %}
+{% if agreed.keys() | reject("in", grouped_by) | list or varied %}
 **Labels**
 {% for key, value in agreed.items() if key not in grouped_by -%}
 - {{ pair(key, value) | trim }}
 {% endfor -%}
-{% if gathered -%}
-- {{ apart_keys[0] }}: {% for value in apart_values[:20] -%}
+{% for key, values in varied.items() -%}
+- {{ key }}: {% for value in values[:20] -%}
 {{ value if "`" in value else "`" ~ value ~ "`" }}{{ ", " if not loop.last }}
 {%- endfor -%}
-{{ " and " ~ (apart_values | length - 20) ~ " more" if apart_values | length > 20 }}
-{% endif -%}
+{{ " and " ~ (values | length - 20) ~ " more" if values | length > 20 }}
+{% endfor -%}
 {% endif -%}
 
 {% if notes %}
