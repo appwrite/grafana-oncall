@@ -355,7 +355,7 @@ ALL_PERMISSION_CLASSES: LegacyAccessControlCompatiblePermissions = [
     getattr(RBACPermission.Permissions, permission_name) for permission_name in ALL_PERMISSION_NAMES
 ]
 ALL_PERMISSION_CHOICES: typing.List[typing.Tuple[str, str]] = []
-for permission_class, permission_name in zip(ALL_PERMISSION_CLASSES, ALL_PERMISSION_NAMES):
+for permission_class, permission_name in zip(ALL_PERMISSION_CLASSES, ALL_PERMISSION_NAMES, strict=False):
     ALL_PERMISSION_CHOICES += [
         (permission_class.value, permission_name),
         (convert_oncall_permission_to_irm(permission_class), permission_name),

@@ -8,7 +8,7 @@ from apps.base.messaging import get_messaging_backend_from_id
 from apps.schedules.ical_utils import list_users_to_notify_from_ical
 
 if typing.TYPE_CHECKING:
-    from django.db.models.manager import RelatedManager
+    from django.db.models.fields.related_descriptors import RelatedManager
 
     from apps.alerts.escalation_snapshot.snapshot_classes import EscalationPolicySnapshot, EscalationSnapshot
     from apps.alerts.models import AlertGroup, AlertGroupLogRecord, ResolutionNote
@@ -624,7 +624,7 @@ class IncidentLogBuilder:
 
             if future_step:
                 if schedule is not None:
-                    step_datetime = timezone.now() + esc_timedelta
+                    step_datetime = timezone.now() + (esc_timedelta or timezone.timedelta())
                     users_oncall = list_users_to_notify_from_ical(schedule, step_datetime)
                     important_text = ""
 

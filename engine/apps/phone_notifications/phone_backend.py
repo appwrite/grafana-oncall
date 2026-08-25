@@ -131,7 +131,7 @@ class PhoneBackend:
             response = requests.post(url, headers=auth, data=data, timeout=5)
         except requests.exceptions.RequestException as e:
             logger.error(f"PhoneBackend._notify_by_cloud_call: request exception {str(e)}")
-            raise FailedToMakeCall
+            raise FailedToMakeCall from e
         if response.status_code == 200:
             logger.info("PhoneBackend._notify_by_cloud_call: OK")
         elif response.status_code == 400 and response.json().get("error") == "limit-exceeded":
@@ -299,7 +299,7 @@ class PhoneBackend:
             response = requests.post(url, headers=auth, data=data, timeout=5)
         except requests.exceptions.RequestException as e:
             logger.error(f"Unable to send SMS through cloud. Request exception {str(e)}")
-            raise FailedToSendSMS
+            raise FailedToSendSMS from e
         if response.status_code == 200:
             logger.info("Sent cloud sms successfully")
         elif response.status_code == 400 and response.json().get("error") == "limit-exceeded":

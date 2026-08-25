@@ -49,7 +49,8 @@ from common.database import NON_POLYMORPHIC_CASCADE, NON_POLYMORPHIC_SET_NULL
 from common.public_primary_keys import generate_public_primary_key, increase_public_primary_key_length
 
 if typing.TYPE_CHECKING:
-    from django.db.models.manager import RelatedManager
+    from django.db.models import QuerySet
+    from django.db.models.fields.related_descriptors import RelatedManager
 
     from apps.alerts.models import EscalationPolicy
     from apps.auth_token.models import ScheduleExportAuthToken
@@ -479,7 +480,7 @@ class OnCallSchedule(PolymorphicModel):
 
     def filter_swap_requests(
         self, datetime_start: datetime.datetime, datetime_end: datetime.datetime
-    ) -> "RelatedManager['ShiftSwapRequest']":
+    ) -> "QuerySet[ShiftSwapRequest]":
         swap_requests = self.shift_swap_requests.filter(  # starting before but ongoing
             swap_start__lt=datetime_start, swap_end__gte=datetime_start
         ).union(
@@ -1084,7 +1085,6 @@ class OnCallSchedule(PolymorphicModel):
 
 class OnCallScheduleICal(OnCallSchedule):
     escalation_policies: "RelatedManager['EscalationPolicy']"
-    objects: models.Manager["OnCallScheduleICal"]
     schedule_export_token: "RelatedManager['ScheduleExportAuthToken']"
 
     # For the ical schedule both primary and overrides icals are imported via ical url
@@ -1153,7 +1153,6 @@ class OnCallScheduleICal(OnCallSchedule):
 
 class OnCallScheduleCalendar(OnCallSchedule):
     escalation_policies: "RelatedManager['EscalationPolicy']"
-    objects: models.Manager["OnCallScheduleCalendar"]
     schedule_export_token: "RelatedManager['ScheduleExportAuthToken']"
 
     # For the calendar schedule only overrides ical is imported via ical url.
@@ -1250,7 +1249,6 @@ class OnCallScheduleCalendar(OnCallSchedule):
 
 class OnCallScheduleWeb(OnCallSchedule):
     escalation_policies: "RelatedManager['EscalationPolicy']"
-    objects: models.Manager["OnCallScheduleWeb"]
     schedule_export_token: "RelatedManager['ScheduleExportAuthToken']"
 
     time_zone = models.CharField(max_length=100, default="UTC")

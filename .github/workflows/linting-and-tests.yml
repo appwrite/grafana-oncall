@@ -347,7 +347,7 @@ jobs:
         uses: ./.github/actions/setup-python
       - name: ty Static Type Checking
         working-directory: engine
-        run: ty check --exit-zero-on-warning
+        run: ty check
 
   end-to-end-tests:
     name: Standard e2e tests

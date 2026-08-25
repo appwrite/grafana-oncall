@@ -14,7 +14,7 @@ from common.ordered_model.ordered_model import OrderedModel
 from common.public_primary_keys import generate_public_primary_key, increase_public_primary_key_length
 
 if typing.TYPE_CHECKING:
-    from django.db.models.manager import RelatedManager
+    from django.db.models.fields.related_descriptors import RelatedManager
 
     from apps.base.models import UserNotificationPolicyLogRecord
 
@@ -66,8 +66,8 @@ def validate_channel_choice(value):
         return
     try:
         _notification_channels(value)
-    except ValueError:
-        raise ValidationError("%(value)s is not a valid option", params={"value": value})
+    except ValueError as e:
+        raise ValidationError("%(value)s is not a valid option", params={"value": value}) from e
 
 
 class UserNotificationPolicy(OrderedModel):

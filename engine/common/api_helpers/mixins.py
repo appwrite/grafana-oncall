@@ -126,10 +126,10 @@ class ListSerializerMixin:
 class EagerLoadingMixin:
     @classmethod
     def setup_eager_loading(cls, queryset):
-        if hasattr(cls, "SELECT_RELATED"):
-            queryset = queryset.select_related(*cls.SELECT_RELATED)
-        if hasattr(cls, "PREFETCH_RELATED"):
-            queryset = queryset.prefetch_related(*cls.PREFETCH_RELATED)
+        if select_related := getattr(cls, "SELECT_RELATED", None):
+            queryset = queryset.select_related(*select_related)
+        if prefetch_related := getattr(cls, "PREFETCH_RELATED", None):
+            queryset = queryset.prefetch_related(*prefetch_related)
         return queryset
 
 
@@ -159,8 +159,8 @@ class PublicPrimaryKeyMixin(typing.Generic[_MT]):
 
         try:
             obj = queryset.get(public_primary_key=pk)
-        except ObjectDoesNotExist:
-            raise NotFound
+        except ObjectDoesNotExist as e:
+            raise NotFound from e
 
         # May raise a permission denied
         self.check_object_permissions(self.request, obj)
@@ -198,8 +198,8 @@ class TeamFilteringMixin:
             queryset = self.filter_queryset(self.get_queryset(ignore_filtering_by_available_teams=True))
             try:
                 queryset.get(public_primary_key=self.kwargs["pk"])
-            except ObjectDoesNotExist:
-                raise NotFound
+            except ObjectDoesNotExist as e:
+                raise NotFound from e
             return Response(data={"error_code": "wrong_team"}, status=status.HTTP_403_FORBIDDEN)
 
     @staticmethod
@@ -313,7 +313,7 @@ class PreviewTemplateMixin:
             if alert_to_template is None:
                 raise BadRequest(detail="Alert to preview does not exist")
         except PreviewTemplateException as e:
-            raise BadRequest(detail=str(e))
+            raise BadRequest(detail=str(e)) from e
 
         if template_body is None or template_name is None:
             response = {"preview": None}

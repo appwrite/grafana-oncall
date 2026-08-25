@@ -27,7 +27,7 @@ class MSG91PhoneProvider(PhoneProvider):
             self._send(number, text)
         except (requests.exceptions.RequestException, ValueError) as e:
             logger.error(f"MSG91PhoneProvider.send_sms: failed {e}")
-            raise FailedToSendSMS(graceful_msg=f"Failed sending sms to {number}")
+            raise FailedToSendSMS(graceful_msg=f"Failed sending sms to {number}") from e
 
     def send_verification_sms(self, number: str):
         # MSG91 has no verification service of its own, so the code is generated and checked here.
@@ -38,7 +38,7 @@ class MSG91PhoneProvider(PhoneProvider):
             self._send(number, f"Your verification code for Grafana OnCall is {code}")
         except (requests.exceptions.RequestException, ValueError) as e:
             logger.error(f"MSG91PhoneProvider.send_verification_sms: failed {e}")
-            raise FailedToStartVerification(graceful_msg=f"Failed sending verification sms to {number}")
+            raise FailedToStartVerification(graceful_msg=f"Failed sending verification sms to {number}") from e
 
     def _send(self, number: str, text: str):
         response = self._flow_create(number, text)

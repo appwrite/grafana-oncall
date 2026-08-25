@@ -63,8 +63,8 @@ class ChannelFilterView(RateLimitHeadersMixin, UpdateSerializerMixin, ModelViewS
                 alert_receive_channel__organization=self.request.auth.organization,
                 alert_receive_channel__deleted_at=None,
             ).get(public_primary_key=public_primary_key)
-        except ChannelFilter.DoesNotExist:
-            raise NotFound
+        except ChannelFilter.DoesNotExist as e:
+            raise NotFound from e
 
     def destroy(self, request, *args, **kwargs):
         instance = self.get_object()

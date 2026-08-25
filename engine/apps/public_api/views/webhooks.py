@@ -64,8 +64,8 @@ class WebhooksView(RateLimitHeadersMixin, UpdateSerializerMixin, ModelViewSet):
             return Webhook.objects.filter(organization=self.request.auth.organization).get(
                 public_primary_key=public_primary_key
             )
-        except Webhook.DoesNotExist:
-            raise NotFound
+        except Webhook.DoesNotExist as e:
+            raise NotFound from e
 
     def perform_create(self, serializer):
         serializer.save()

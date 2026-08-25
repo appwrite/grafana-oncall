@@ -21,9 +21,9 @@ class MattermostEventAuthentication(BaseAuthentication):
         try:
             MattermostEventAuthenticator.verify(auth)
             mattermost_user = MattermostUser.objects.get(mattermost_user_id=request.data["user_id"])
-        except MattermostEventTokenInvalid:
-            raise exceptions.AuthenticationFailed("Invalid auth token")
-        except MattermostUser.DoesNotExist:
-            raise exceptions.AuthenticationFailed("Mattermost user not integrated")
+        except MattermostEventTokenInvalid as e:
+            raise exceptions.AuthenticationFailed("Invalid auth token") from e
+        except MattermostUser.DoesNotExist as e:
+            raise exceptions.AuthenticationFailed("Mattermost user not integrated") from e
 
         return mattermost_user.user, None

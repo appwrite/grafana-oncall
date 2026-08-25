@@ -59,7 +59,7 @@ class ShiftSwapRequest(models.Model):
     schedule: "OnCallSchedule"
     slack_message: typing.Optional["SlackMessage"]
 
-    objects: models.Manager["ShiftSwapRequest"] = ShiftSwapRequestManager()
+    objects: typing.ClassVar[models.Manager["ShiftSwapRequest"]] = ShiftSwapRequestManager()
     objects_with_deleted: models.Manager["ShiftSwapRequest"] = models.Manager()
 
     FOLLOWUP_OFFSETS = [

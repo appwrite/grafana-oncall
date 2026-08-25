@@ -54,8 +54,8 @@ def test_integration_does_not_raise_exception_organization_moved(
     try:
         integration_view.dispatch(RequestFactory().post("/"), alert_channel_key=alert_receive_channel.token)
         raise AssertionError()
-    except OrganizationMovedException:
-        raise AssertionError()
+    except OrganizationMovedException as e:
+        raise AssertionError() from e
     except Exception:
         assert True
 
@@ -137,8 +137,8 @@ def test_api_token_does_not_raise_exception_organization_moved(
         api_auth = ApiTokenAuthentication()
         api_auth.authenticate_credentials(token)
         assert True
-    except OrganizationMovedException:
-        raise AssertionError()
+    except OrganizationMovedException as e:
+        raise AssertionError() from e
 
 
 @pytest.mark.django_db
@@ -178,8 +178,8 @@ def test_schedule_export_token_does_not_raise_exception_organization_moved(
         schedule_auth = ScheduleExportAuthentication()
         schedule_auth.authenticate_credentials(token, schedule.public_primary_key)
         assert True
-    except OrganizationMovedException:
-        raise AssertionError()
+    except OrganizationMovedException as e:
+        raise AssertionError() from e
 
 
 @pytest.mark.django_db
@@ -218,8 +218,8 @@ def test_user_schedule_export_token_does_not_raise_exception_organization_moved(
         user_schedule_auth = UserScheduleExportAuthentication()
         user_schedule_auth.authenticate_credentials(token, admin.public_primary_key)
         assert True
-    except OrganizationMovedException:
-        raise AssertionError()
+    except OrganizationMovedException as e:
+        raise AssertionError() from e
 
 
 @pytest.mark.django_db

@@ -48,8 +48,8 @@ class PersonalNotificationView(RateLimitHeadersMixin, UpdateSerializerMixin, Mod
                         public_primary_key=user_id,
                         organization=organization,
                     )
-                except User.DoesNotExist:
-                    raise BadRequest(detail="User not found.")
+                except User.DoesNotExist as e:
+                    raise BadRequest(detail="User not found.") from e
             queryset = UserNotificationPolicy.objects.filter(
                 user__public_primary_key=user_id,
                 user__organization=organization,
@@ -73,8 +73,8 @@ class PersonalNotificationView(RateLimitHeadersMixin, UpdateSerializerMixin, Mod
         queryset = self.filter_queryset(self.get_queryset())
         try:
             return queryset.get(public_primary_key=public_primary_key)
-        except UserNotificationPolicy.DoesNotExist:
-            raise NotFound
+        except UserNotificationPolicy.DoesNotExist as e:
+            raise NotFound from e
 
     def destroy(self, request, *args, **kwargs):
         instance = self.get_object()

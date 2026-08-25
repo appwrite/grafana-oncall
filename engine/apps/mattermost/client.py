@@ -59,21 +59,21 @@ class MattermostClient:
                 url=ex.response.request.url,
                 msg=ex.response.json()["message"],
                 method=ex.response.request.method,
-            )
+            ) from ex
         except requests.Timeout as ex:
             raise MattermostAPIException(
                 status=ex.response.status_code,
                 url=ex.response.request.url,
                 msg="Mattermost api call gateway timedout",
                 method=ex.response.request.method,
-            )
+            ) from ex
         except requests.exceptions.RequestException as ex:
             raise MattermostAPIException(
                 status=ex.response.status_code,
                 url=ex.response.request.url,
                 msg="Unexpected error from mattermost server",
                 method=ex.response.request.method,
-            )
+            ) from ex
 
     def get_channel_by_id(self, channel_id: str) -> MattermostChannel:
         url = f"{self.base_url}/channels/{channel_id}"

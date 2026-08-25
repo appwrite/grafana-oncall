@@ -62,8 +62,8 @@ class FCMDeviceAuthorizedViewSet(BaseFCMDeviceAuthorizedViewSet):
         """Overrides original method to add filtering by user"""
         try:
             obj = self.model.objects.get(registration_id=self.kwargs["registration_id"], user=self.request.user)
-        except ObjectDoesNotExist:
-            raise NotFound
+        except ObjectDoesNotExist as e:
+            raise NotFound from e
         # May raise a permission denied
         self.check_object_permissions(self.request, obj)
         return obj
@@ -75,8 +75,8 @@ class MobileAppAuthTokenAPIView(APIView):
     def get(self, request):
         try:
             token = MobileAppAuthToken.objects.get(user=self.request.user)
-        except MobileAppAuthToken.DoesNotExist:
-            raise NotFound
+        except MobileAppAuthToken.DoesNotExist as e:
+            raise NotFound from e
 
         response = {
             "token_id": token.id,
@@ -109,8 +109,8 @@ class MobileAppAuthTokenAPIView(APIView):
         try:
             token = MobileAppAuthToken.objects.get(user=self.request.user)
             token.delete()
-        except MobileAppAuthToken.DoesNotExist:
-            raise NotFound
+        except MobileAppAuthToken.DoesNotExist as e:
+            raise NotFound from e
 
         return Response(status=status.HTTP_204_NO_CONTENT)
 

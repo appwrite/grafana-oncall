@@ -75,8 +75,8 @@ class AddToResolutionNoteStep(scenario_step.ScenarioStep):
 
         try:
             channel_id = payload["channel"]["id"]
-        except KeyError:
-            raise Exception("Channel was not found")
+        except KeyError as e:
+            raise Exception("Channel was not found") from e
 
         warning_text = "Unable to add this message to resolution note, this command works only in incident threads."
 
@@ -125,7 +125,8 @@ class AddToResolutionNoteStep(scenario_step.ScenarioStep):
             self.open_warning_window(payload, warning_text)
             return
 
-        if payload["message"]["type"] == "message" and "user" in payload["message"]:
+        message = payload.get("message")
+        if message and message["type"] == "message" and "user" in message:
             message_ts = payload["message_ts"]
 
             result = self._slack_client.chat_getPermalink(channel=channel_id, message_ts=message_ts)
@@ -133,7 +134,7 @@ class AddToResolutionNoteStep(scenario_step.ScenarioStep):
             if result["permalink"] is not None:
                 permalink = result["permalink"]
 
-            if payload["message"]["ts"] in [
+            if message["ts"] in [
                 message.ts
                 for message in alert_group.resolution_note_slack_messages.filter(added_to_resolution_note=True)
             ]:

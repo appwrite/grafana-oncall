@@ -52,8 +52,8 @@ class ResolutionNoteView(RateLimitHeadersMixin, UpdateSerializerMixin, ModelView
         queryset = self.filter_queryset(self.get_queryset())
         try:
             return queryset.get(public_primary_key=public_primary_key)
-        except ResolutionNote.DoesNotExist:
-            raise NotFound
+        except ResolutionNote.DoesNotExist as e:
+            raise NotFound from e
 
     def perform_create(self, serializer):
         super().perform_create(serializer)

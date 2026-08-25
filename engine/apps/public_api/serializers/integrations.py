@@ -133,8 +133,8 @@ class IntegrationSerializer(EagerLoadingMixin, serializers.ModelSerializer, Main
                     service_account=user.service_account if user.is_service_account else None,
                     organization=organization,
                 )
-            except AlertReceiveChannel.DuplicateDirectPagingError:
-                raise BadRequest(detail=AlertReceiveChannel.DuplicateDirectPagingError.DETAIL)
+            except AlertReceiveChannel.DuplicateDirectPagingError as e:
+                raise BadRequest(detail=AlertReceiveChannel.DuplicateDirectPagingError.DETAIL) from e
             if default_route_data:
                 serializer = DefaultChannelFilterSerializer(
                     instance.default_channel_filter, default_route_data, context=self.context
@@ -148,8 +148,8 @@ class IntegrationSerializer(EagerLoadingMixin, serializers.ModelSerializer, Main
     def update(self, *args, **kwargs):
         try:
             return super().update(*args, **kwargs)
-        except AlertReceiveChannel.DuplicateDirectPagingError:
-            raise BadRequest(detail=AlertReceiveChannel.DuplicateDirectPagingError.DETAIL)
+        except AlertReceiveChannel.DuplicateDirectPagingError as e:
+            raise BadRequest(detail=AlertReceiveChannel.DuplicateDirectPagingError.DETAIL) from e
 
     def validate(self, attrs):
         self.validate_name_uniqueness(attrs)
@@ -169,8 +169,8 @@ class IntegrationSerializer(EagerLoadingMixin, serializers.ModelSerializer, Main
             )
         except AlertReceiveChannel.DoesNotExist:
             return
-        except AlertReceiveChannel.MultipleObjectsReturned:
-            raise BadRequest(detail="An integration with this name already exists for this team")
+        except AlertReceiveChannel.MultipleObjectsReturned as e:
+            raise BadRequest(detail="An integration with this name already exists for this team") from e
 
         if self.instance and obj.id == self.instance.id:
             return
@@ -192,8 +192,8 @@ class IntegrationSerializer(EagerLoadingMixin, serializers.ModelSerializer, Main
                     continue
                 try:
                     jinja_template_env.from_string(attr_template)
-                except TemplateSyntaxError:
-                    raise BadRequest(detail=f"invalid {notification_channel} {attr} template")
+                except TemplateSyntaxError as e:
+                    raise BadRequest(detail=f"invalid {notification_channel} {attr} template") from e
 
         for template_name in PUBLIC_BEHAVIOUR_TEMPLATES_FIELDS:
             template_data = templates.get(template_name, "")
@@ -203,8 +203,8 @@ class IntegrationSerializer(EagerLoadingMixin, serializers.ModelSerializer, Main
                 raise BadRequest(detail=f"Invalid {template_name} template data")
             try:
                 jinja_template_env.from_string(template_data)
-            except TemplateSyntaxError:
-                raise BadRequest(detail=f"Invalid {template_name} template data")
+            except TemplateSyntaxError as e:
+                raise BadRequest(detail=f"Invalid {template_name} template data") from e
         return templates
 
     def _correct_validated_data(self, validated_data):
@@ -280,14 +280,14 @@ class IntegrationSerializer(EagerLoadingMixin, serializers.ModelSerializer, Main
                         validated_data[TEMPLATE_PUBLIC_API_NAME_TO_DB_FIELD[template_backend_name]] = (
                             template_from_request
                         )
-                    except KeyError:
-                        raise BadRequest(detail="Invalid template data")
+                    except KeyError as e:
+                        raise BadRequest(detail="Invalid template data") from e
                 elif type(template_from_request) is dict:  # if it's nested template: {slack: {"title": "some title"}}
                     for attr, template in template_from_request.items():
                         try:
                             validated_data[TEMPLATE_PUBLIC_API_NAME_TO_DB_FIELD[template_backend_name][attr]] = template
-                        except KeyError:
-                            raise BadRequest(detail="Invalid template data")
+                        except KeyError as e:
+                            raise BadRequest(detail="Invalid template data") from e
                 elif template_from_request is None:
                     # if it's we receive None, it's needed to set template to default value
                     try:
@@ -299,8 +299,8 @@ class IntegrationSerializer(EagerLoadingMixin, serializers.ModelSerializer, Main
                             # if we receive None for nested template set all it's fields to None
                             for key in template_to_set_to_default.keys():
                                 validated_data[TEMPLATE_PUBLIC_API_NAME_TO_DB_FIELD[template_backend_name][key]] = None
-                    except KeyError:
-                        raise BadRequest(detail="Invalid template data")
+                    except KeyError as e:
+                        raise BadRequest(detail="Invalid template data") from e
 
         return validated_data
 

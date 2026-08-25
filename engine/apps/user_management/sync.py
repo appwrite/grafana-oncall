@@ -267,7 +267,10 @@ def _create_organization(
 
 
 def get_or_create_organization(
-    org_id: int, stack_id: int, sync_data: SyncData = None, instance_info: GCOMInstanceInfo = None
+    org_id: int,
+    stack_id: int,
+    sync_data: typing.Optional[SyncData] = None,
+    instance_info: typing.Optional[GCOMInstanceInfo] = None,
 ) -> Organization:
     organization = Organization.objects.filter(org_id=org_id, stack_id=stack_id).first()
     if not organization:

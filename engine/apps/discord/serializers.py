@@ -41,9 +41,9 @@ class DiscordChannelSerializer(serializers.ModelSerializer):
         try:
             channel = DiscordClient().get_channel(channel_id=channel_id)
         except DiscordAPIException as ex:
-            raise BadRequest(detail=ex.msg)
-        except DiscordAPITokenInvalid:
-            raise BadRequest(detail="Discord bot token is invalid.")
+            raise BadRequest(detail=ex.msg) from ex
+        except DiscordAPITokenInvalid as e:
+            raise BadRequest(detail="Discord bot token is invalid.") from e
 
         return super().to_internal_value(
             {

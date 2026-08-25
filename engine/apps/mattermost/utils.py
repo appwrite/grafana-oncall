@@ -35,4 +35,4 @@ class MattermostEventAuthenticator:
             return payload
         except jwt.InvalidTokenError as e:
             logger.error(f"Error while verifying mattermost token {e}")
-            raise MattermostEventTokenInvalid(msg="Invalid token from mattermost server")
+            raise MattermostEventTokenInvalid(msg="Invalid token from mattermost server") from e

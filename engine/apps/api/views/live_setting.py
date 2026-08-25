@@ -87,9 +87,9 @@ class LiveSettingViewSet(PublicPrimaryKeyMixin[LiveSetting], viewsets.ModelViewS
 
     def _reset_telegram_integration(self, old_token):
         # tell Telegram to cancel sending events from old bot
-        with suppress(error.InvalidToken, error.Unauthorized):
+        with suppress(error.InvalidToken, error.Forbidden):
             old_client = TelegramClient(token=old_token)
-            old_client.api_client.delete_webhook()
+            old_client.delete_webhook()
 
         # delete telegram channels for current team
         organization = self.request.auth.organization

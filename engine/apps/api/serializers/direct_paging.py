@@ -26,8 +26,8 @@ class UserReferenceSerializer(serializers.Serializer):
 
         try:
             attrs["instance"] = organization.users.get(public_primary_key=id)
-        except ObjectDoesNotExist:
-            raise serializers.ValidationError(f"User {id} does not exist")
+        except ObjectDoesNotExist as e:
+            raise serializers.ValidationError(f"User {id} does not exist") from e
 
         return attrs
 
@@ -70,8 +70,8 @@ class BasePagingSerializer(serializers.Serializer):
                 attrs["alert_group"] = AlertGroup.objects.get(
                     public_primary_key=alert_group_id, channel__organization=organization
                 )
-            except ObjectDoesNotExist:
-                raise serializers.ValidationError("Alert group {} does not exist".format(alert_group_id))
+            except ObjectDoesNotExist as e:
+                raise serializers.ValidationError("Alert group {} does not exist".format(alert_group_id)) from e
 
         return attrs
 

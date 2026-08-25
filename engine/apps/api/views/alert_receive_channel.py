@@ -95,8 +95,8 @@ class AlertReceiveChannelFilter(ByTeamModelFieldFilterMixin, filters.FilterSet):
         for mode in value:
             try:
                 mode = int(mode)
-            except (ValueError, TypeError):
-                raise BadRequest(detail="Invalid mode value")
+            except (ValueError, TypeError) as e:
+                raise BadRequest(detail="Invalid mode value") from e
             if mode not in [AlertReceiveChannel.DEBUG_MAINTENANCE, AlertReceiveChannel.MAINTENANCE]:
                 raise BadRequest(detail="Invalid mode value")
             q_objects |= Q(maintenance_mode=mode)
@@ -280,7 +280,7 @@ class AlertReceiveChannelView(
         try:
             instance.send_demo_alert(payload=payload)
         except UnableToSendDemoAlert as e:
-            raise BadRequest(detail=str(e))
+            raise BadRequest(detail=str(e)) from e
 
         return Response(status=status.HTTP_200_OK)
 
@@ -290,7 +290,7 @@ class AlertReceiveChannelView(
             try:
                 return integration_func(instance)
             except BacksyncIntegrationRequestError as e:
-                raise BadRequest(detail=e.error_msg)
+                raise BadRequest(detail=e.error_msg) from e
 
     def _test_connection(self, request, pk=None):
         instance = None
@@ -411,7 +411,7 @@ class AlertReceiveChannelView(
         try:
             instance.change_team(team_id=team_id, user=self.request.user)
         except TeamCanNotBeChangedError as e:
-            raise BadRequest(detail=e)
+            raise BadRequest(detail=e) from e
 
         return Response()
 
@@ -524,14 +524,14 @@ class AlertReceiveChannelView(
         duration = request.data.get("duration", None)
         try:
             mode = int(mode)
-        except (ValueError, TypeError):
-            raise BadRequest(detail={"mode": ["Invalid mode"]})
+        except (ValueError, TypeError) as e:
+            raise BadRequest(detail={"mode": ["Invalid mode"]}) from e
         if mode not in [MaintainableObject.DEBUG_MAINTENANCE, MaintainableObject.MAINTENANCE]:
             raise BadRequest(detail={"mode": ["Unknown mode"]})
         try:
             duration = int(duration)
-        except (ValueError, TypeError):
-            raise BadRequest(detail={"duration": ["Invalid duration"]})
+        except (ValueError, TypeError) as e:
+            raise BadRequest(detail={"duration": ["Invalid duration"]}) from e
         if duration not in MaintainableObject.maintenance_duration_options_in_seconds():
             raise BadRequest(detail={"mode": ["Unknown duration"]})
 
@@ -542,7 +542,7 @@ class AlertReceiveChannelView(
                 detail = {"alert_receive_channel_id": ["Already on maintenance"]}
             else:
                 detail = str(e)
-            raise BadRequest(detail=detail)
+            raise BadRequest(detail=detail) from e
 
         return Response(status=status.HTTP_200_OK)
 
@@ -770,8 +770,8 @@ class AlertReceiveChannelView(
         instance = self.get_object()
         try:
             webhook = instance.webhooks.get(is_from_connected_integration=True, public_primary_key=webhook_id)
-        except ObjectDoesNotExist:
-            raise NotFound
+        except ObjectDoesNotExist as e:
+            raise NotFound from e
         serializer = WebhookSerializer(webhook, data=request.data, context={"request": request})
         serializer.is_valid(raise_exception=True)
         serializer.save()
@@ -784,8 +784,8 @@ class AlertReceiveChannelView(
         instance = self.get_object()
         try:
             webhook = instance.webhooks.get(is_from_connected_integration=True, public_primary_key=webhook_id)
-        except ObjectDoesNotExist:
-            raise NotFound
+        except ObjectDoesNotExist as e:
+            raise NotFound from e
         webhook.delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
 
@@ -843,8 +843,8 @@ class AlertReceiveChannelView(
             connection = instance.connected_alert_receive_channels.get(
                 connected_alert_receive_channel_id__public_primary_key=connected_alert_receive_channel_id
             )
-        except ObjectDoesNotExist:
-            raise NotFound
+        except ObjectDoesNotExist as e:
+            raise NotFound from e
 
         serializer = AlertReceiveChannelConnectedChannelSerializer(connection, data=request.data)
         serializer.is_valid(raise_exception=True)
@@ -859,8 +859,8 @@ class AlertReceiveChannelView(
             connection = instance.connected_alert_receive_channels.get(
                 connected_alert_receive_channel_id__public_primary_key=connected_alert_receive_channel_id
             )
-        except ObjectDoesNotExist:
-            raise NotFound
+        except ObjectDoesNotExist as e:
+            raise NotFound from e
 
         connection.delete()
 
@@ -878,8 +878,8 @@ class AlertReceiveChannelView(
             _ = IntegrationBacksyncAuthToken.objects.get(
                 alert_receive_channel=instance, organization=request.auth.organization
             )
-        except IntegrationBacksyncAuthToken.DoesNotExist:
-            raise NotFound
+        except IntegrationBacksyncAuthToken.DoesNotExist as e:
+            raise NotFound from e
 
         return Response(status=status.HTTP_200_OK)
 

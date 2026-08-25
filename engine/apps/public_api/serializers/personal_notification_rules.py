@@ -51,8 +51,8 @@ class PersonalNotificationRuleSerializer(EagerLoadingMixin, OrderedModelSerializ
             except (ValueError, TypeError):
                 try:
                     data["duration"] = str(timedelta(seconds=data["duration"]))
-                except (ValueError, TypeError):
-                    raise BadRequest(detail="Invalid duration format")
+                except (ValueError, TypeError) as e:
+                    raise BadRequest(detail="Invalid duration format") from e
         return super().to_internal_value(data)
 
     def to_representation(self, instance):

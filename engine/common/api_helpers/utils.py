@@ -72,10 +72,10 @@ def validate_ical_url(url):
         try:
             ical_file = fetch_ical_file(url)
             Calendar.from_ical(ical_file)
-        except requests.exceptions.RequestException:
-            raise serializers.ValidationError("Ical download failed")
-        except ValueError:
-            raise serializers.ValidationError("Ical parse failed")
+        except requests.exceptions.RequestException as e:
+            raise serializers.ValidationError("Ical download failed") from e
+        except ValueError as e:
+            raise serializers.ValidationError("Ical parse failed") from e
         return url
     return None
 
@@ -112,8 +112,8 @@ def get_date_range_from_request(request: Request) -> typing.Tuple[str, datetime.
     if date_param is not None:
         try:
             date = dateparse.parse_date(date_param)
-        except ValueError:
-            raise BadRequest(detail="Invalid date format")
+        except ValueError as e:
+            raise BadRequest(detail="Invalid date format") from e
         else:
             if date is None:
                 raise BadRequest(detail="Invalid date format")
@@ -125,8 +125,8 @@ def get_date_range_from_request(request: Request) -> typing.Tuple[str, datetime.
 
     try:
         days = int(request.query_params.get("days", 7))  # fallback to a week
-    except ValueError:
-        raise BadRequest(detail="Invalid days format")
+    except ValueError as e:
+        raise BadRequest(detail="Invalid days format") from e
 
     return user_tz, starting_date, days
 

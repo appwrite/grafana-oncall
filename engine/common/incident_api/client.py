@@ -101,7 +101,7 @@ class IncidentAPIClient:
                 url=e.response.request.url if e.response else url,
                 msg=e.response.text if e.response else "Unexpected error",
                 method=e.response.request.method if e.response else "POST",
-            )
+            ) from e
         return response
 
     def _check_response(self, response: requests.models.Response):

@@ -19,8 +19,8 @@ class OrderedModelViewSet(ModelViewSet):
         prev_state = self._get_insight_logs_serialized(instance)
         try:
             instance.to_index(position)
-        except IndexError:
-            raise BadRequest(detail="Invalid position")
+        except IndexError as e:
+            raise BadRequest(detail="Invalid position") from e
         new_state = self._get_insight_logs_serialized(instance)
 
         write_resource_insight_log(

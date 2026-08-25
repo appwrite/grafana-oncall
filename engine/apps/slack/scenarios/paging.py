@@ -32,8 +32,6 @@ from apps.slack.types import (
 logger = logging.getLogger(__name__)
 
 if typing.TYPE_CHECKING:
-    from django.db.models.manager import RelatedManager
-
     from apps.slack.models import SlackTeamIdentity, SlackUserIdentity
     from apps.user_management.models import Organization, Team, User
 
@@ -865,7 +863,7 @@ def _get_team_select_blocks(
 
 
 def _create_user_option_groups(
-    organization, users: "RelatedManager['User']", max_options_per_group: int, option_group_label_text_prefix: str
+    organization, users: "QuerySet[User]", max_options_per_group: int, option_group_label_text_prefix: str
 ) -> typing.List[CompositionObjectOptionGroup]:
     user_options: typing.List[CompositionObjectOption] = [
         {

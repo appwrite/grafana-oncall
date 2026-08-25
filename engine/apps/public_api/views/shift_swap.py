@@ -80,18 +80,19 @@ class ShiftSwapViewSet(RateLimitHeadersMixin, BaseShiftSwapViewSet):
         public_primary_key = self.kwargs["pk"]
         try:
             return self.get_queryset().get(public_primary_key=public_primary_key)
-        except ShiftSwapRequest.DoesNotExist:
-            raise NotFound
+        except ShiftSwapRequest.DoesNotExist as e:
+            raise NotFound from e
 
     def _get_user(self, field_name: str):
         """Require and return user from ID given by field_name."""
-        user_pk = self.request.data.pop(field_name, None)
+        data = self.request.data
+        user_pk = data.pop(field_name, None) if isinstance(data, dict) else None
         if not user_pk:
             raise BadRequest(detail=f"{field_name} user ID is required")
         try:
             user = User.objects.get(organization=self.request.auth.organization, public_primary_key=user_pk)
-        except User.DoesNotExist:
-            raise BadRequest(detail=f"Invalid {field_name} user ID")
+        except User.DoesNotExist as e:
+            raise BadRequest(detail=f"Invalid {field_name} user ID") from e
         return user
 
     def perform_create(self, serializer: BaseSerializer[ShiftSwapRequest]) -> None:

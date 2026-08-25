@@ -49,8 +49,8 @@ class DateRangeFilterMixin:
         try:
             start_date = datetime.strptime(date_entries[0], cls.DATE_FORMAT)
             end_date = datetime.strptime(date_entries[1], cls.DATE_FORMAT)
-        except ValueError:
-            raise BadRequest(detail="Invalid range value")
+        except ValueError as e:
+            raise BadRequest(detail="Invalid range value") from e
 
         if start_date > end_date:
             raise BadRequest(detail="Invalid range value")

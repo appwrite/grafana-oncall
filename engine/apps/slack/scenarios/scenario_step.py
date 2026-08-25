@@ -77,7 +77,7 @@ class ScenarioStep(object):
             module = importlib.import_module("apps.slack.scenarios." + scenario)
             return getattr(module, step)
         except ImportError as e:
-            raise Exception("Check import spelling! Scenario: {}, Step:{}, Error: {}".format(scenario, step, e))
+            raise Exception("Check import spelling! Scenario: {}, Step:{}, Error: {}".format(scenario, step, e)) from e
 
     def open_warning_window(self, payload: "EventPayload", warning_text: str, title: str | None = None) -> None:
         if title is None:

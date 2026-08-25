@@ -156,9 +156,9 @@ DATABASE_PORT = os.getenv("DATABASE_PORT") or os.getenv("MYSQL_PORT")
 DATABASE_OPTIONS = os.getenv("DATABASE_OPTIONS")
 if DATABASE_OPTIONS:
     try:
-        DATABASE_OPTIONS = dict([tuple(i.split("=")) for i in str(DATABASE_OPTIONS).split(" ")])
-    except Exception:
-        raise Exception("Bad database options. Check DATABASE_OPTIONS variable")
+        DATABASE_OPTIONS = {key: value for key, value in (item.split("=") for item in str(DATABASE_OPTIONS).split(" "))}
+    except Exception as e:
+        raise Exception("Bad database options. Check DATABASE_OPTIONS variable") from e
 else:
     DATABASE_OPTIONS = {}
 

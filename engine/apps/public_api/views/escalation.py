@@ -45,8 +45,8 @@ class EscalationView(APIView):
                 users=[(user["instance"], user["important"]) for user in validated_data["users"]],
                 alert_group=validated_data["alert_group"],
             )
-        except DirectPagingAlertGroupResolvedError:
-            raise BadRequest(detail=DirectPagingAlertGroupResolvedError.DETAIL)
-        except DirectPagingUserTeamValidationError:
-            raise BadRequest(detail=DirectPagingUserTeamValidationError.DETAIL)
+        except DirectPagingAlertGroupResolvedError as e:
+            raise BadRequest(detail=DirectPagingAlertGroupResolvedError.DETAIL) from e
+        except DirectPagingUserTeamValidationError as e:
+            raise BadRequest(detail=DirectPagingUserTeamValidationError.DETAIL) from e
         return Response(AlertGroupSerializer(alert_group).data, status=status.HTTP_200_OK)

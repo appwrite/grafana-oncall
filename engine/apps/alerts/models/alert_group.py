@@ -36,7 +36,7 @@ from common.utils import clean_markup, str_or_backup
 from .alert_group_counter import AlertGroupCounter
 
 if typing.TYPE_CHECKING:
-    from django.db.models.manager import RelatedManager
+    from django.db.models.fields.related_descriptors import RelatedManager
 
     from apps.alerts.models import (
         Alert,
@@ -210,7 +210,7 @@ class AlertGroup(AlertGroupSlackRenderingMixin, EscalationSnapshotMixin, models.
     slack_messages: "RelatedManager['SlackMessage']"
     users: "RelatedManager['User']"
 
-    objects: models.Manager["AlertGroup"] = AlertGroupQuerySet.as_manager()
+    objects: typing.ClassVar[models.Manager["AlertGroup"]] = AlertGroupQuerySet.as_manager()
 
     (
         NEW,
@@ -1439,7 +1439,7 @@ class AlertGroup(AlertGroupSlackRenderingMixin, EscalationSnapshotMixin, models.
                 type=AlertGroupLogRecord.TYPE_UN_SILENCE, author=user, reason="Bulk action acknowledge"
             )
 
-        for alert_group, previous_state in zip(alert_groups_to_acknowledge_list, previous_states):
+        for alert_group, previous_state in zip(alert_groups_to_acknowledge_list, previous_states, strict=False):
             # update metrics cache
             alert_group._update_metrics(
                 organization_id=user.organization_id,
@@ -1514,7 +1514,7 @@ class AlertGroup(AlertGroupSlackRenderingMixin, EscalationSnapshotMixin, models.
                 type=AlertGroupLogRecord.TYPE_UN_SILENCE, author=user, reason="Bulk action resolve"
             )
 
-        for alert_group, previous_state in zip(alert_groups_to_resolve_list, previous_states):
+        for alert_group, previous_state in zip(alert_groups_to_resolve_list, previous_states, strict=False):
             # update metrics cache
             alert_group._update_metrics(
                 organization_id=user.organization_id,
@@ -1799,7 +1799,7 @@ class AlertGroup(AlertGroupSlackRenderingMixin, EscalationSnapshotMixin, models.
                 reason="Bulk action silence",
             )
 
-        for alert_group, previous_state in zip(alert_groups_to_silence_list, previous_states):
+        for alert_group, previous_state in zip(alert_groups_to_silence_list, previous_states, strict=False):
             # update metrics cache
             alert_group._update_metrics(
                 organization_id=user.organization_id,

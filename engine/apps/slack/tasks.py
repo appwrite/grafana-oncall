@@ -239,7 +239,7 @@ def send_message_to_thread_if_bot_not_in_channel(
 
             raise send_message_to_thread_if_bot_not_in_channel.retry(
                 (alert_group_pk, slack_team_identity_pk, channel_id), countdown=e.retry_after, exc=e
-            )
+            ) from e
 
 
 @shared_dedicated_queue_retry_task(autoretry_for=(Exception,), retry_backoff=True, max_retries=0)

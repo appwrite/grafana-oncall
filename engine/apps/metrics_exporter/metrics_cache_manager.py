@@ -88,7 +88,12 @@ class MetricsCacheManager:
     ):
         """Call methods to update state and response time metrics cache for one alert group."""
 
-        if response_time and old_state == AlertGroupState.FIRING and started_at > get_response_time_period():
+        if (
+            response_time
+            and started_at
+            and old_state == AlertGroupState.FIRING
+            and started_at > get_response_time_period()
+        ):
             response_time_seconds = int(response_time.total_seconds())
             MetricsCacheManager.metrics_update_response_time_cache_for_alert_group(
                 integration_id, organization_id, response_time_seconds, service_name

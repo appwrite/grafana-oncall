@@ -16,8 +16,6 @@ from apps.user_management.models import Organization
 
 
 class PluginAuthToken(BaseAuthToken):
-    objects: models.Manager["PluginAuthToken"]
-
     salt = models.CharField(max_length=constants.AUTH_TOKEN_CHARACTER_LENGTH, null=True)
     organization = models.ForeignKey(
         to=Organization,
@@ -53,8 +51,8 @@ class PluginAuthToken(BaseAuthToken):
                 salt = binascii.unhexlify(auth_token.salt)
                 recreated_token = generate_plugin_token_string(salt, stack_id, org_id)
                 digest = hash_token_string(recreated_token)
-            except (TypeError, binascii.Error):
-                raise InvalidToken
+            except (TypeError, binascii.Error) as e:
+                raise InvalidToken from e
             if compare_digest(digest, auth_token.digest) and token == recreated_token:
                 return auth_token
 

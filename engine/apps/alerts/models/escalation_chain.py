@@ -8,7 +8,7 @@ from apps.alerts.models.escalation_policy import generate_public_primary_key_for
 from common.public_primary_keys import generate_public_primary_key, increase_public_primary_key_length
 
 if typing.TYPE_CHECKING:
-    from django.db.models.manager import RelatedManager
+    from django.db.models.fields.related_descriptors import RelatedManager
 
     from apps.alerts.models import ChannelFilter, EscalationPolicy
 

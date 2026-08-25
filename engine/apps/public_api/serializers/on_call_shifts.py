@@ -28,8 +28,8 @@ class CustomOnCallShiftTypeField(fields.CharField):
                 for key, value in CustomOnCallShift.PUBLIC_TYPE_CHOICES_MAP.items()
                 if value == data and key in CustomOnCallShift.PUBLIC_TYPE_CHOICES_MAP
             ][0]
-        except IndexError:
-            raise BadRequest(detail="Invalid shift type")
+        except IndexError as e:
+            raise BadRequest(detail="Invalid shift type") from e
         return shift_type
 
 
@@ -44,11 +44,11 @@ class CustomOnCallShiftWeekStartField(fields.CharField):
                 for key, value in CustomOnCallShift.ICAL_WEEKDAY_MAP.items()
                 if value == data and key in CustomOnCallShift.ICAL_WEEKDAY_MAP
             ][0]
-        except IndexError:
+        except IndexError as e:
             raise BadRequest(
                 detail="Invalid day format for week start field. "
                 "Should be one of the following: 'MO', 'TU', 'WE', 'TH', 'FR', 'SA', 'SU'"
-            )
+            ) from e
         return week_start
 
 
@@ -63,8 +63,8 @@ class CustomOnCallShiftFrequencyField(fields.CharField):
                 for key, value in CustomOnCallShift.PUBLIC_FREQUENCY_CHOICES_MAP.items()
                 if value == data and key in CustomOnCallShift.PUBLIC_FREQUENCY_CHOICES_MAP
             ][0]
-        except IndexError:
-            raise BadRequest(detail="Invalid frequency type")
+        except IndexError as e:
+            raise BadRequest(detail="Invalid frequency type") from e
         return frequency
 
 
@@ -221,8 +221,8 @@ class CustomOnCallShiftSerializer(EagerLoadingMixin, serializers.ModelSerializer
     def _validate_date_format(self, value):
         try:
             time.strptime(value, "%Y-%m-%dT%H:%M:%S")
-        except (TypeError, ValueError):
-            raise BadRequest(detail="Invalid datetime format, should be \"yyyy-mm-dd'T'hh:mm:ss\"")
+        except (TypeError, ValueError) as e:
+            raise BadRequest(detail="Invalid datetime format, should be \"yyyy-mm-dd'T'hh:mm:ss\"") from e
 
     def _validate_start(self, start):
         self._validate_date_format(start)

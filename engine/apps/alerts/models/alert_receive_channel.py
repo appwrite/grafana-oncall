@@ -41,7 +41,7 @@ from common.jinja_templater import jinja_template_env
 from common.public_primary_keys import generate_public_primary_key, increase_public_primary_key_length
 
 if typing.TYPE_CHECKING:
-    from django.db.models.manager import RelatedManager
+    from django.db.models.fields.related_descriptors import RelatedManager
 
     from apps.alerts.models import AlertGroup, ChannelFilter
     from apps.labels.models import AlertReceiveChannelAssociatedLabel
@@ -467,7 +467,7 @@ class AlertReceiveChannel(IntegrationOptionsMixin, MaintainableObject):
         return self.team.name if self.team else "No team"
 
     @cached_property
-    def team_id_or_no_team(self) -> str:
+    def team_id_or_no_team(self) -> typing.Union[int, str]:
         return self.team_id if self.team else "no_team"
 
     @cached_property

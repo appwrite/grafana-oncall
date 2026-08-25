@@ -16,7 +16,7 @@ from apps.slack.scenarios.notified_user_not_in_channel import NotifiedUserNotInC
 from apps.user_management.models import Organization, User
 
 if typing.TYPE_CHECKING:
-    from django.db.models.manager import RelatedManager
+    from django.db.models.fields.related_descriptors import RelatedManager
 
     from apps.slack.models import SlackMessage
 
@@ -39,17 +39,17 @@ class SlackUserIdentityManager(models.Manager):
     def get(self, **kwargs):
         try:
             instance = super().get(**kwargs, is_restricted=False, is_ultra_restricted=False)
-        except SlackUserIdentity.DoesNotExist:
+        except SlackUserIdentity.DoesNotExist as e:
             instance = self.filter(**kwargs).first()
             if instance is None:
-                raise SlackUserIdentity.DoesNotExist
+                raise SlackUserIdentity.DoesNotExist from e
         return instance
 
 
 class SlackUserIdentity(models.Model):
     users: "RelatedManager['User']"
 
-    objects: models.Manager["SlackUserIdentity"] = SlackUserIdentityManager()
+    objects: typing.ClassVar[models.Manager["SlackUserIdentity"]] = SlackUserIdentityManager()
     all_objects: models.Manager["SlackUserIdentity"] = AllSlackUserIdentityManager()
 
     id = models.AutoField(primary_key=True)

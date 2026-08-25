@@ -30,8 +30,8 @@ class EscalationPolicyTypeField(fields.CharField):
                 for key, value in EscalationPolicy.PUBLIC_STEP_CHOICES_MAP.items()
                 if value == data and key in EscalationPolicy.PUBLIC_STEP_CHOICES
             ][0]
-        except IndexError:
-            raise BadRequest(detail="Invalid escalation step type")
+        except IndexError as e:
+            raise BadRequest(detail="Invalid escalation step type") from e
         if step_type not in EscalationPolicy.PUBLIC_STEP_CHOICES:
             raise BadRequest(detail="Invalid escalation step type")
         return step_type
