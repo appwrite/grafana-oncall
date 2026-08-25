@@ -693,9 +693,12 @@ def test_create_ical_schedule(schedule_internal_api_setup, make_user_auth_header
         "notify_empty_oncall": 0,
         "notify_oncall_shift_freq": 1,
     }
-    with patch(
-        "apps.api.serializers.schedule_ical.ScheduleICalSerializer.validate_ical_url_primary", return_value=ICAL_URL
-    ), patch("apps.schedules.tasks.refresh_ical_final_schedule.apply_async") as mock_refresh_final:
+    with (
+        patch(
+            "apps.api.serializers.schedule_ical.ScheduleICalSerializer.validate_ical_url_primary", return_value=ICAL_URL
+        ),
+        patch("apps.schedules.tasks.refresh_ical_final_schedule.apply_async") as mock_refresh_final,
+    ):
         response = client.post(url, data, format="json", **make_user_auth_headers(user, token))
         # modify initial data by adding id and None for optional fields
         schedule = OnCallSchedule.objects.get(public_primary_key=response.data["id"])
@@ -818,9 +821,13 @@ def test_update_ical_schedule_url(schedule_internal_api_setup, make_user_auth_he
         "type": 1,
         "ical_url_primary": updated_url,
     }
-    with patch(
-        "apps.api.serializers.schedule_ical.ScheduleICalSerializer.validate_ical_url_primary", return_value=updated_url
-    ), patch("apps.schedules.tasks.refresh_ical_final_schedule.apply_async") as mock_refresh_final:
+    with (
+        patch(
+            "apps.api.serializers.schedule_ical.ScheduleICalSerializer.validate_ical_url_primary",
+            return_value=updated_url,
+        ),
+        patch("apps.schedules.tasks.refresh_ical_final_schedule.apply_async") as mock_refresh_final,
+    ):
         response = client.put(
             url, data=json.dumps(data), content_type="application/json", **make_user_auth_headers(user, token)
         )

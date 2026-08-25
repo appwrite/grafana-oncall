@@ -28,7 +28,7 @@ def build_subject_and_message(alert_group, emails_left):
     templated_alert = AlertEmailTemplater(alert).render()
 
     title_fallback = (
-        f"#{alert_group.inside_organization_number} " f"{DEFAULT_BACKUP_TITLE} via {alert_group.channel.verbal_name}"
+        f"#{alert_group.inside_organization_number} {DEFAULT_BACKUP_TITLE} via {alert_group.channel.verbal_name}"
     )
 
     # default templates are the same as web templates, which are in Markdown format

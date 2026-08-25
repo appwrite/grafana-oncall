@@ -362,13 +362,13 @@ class TestRBACPermission:
             ),
         )
 
-        assert (
-            permissions.RBACPermission().has_permission(MockedRequest(user_with_permission), viewset) is True
-        ), "it works on a viewset when the user does have permission"
+        assert permissions.RBACPermission().has_permission(MockedRequest(user_with_permission), viewset) is True, (
+            "it works on a viewset when the user does have permission"
+        )
 
-        assert (
-            permissions.RBACPermission().has_permission(MockedRequest(user_without_permission), viewset) is False
-        ), "it works on a viewset when the user does have permission"
+        assert permissions.RBACPermission().has_permission(MockedRequest(user_without_permission), viewset) is False, (
+            "it works on a viewset when the user does have permission"
+        )
 
         assert (
             permissions.RBACPermission().has_permission(
@@ -415,17 +415,17 @@ class TestRBACPermission:
             def __init__(self, user: typing.Optional[User] = None) -> None:
                 super().__init__(user, method)
 
-        assert (
-            permissions.RBACPermission().has_permission(Request(user1), apiview) is True
-        ), "it works on an APIView when the user has permission"
+        assert permissions.RBACPermission().has_permission(Request(user1), apiview) is True, (
+            "it works on an APIView when the user has permission"
+        )
 
-        assert (
-            permissions.RBACPermission().has_permission(Request(user2), apiview) is False
-        ), "it works on an APIView when the user does not have permission"
+        assert permissions.RBACPermission().has_permission(Request(user2), apiview) is False, (
+            "it works on an APIView when the user does not have permission"
+        )
 
-        assert (
-            permissions.RBACPermission().has_permission(Request(user2), apiview_with_no_permissions) is True
-        ), "it works on a viewset when the viewset action does not require permissions"
+        assert permissions.RBACPermission().has_permission(Request(user2), apiview_with_no_permissions) is True, (
+            "it works on a viewset when the viewset action does not require permissions"
+        )
 
     def test_has_permission_throws_assertion_error_if_developer_forgets_to_specify_rbac_permissions(self) -> None:
         action_slash_method = "hello"

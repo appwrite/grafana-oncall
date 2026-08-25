@@ -109,22 +109,16 @@ def test_apply_jinja_template_datetimeformat_as_timezone():
         "{{ payload.naive | iso8601_to_time | datetimeformat_as_timezone('%Y-%m-%dT%H:%M:%S%z', 'America/Chicago') }}",
         payload,
     ) == parse_datetime(payload["naive"]).astimezone(timezone("America/Chicago")).strftime("%Y-%m-%dT%H:%M:%S%z")
-    assert (
-        apply_jinja_template(
-            """{{ payload.aware | datetimeparse('%Y-%m-%d %H:%M:%S%z') | datetimeformat_as_timezone('%Y-%m-%dT%H:%M:%S%z',
+    assert apply_jinja_template(
+        """{{ payload.aware | datetimeparse('%Y-%m-%d %H:%M:%S%z') | datetimeformat_as_timezone('%Y-%m-%dT%H:%M:%S%z',
         'America/Chicago') }}""",
-            payload,
-        )
-        == parse_datetime(payload["aware"]).astimezone(timezone("America/Chicago")).strftime("%Y-%m-%dT%H:%M:%S%z")
-    )
-    assert (
-        apply_jinja_template(
-            """{{ payload.naive | datetimeparse('%Y-%m-%d %H:%M:%S') | datetimeformat_as_timezone('%Y-%m-%dT%H:%M:%S%z',
+        payload,
+    ) == parse_datetime(payload["aware"]).astimezone(timezone("America/Chicago")).strftime("%Y-%m-%dT%H:%M:%S%z")
+    assert apply_jinja_template(
+        """{{ payload.naive | datetimeparse('%Y-%m-%d %H:%M:%S') | datetimeformat_as_timezone('%Y-%m-%dT%H:%M:%S%z',
         'America/Chicago') }}""",
-            payload,
-        )
-        == parse_datetime(payload["naive"]).astimezone(timezone("America/Chicago")).strftime("%Y-%m-%dT%H:%M:%S%z")
-    )
+        payload,
+    ) == parse_datetime(payload["naive"]).astimezone(timezone("America/Chicago")).strftime("%Y-%m-%dT%H:%M:%S%z")
 
     with pytest.raises(JinjaTemplateWarning):
         apply_jinja_template(
@@ -198,9 +192,7 @@ def test_apply_jinja_template_b64decode():
     assert apply_jinja_template(
         "{{ payload.name | b64decode }}",
         payload,
-    ) == base64.b64decode(
-        payload["name"]
-    ).decode("utf-8")
+    ) == base64.b64decode(payload["name"]).decode("utf-8")
 
 
 def test_apply_jinja_template_json_dumps():

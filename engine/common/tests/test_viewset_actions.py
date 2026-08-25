@@ -45,9 +45,9 @@ def test_internal_api_detail_actions_get_object(
     This is required to ensure all detail actions are safe, consistent with each other and easily testable.
     """
     assert response.status_code == status.HTTP_404_NOT_FOUND, "check for 404 must come before any additional checks"
-    assert (
-        mock_get_object.call_count == 1
-    ), f"self.get_object() must be called in {viewset_class.__class__.__name__}.{action.__name__}"
+    assert mock_get_object.call_count == 1, (
+        f"self.get_object() must be called in {viewset_class.__class__.__name__}.{action.__name__}"
+    )
 
 
 @pytest.mark.parametrize(
@@ -81,6 +81,6 @@ def test_public_api_detail_actions_get_object(make_organization_and_user_with_to
     will be ignored by this test.
     """
     assert response.status_code == status.HTTP_404_NOT_FOUND, "check for 404 must come before any additional checks"
-    assert (
-        mock_get_object.call_count == 1
-    ), f"self.get_object() must be called in {viewset_class.__class__.__name__}.{action.__name__}"
+    assert mock_get_object.call_count == 1, (
+        f"self.get_object() must be called in {viewset_class.__class__.__name__}.{action.__name__}"
+    )

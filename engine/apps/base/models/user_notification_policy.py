@@ -202,9 +202,9 @@ class NotificationChannelOptions:
 class NotificationChannelAPIOptions(NotificationChannelOptions):
     LABELS = {
         UserNotificationPolicy.NotificationChannel.SLACK: "Slack mentions",
-        UserNotificationPolicy.NotificationChannel.SMS: "SMS \U00002709\U0001F4F2",
-        UserNotificationPolicy.NotificationChannel.PHONE_CALL: "Phone call \U0000260E",
-        UserNotificationPolicy.NotificationChannel.TELEGRAM: "Telegram \U0001F916",
+        UserNotificationPolicy.NotificationChannel.SMS: "SMS \U00002709\U0001f4f2",
+        UserNotificationPolicy.NotificationChannel.PHONE_CALL: "Phone call \U0000260e",
+        UserNotificationPolicy.NotificationChannel.TELEGRAM: "Telegram \U0001f916",
     }
     LABELS.update(
         {
@@ -216,7 +216,7 @@ class NotificationChannelAPIOptions(NotificationChannelOptions):
     SHORT_LABELS = {
         UserNotificationPolicy.NotificationChannel.SLACK: "Slack",
         UserNotificationPolicy.NotificationChannel.SMS: "SMS",
-        UserNotificationPolicy.NotificationChannel.PHONE_CALL: "\U0000260E",
+        UserNotificationPolicy.NotificationChannel.PHONE_CALL: "\U0000260e",
         UserNotificationPolicy.NotificationChannel.TELEGRAM: "Telegram",
     }
     SHORT_LABELS.update(

@@ -313,9 +313,9 @@ class RBACPermission(permissions.BasePermission):
         rbac_permissions: typing.Optional[RBACPermissionsAttribute] = getattr(view, RBAC_PERMISSIONS_ATTR, None)
 
         # first check that the rbac_permissions dict attribute is defined
-        assert (
-            rbac_permissions is not None
-        ), f"Must define a {RBAC_PERMISSIONS_ATTR} dict on the ViewSet that is consuming the RBACPermission class"
+        assert rbac_permissions is not None, (
+            f"Must define a {RBAC_PERMISSIONS_ATTR} dict on the ViewSet that is consuming the RBACPermission class"
+        )
 
         action_required_permissions: typing.Optional[typing.List] = rbac_permissions.get(action, None)
 

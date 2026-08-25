@@ -2,7 +2,6 @@
 [Documentation](https://api.slack.com/dialogs)
 """
 
-
 import typing
 
 from apps.slack.types.common import BaseEvent, PayloadType

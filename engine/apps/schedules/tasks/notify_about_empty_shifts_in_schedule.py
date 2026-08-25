@@ -71,10 +71,10 @@ def notify_about_empty_shifts_in_schedule_task(schedule_pk):
 
             if empty_shift.all_day:
                 if empty_shift.start.day == empty_shift.end.day:
-                    all_day_text = f'{empty_shift.start.strftime("%b %d")}\n'
+                    all_day_text = f"{empty_shift.start.strftime('%b %d')}\n"
                 else:
                     all_day_text = (
-                        f'From {empty_shift.start.strftime("%b %d")} to {empty_shift.end.strftime("%b %d")}\n'
+                        f"From {empty_shift.start.strftime('%b %d')} to {empty_shift.end.strftime('%b %d')}\n"
                     )
                 text += all_day_text
                 text += '*All-day* event in "UTC" TZ\n'

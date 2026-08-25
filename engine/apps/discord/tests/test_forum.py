@@ -49,10 +49,13 @@ def test_an_alert_group_becomes_a_forum_post(make_forum, make_alert_for):
     organization, channel = make_forum()
     alert_group, alert = make_alert_for(organization)
 
-    with patch(
-        "apps.discord.tasks.DiscordClient.create_thread",
-        return_value=DiscordAPIMessage(message_id="1300000000000000009", channel_id="1300000000000000009"),
-    ) as create_thread, patch("apps.discord.tasks.DiscordClient.create_message") as create_message:
+    with (
+        patch(
+            "apps.discord.tasks.DiscordClient.create_thread",
+            return_value=DiscordAPIMessage(message_id="1300000000000000009", channel_id="1300000000000000009"),
+        ) as create_thread,
+        patch("apps.discord.tasks.DiscordClient.create_message") as create_message,
+    ):
         on_create_alert_async(alert.pk)
 
     create_message.assert_not_called()
@@ -142,10 +145,13 @@ def test_a_text_channel_still_gets_a_plain_message(
     channel = make_discord_channel(organization=organization, is_default_channel=True)
     alert_group, alert = make_alert_for(organization)
 
-    with patch(
-        "apps.discord.tasks.DiscordClient.create_message",
-        return_value=DiscordAPIMessage(message_id="1300000000000000001", channel_id=channel.channel_id),
-    ), patch("apps.discord.tasks.DiscordClient.create_thread") as create_thread:
+    with (
+        patch(
+            "apps.discord.tasks.DiscordClient.create_message",
+            return_value=DiscordAPIMessage(message_id="1300000000000000001", channel_id=channel.channel_id),
+        ),
+        patch("apps.discord.tasks.DiscordClient.create_thread") as create_thread,
+    ):
         on_create_alert_async(alert.pk)
 
     create_thread.assert_not_called()
@@ -163,9 +169,10 @@ def test_a_retry_adopts_the_post_a_dead_attempt_already_opened(make_forum, make_
     organization, _ = make_forum()
     alert_group, alert = make_alert_for(organization)
 
-    with patch("apps.discord.tasks.DiscordClient.find_thread_for", return_value="1300000000000000009") as find, patch(
-        "apps.discord.tasks.DiscordClient.create_thread"
-    ) as create_thread:
+    with (
+        patch("apps.discord.tasks.DiscordClient.find_thread_for", return_value="1300000000000000009") as find,
+        patch("apps.discord.tasks.DiscordClient.create_thread") as create_thread,
+    ):
         run_as_retry(on_create_alert_async, alert.pk, retries=1)
 
     create_thread.assert_not_called()
@@ -178,10 +185,13 @@ def test_a_retry_with_nothing_to_adopt_opens_the_post(make_forum, make_alert_for
     organization, _ = make_forum()
     alert_group, alert = make_alert_for(organization)
 
-    with patch("apps.discord.tasks.DiscordClient.find_thread_for", return_value=None), patch(
-        "apps.discord.tasks.DiscordClient.create_thread",
-        return_value=DiscordAPIMessage(message_id="1300000000000000010", channel_id="1300000000000000010"),
-    ) as create_thread:
+    with (
+        patch("apps.discord.tasks.DiscordClient.find_thread_for", return_value=None),
+        patch(
+            "apps.discord.tasks.DiscordClient.create_thread",
+            return_value=DiscordAPIMessage(message_id="1300000000000000010", channel_id="1300000000000000010"),
+        ) as create_thread,
+    ):
         run_as_retry(on_create_alert_async, alert.pk, retries=2)
 
     create_thread.assert_called_once()
@@ -194,9 +204,12 @@ def test_the_first_attempt_does_not_go_looking(make_forum, make_alert_for):
     organization, _ = make_forum()
     _, alert = make_alert_for(organization)
 
-    with patch("apps.discord.tasks.DiscordClient.find_thread_for") as find, patch(
-        "apps.discord.tasks.DiscordClient.create_thread",
-        return_value=DiscordAPIMessage(message_id="1300000000000000011", channel_id="1300000000000000011"),
+    with (
+        patch("apps.discord.tasks.DiscordClient.find_thread_for") as find,
+        patch(
+            "apps.discord.tasks.DiscordClient.create_thread",
+            return_value=DiscordAPIMessage(message_id="1300000000000000011", channel_id="1300000000000000011"),
+        ),
     ):
         on_create_alert_async(alert.pk)
 
@@ -228,9 +241,10 @@ def test_updating_a_post_unarchives_and_retags_it_first(make_forum, make_alert_f
     )
     representative = acknowledge(alert_group)
 
-    with patch("apps.discord.alert_group_representative.DiscordClient.update_thread") as update_thread, patch(
-        "apps.discord.alert_group_representative.DiscordClient.update_message"
-    ) as update_message:
+    with (
+        patch("apps.discord.alert_group_representative.DiscordClient.update_thread") as update_thread,
+        patch("apps.discord.alert_group_representative.DiscordClient.update_message") as update_message,
+    ):
         representative.get_handler()(alert_group)
 
     # Discord refuses an edit to an archived post, so unarchiving happens in the same call that retags it.
@@ -259,9 +273,10 @@ def test_updating_a_channel_message_touches_no_thread(
     message = make_discord_message(alert_group=alert_group, message_type=DiscordMessage.ALERT_GROUP_MESSAGE)
     representative = acknowledge(alert_group)
 
-    with patch("apps.discord.alert_group_representative.DiscordClient.update_thread") as update_thread, patch(
-        "apps.discord.alert_group_representative.DiscordClient.update_message"
-    ) as update_message:
+    with (
+        patch("apps.discord.alert_group_representative.DiscordClient.update_thread") as update_thread,
+        patch("apps.discord.alert_group_representative.DiscordClient.update_message") as update_message,
+    ):
         representative.get_handler()(alert_group)
 
     update_thread.assert_not_called()

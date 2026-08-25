@@ -277,9 +277,9 @@ class IntegrationSerializer(EagerLoadingMixin, serializers.ModelSerializer, Main
             if template_backend_name in TEMPLATES_WITH_SEPARATE_DB_FIELD:
                 if type(template_from_request) is str:  # if it's plain template: {"resolve_signal": "resolve me"}
                     try:
-                        validated_data[
-                            TEMPLATE_PUBLIC_API_NAME_TO_DB_FIELD[template_backend_name]
-                        ] = template_from_request
+                        validated_data[TEMPLATE_PUBLIC_API_NAME_TO_DB_FIELD[template_backend_name]] = (
+                            template_from_request
+                        )
                     except KeyError:
                         raise BadRequest(detail="Invalid template data")
                 elif type(template_from_request) is dict:  # if it's nested template: {slack: {"title": "some title"}}

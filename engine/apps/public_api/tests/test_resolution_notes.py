@@ -391,11 +391,14 @@ def test_create_resolution_note_grafana_auth(make_organization_and_user, make_al
     grafana_sa_auth = GrafanaServiceAccountAuthentication()
 
     # GrafanaServiceAccountAuthentication handles empty auth
-    with patch(
-        "apps.auth_token.auth.ApiTokenAuthentication.authenticate", wraps=api_token_auth.authenticate
-    ) as mock_api_key_auth, patch(
-        "apps.auth_token.auth.GrafanaServiceAccountAuthentication.authenticate", wraps=grafana_sa_auth.authenticate
-    ) as mock_grafana_auth:
+    with (
+        patch(
+            "apps.auth_token.auth.ApiTokenAuthentication.authenticate", wraps=api_token_auth.authenticate
+        ) as mock_api_key_auth,
+        patch(
+            "apps.auth_token.auth.GrafanaServiceAccountAuthentication.authenticate", wraps=grafana_sa_auth.authenticate
+        ) as mock_grafana_auth,
+    ):
         response = client.post(url, data=data, format="json")
         mock_grafana_auth.assert_called_once()
         mock_api_key_auth.assert_not_called()
@@ -403,11 +406,14 @@ def test_create_resolution_note_grafana_auth(make_organization_and_user, make_al
 
     token = "abc123"
     # GrafanaServiceAccountAuthentication passes through api key auth
-    with patch(
-        "apps.auth_token.auth.ApiTokenAuthentication.authenticate", wraps=api_token_auth.authenticate
-    ) as mock_api_key_auth, patch(
-        "apps.auth_token.auth.GrafanaServiceAccountAuthentication.authenticate", wraps=grafana_sa_auth.authenticate
-    ) as mock_grafana_auth:
+    with (
+        patch(
+            "apps.auth_token.auth.ApiTokenAuthentication.authenticate", wraps=api_token_auth.authenticate
+        ) as mock_api_key_auth,
+        patch(
+            "apps.auth_token.auth.GrafanaServiceAccountAuthentication.authenticate", wraps=grafana_sa_auth.authenticate
+        ) as mock_grafana_auth,
+    ):
         response = client.post(url, data=data, format="json", HTTP_AUTHORIZATION=f"{token}")
         mock_grafana_auth.assert_called_once()
         mock_api_key_auth.assert_called_once()
@@ -415,11 +421,14 @@ def test_create_resolution_note_grafana_auth(make_organization_and_user, make_al
 
     token = f"{ServiceAccountToken.GRAFANA_SA_PREFIX}123"
     # GrafanaServiceAccountAuthentication handle invalid token
-    with patch(
-        "apps.auth_token.auth.ApiTokenAuthentication.authenticate", wraps=api_token_auth.authenticate
-    ) as mock_api_key_auth, patch(
-        "apps.auth_token.auth.GrafanaServiceAccountAuthentication.authenticate", wraps=grafana_sa_auth.authenticate
-    ) as mock_grafana_auth:
+    with (
+        patch(
+            "apps.auth_token.auth.ApiTokenAuthentication.authenticate", wraps=api_token_auth.authenticate
+        ) as mock_api_key_auth,
+        patch(
+            "apps.auth_token.auth.GrafanaServiceAccountAuthentication.authenticate", wraps=grafana_sa_auth.authenticate
+        ) as mock_grafana_auth,
+    ):
         response = client.post(url, data=data, format="json", HTTP_AUTHORIZATION=f"{token}")
         mock_grafana_auth.assert_called_once()
         mock_api_key_auth.assert_not_called()

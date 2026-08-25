@@ -1,14 +1,25 @@
-[tool.isort]
-profile = "black"
-line_length=120
-float_to_top=true
-py_version=311
-extend_skip_glob = "**/migrations/**"
-
-[tool.black]
+[tool.ruff]
 line-length = 120
-target-version = ["py311"]
-force-exclude = "migrations"
+target-version = "py313"
+extend-exclude = ["migrations"]
+
+[tool.ruff.lint]
+# The flake8 setup this replaces: pycodestyle/pyflakes defaults plus flake8-bugbear (B) and
+# flake8-tidy-imports (TID), with isort (I) folded in.
+select = ["E", "F", "W", "B", "I", "TID"]
+# Never enforced here before ruff; ~200 pre-existing sites. Lift when someone sweeps them.
+ignore = ["B904", "B905"]
+
+[tool.ruff.lint.pycodestyle]
+# The formatter wraps at 120; a line only it cannot split is tolerated up to here.
+max-line-length = 180
+
+[tool.ruff.lint.flake8-tidy-imports]
+ban-relative-imports = "parents"
+
+[tool.ruff.lint.flake8-tidy-imports.banned-api]
+"jinja2.Template".msg = "Use apply_jinja_template instead"
+"django.apps.apps".msg = "Import models directly instead"
 
 [tool.mypy]
 mypy_path = "$MYPY_CONFIG_FILE_DIR/type_stubs"

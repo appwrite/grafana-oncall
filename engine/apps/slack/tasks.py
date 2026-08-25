@@ -591,7 +591,7 @@ def populate_slack_channels_for_team(slack_team_identity_id: int, cursor: typing
             delay = random.randint(1, 3) * 60
             logger.warning(
                 f"'conversations.list' slack api error: rate_limited. SlackTeamIdentity pk: {slack_team_identity_id}. "
-                f"Delay populate_slack_channels_for_team task for {delay//60} min."
+                f"Delay populate_slack_channels_for_team task for {delay // 60} min."
             )
             start_populate_slack_channels_for_team(slack_team_identity_id, delay, cursor)
         else:

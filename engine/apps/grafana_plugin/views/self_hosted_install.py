@@ -37,9 +37,9 @@ class SelfHostedInstallView(GrafanaHeadersMixin, APIView):
             provisioning_info["error"] = f"Unable to connect to the specified Grafana API - {grafana_url}"
             return Response(data=provisioning_info, status=status.HTTP_400_BAD_REQUEST)
         elif status_code in [status.HTTP_401_UNAUTHORIZED, status.HTTP_403_FORBIDDEN]:
-            provisioning_info[
-                "error"
-            ] = f"You are not authorized to communicate with the specified Grafana API - {grafana_url}"
+            provisioning_info["error"] = (
+                f"You are not authorized to communicate with the specified Grafana API - {grafana_url}"
+            )
             return Response(data=provisioning_info, status=status.HTTP_400_BAD_REQUEST)
 
         organization = Organization.objects.filter(stack_id=stack_id, org_id=org_id).first()

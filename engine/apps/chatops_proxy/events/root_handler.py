@@ -19,15 +19,15 @@ class ChatopsEventsHandler:
         handle iterates over all handlers and chooses the first one that matches the event.
         Returns True if a handler was found and False otherwise.
         """
-        logger.info(f"msg=\"ChatopsEventsHandler: Handling\" event_type={event_data.get('event_type')}")
+        logger.info(f'msg="ChatopsEventsHandler: Handling" event_type={event_data.get("event_type")}')
         for h in self.HANDLERS:
             if h.match(event_data):
                 logger.info(
-                    f"msg=\"ChatopsEventsHandler: Found matching handler {h.__name__}\" event_type={event_data.get('event_type')}"
+                    f'msg="ChatopsEventsHandler: Found matching handler {h.__name__}" event_type={event_data.get("event_type")}'
                 )
                 self._exec(h.handle, event_data.get("data", {}))
                 return True
-        logger.error(f"msg=\"ChatopsEventsHandler: No handler found\" event_type={event_data.get('event_type')}")
+        logger.error(f'msg="ChatopsEventsHandler: No handler found" event_type={event_data.get("event_type")}')
         return False
 
     def _exec(self, handlefunc: typing.Callable[[dict], None], data: dict):

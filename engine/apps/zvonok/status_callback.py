@@ -62,8 +62,7 @@ def update_zvonok_call_status(call_id: str, call_status: str, user_choice: Optio
         )
         log_record.save()
         logger.info(
-            f"zvonok.update_zvonok_call_status: created log_record log_record_id={log_record.id} "
-            f"type={log_record_type}"
+            f"zvonok.update_zvonok_call_status: created log_record log_record_id={log_record.id} type={log_record_type}"
         )
 
         user_notification_action_triggered_signal.send(sender=update_zvonok_call_status, log_record=log_record)

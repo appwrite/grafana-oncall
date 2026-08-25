@@ -25,5 +25,5 @@ def increase_public_primary_key_length(
             prefix=prefix, length=settings.PUBLIC_PRIMARY_KEY_MIN_LENGTH + failure_counter
         )
     raise FieldError(
-        f"A count of {model_name} new_public_primary_key generation " f"attempts is more than {max_attempt_count}!"
+        f"A count of {model_name} new_public_primary_key generation attempts is more than {max_attempt_count}!"
     )

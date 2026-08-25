@@ -1265,7 +1265,7 @@ def test_current_personal_notification(
 ):
     organization, user, token = make_organization_and_user_with_plugin_token()
     with pytest.raises(ObjectDoesNotExist):
-        user.personal_webhook
+        _ = user.personal_webhook
 
     webhook = make_custom_webhook(organization, trigger_type=Webhook.TRIGGER_PERSONAL_NOTIFICATION)
 
@@ -1298,7 +1298,7 @@ def test_set_personal_notification(
 ):
     organization, user, token = make_organization_and_user_with_plugin_token()
     with pytest.raises(ObjectDoesNotExist):
-        user.personal_webhook
+        _ = user.personal_webhook
 
     webhook = make_custom_webhook(organization, trigger_type=Webhook.TRIGGER_PERSONAL_NOTIFICATION)
     other_webhook = make_custom_webhook(organization, trigger_type=Webhook.TRIGGER_MANUAL)

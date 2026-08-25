@@ -216,7 +216,7 @@ def _mailgun_inbound_email_payload(sender_email, to_email, subject, message):
         "Message-Id": "<example-message-id@mail.example.com>",
         "Mime-Version": "1.0",
         "Received": (
-            f"by mail.example.com with SMTP id example-id for <{to_email}>; " "Mon, 11 Nov 2024 08:10:15 -0800 (PST)"
+            f"by mail.example.com with SMTP id example-id for <{to_email}>; Mon, 11 Nov 2024 08:10:15 -0800 (PST)"
         ),
         "Subject": subject,
         "To": to_email,
@@ -399,9 +399,7 @@ def test_mailgun_provider_load(
 
         Hello!
         --94eb2c05e174adb140055b6339c5--
-        """.format(
-                recipients=recipients
-            )
+        """.format(recipients=recipients)
         ),
     }
 

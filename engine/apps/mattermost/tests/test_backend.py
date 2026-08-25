@@ -14,7 +14,7 @@ def test_unlink_user(make_organization_and_user, make_mattermost_user):
     user.refresh_from_db()
 
     with pytest.raises(User.mattermost_user_identity.RelatedObjectDoesNotExist):
-        user.mattermost_user_identity
+        _ = user.mattermost_user_identity
 
 
 @pytest.mark.django_db

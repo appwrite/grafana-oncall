@@ -4,6 +4,7 @@ It's expected that error codes will use 1000-9999 codes range, where first two d
 11xx - AlertGroup, 12xx - AlertReceiveChannel, etc.
 10xx are saved for non-entity related errors.
 """
+
 # TODO: this package is WIP. It requires validation of code ranges.
 from enum import Enum, unique
 

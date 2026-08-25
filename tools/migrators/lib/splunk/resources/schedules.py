@@ -319,9 +319,9 @@ class RotationShift:
             duration = self.duration
         elif self.shift_type == "pho":
             duration = self._calculate_partial_day_duration_from_mask()
-            extra_kwargs[
-                "by_day"
-            ] = self._calculate_by_days_from_partial_day_shift_mask()
+            extra_kwargs["by_day"] = (
+                self._calculate_by_days_from_partial_day_shift_mask()
+            )
         elif self.shift_type == "cstm":
             num_days = self.duration.days
 

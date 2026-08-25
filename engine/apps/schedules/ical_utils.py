@@ -488,9 +488,9 @@ def get_cached_oncall_users_for_multiple_schedules(schedules: typing.List["OnCal
     new_results_to_update_in_cache: typing.Dict[str, typing.List[str]] = {}
     for schedule, oncall_users in results.items():
         oncall_user_public_primary_keys = [user.public_primary_key for user in oncall_users]
-        new_results_to_update_in_cache[
-            _generate_cache_key_for_schedule_oncall_users(schedule)
-        ] = oncall_user_public_primary_keys
+        new_results_to_update_in_cache[_generate_cache_key_for_schedule_oncall_users(schedule)] = (
+            oncall_user_public_primary_keys
+        )
 
     cache.set_many(new_results_to_update_in_cache, timeout=SCHEDULE_ONCALL_CACHE_TTL)
 
