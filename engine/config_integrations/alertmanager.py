@@ -255,12 +255,18 @@ discord_message = """\
 {% else -%}
 {% set prose = "" -%}
 {% endif -%}
+{# "Carries" means says as a word of its own: matching anywhere in the sentence read `shard: 1` into "12 jobs"
+   and dropped the one label telling two shards apart. -#}
+{% set carried = [] -%}
+{% for token in prose.split() -%}
+{% set _ = carried.append(token | trim("`.,:;!?()[]{}" ~ '"' ~ "'")) -%}
+{% endfor -%}
 {% set apart = [] -%}
 {% for key, value in instance.get("labels", {}).items()
    if key not in said_elsewhere
    and not key.startswith("__")
    and agreed.get(key) != value
-   and (value | string) not in prose -%}
+   and (value | string) not in carried -%}
 {% set _ = apart.append(pair(key, value) | trim) -%}
 {% endfor -%}
 {% if prose and apart -%}

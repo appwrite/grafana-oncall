@@ -593,9 +593,11 @@ def test_a_card_names_each_instance_a_group_holds(integration):
     lines = rendered.splitlines()
 
     assert "**Summaries**" in lines
+    # The sentence says the queue and the cluster as words of their own; the region hides in the cluster's name
+    # as a syllable, which is not saying it, so the line carries it.
     for instance in (
-        "- The `builds` queue on `cloud-fra1-prod` gained 2384 failed jobs in an hour.",
-        "- The `domains` queue on `cloud-syd1-prod` gained 12825 failed jobs in an hour.",
+        "- The `builds` queue on `cloud-fra1-prod` gained 2384 failed jobs in an hour. — deployment_region_name: `fra`",
+        "- The `domains` queue on `cloud-syd1-prod` gained 12825 failed jobs in an hour. — deployment_region_name: `syd`",
     ):
         assert instance in lines, f"{instance} should be a line of its own"
     # The names that only the instances carry, which is the whole reason the card lists them.
@@ -812,6 +814,67 @@ def test_an_instance_line_does_not_repeat_what_its_summary_already_says(integrat
     assert "- The `domains` queue on `cloud-syd1-prod` has failed 12 more jobs." in lines
     # The labels the sentence already carries are not appended to it.
     assert not any("service_name:" in line for line in lines)
+
+
+@pytest.mark.parametrize("integration", ["alertmanager", "grafana_alerting"])
+def test_a_summary_carries_a_label_as_a_word_and_not_as_a_syllable(integration):
+    """A sentence carries a label when it says it as a word of its own, not when the characters happen to occur.
+
+    Matched anywhere in the sentence, `shard: 1` was read into "12 jobs" and dropped, and with every alert
+    written the same sentence the lines collapsed to one — the very defect naming instances was meant to fix,
+    reachable again through any label short enough to hide inside a number.
+    """
+    rendered = apply_jinja_template(
+        import_module(f"config_integrations.{integration}").discord_message,
+        payload={
+            "groupLabels": {"alertname": "Queue has failed jobs"},
+            "commonLabels": {"alertname": "Queue has failed jobs", "team": "cloud"},
+            "commonAnnotations": {},
+            "alerts": [
+                {"status": "firing", "labels": {"alertname": "Queue has failed jobs", "team": "cloud", "shard": shard},
+                 "annotations": {"summary": "The queue gained 12 failed jobs."}}
+                for shard in ("1", "2")
+            ],
+        },
+        source_link="",
+        integration_name="Grafana Alerting",
+    )
+    lines = rendered.splitlines()
+
+    assert "- The queue gained 12 failed jobs. — shard: `1`" in lines
+    assert "- The queue gained 12 failed jobs. — shard: `2`" in lines
+
+
+@pytest.mark.parametrize("integration", ["alertmanager", "grafana_alerting"])
+def test_a_summary_carries_a_label_even_wrapped_in_punctuation(integration):
+    """The word the sentence says arrives fenced in backticks or trailed by a period, and is still that word."""
+    rendered = apply_jinja_template(
+        import_module(f"config_integrations.{integration}").discord_message,
+        payload={
+            "groupLabels": {"alertname": "Queue has failed jobs"},
+            "commonLabels": {"alertname": "Queue has failed jobs"},
+            "commonAnnotations": {},
+            "alerts": [
+                {"status": "firing",
+                 "labels": {"alertname": "Queue has failed jobs", "service_name": "builds",
+                            "k8s_cluster_name": "cloud-fra1-prod"},
+                 "annotations": {"summary": "The `builds` queue failed on cloud-fra1-prod."}},
+                {"status": "firing",
+                 "labels": {"alertname": "Queue has failed jobs", "service_name": "domains",
+                            "k8s_cluster_name": "cloud-syd1-prod"},
+                 "annotations": {"summary": "The `domains` queue failed on cloud-syd1-prod."}},
+            ],
+        },
+        source_link="",
+        integration_name="Grafana Alerting",
+    )
+    lines = rendered.splitlines()
+
+    # `builds` sits in backticks and cloud-fra1-prod before a period; the sentence carries both, so no label
+    # is appended to it.
+    assert "- The `builds` queue failed on cloud-fra1-prod." in lines
+    assert "- The `domains` queue failed on cloud-syd1-prod." in lines
+    assert not any("service_name:" in line or "k8s_cluster_name:" in line for line in lines)
 
 
 @pytest.mark.parametrize("integration", ["alertmanager", "grafana_alerting"])
