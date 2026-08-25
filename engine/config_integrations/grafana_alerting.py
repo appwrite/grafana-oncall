@@ -243,6 +243,17 @@ discord_message = """\
 {% endfor -%}
 
 {% set summary = annotations.get("summary") -%}
+{# A sentence every instance says is the group's summary, whichever field the sender put it in: repeated on a
+   line per instance it reads as a list saying one thing. -#}
+{% if not summary and (instances | length) > 1 -%}
+{% set owns = [] -%}
+{% for instance in instances -%}
+{% set _ = owns.append(instance.get("annotations", {}).get("summary")) -%}
+{% endfor -%}
+{% if owns[0] and owns | unique | list | length == 1 -%}
+{% set summary = owns[0] -%}
+{% endif -%}
+{% endif -%}
 {% set description = annotations.get("description") -%}
 
 {# What identifies an instance is the labels the group does not share; a summary is prose that usually names them
@@ -250,10 +261,14 @@ discord_message = """\
    summary above, and then adds whichever of its own labels that sentence does not carry. A rule that writes
    every instance the same sentence identifies none of them, and then the labels are all a line has to go on. -#}
 {% set summaries = [] -%}
+{% set apart_keys = [] -%}
+{% set apart_values = [] -%}
+{% set prose_lines = [] -%}
 {% for instance in instances -%}
 {% set own = instance.get("annotations", {}).get("summary") -%}
 {% if own and own != summary -%}
 {% set prose = (own | string).split() | join(" ") -%}
+{% set _ = prose_lines.append(prose) -%}
 {% else -%}
 {% set prose = "" -%}
 {% endif -%}
@@ -270,6 +285,13 @@ discord_message = """\
    and agreed.get(key) != value
    and (value | string) not in carried -%}
 {% set _ = apart.append(pair(key, value) | trim) -%}
+{% if key not in apart_keys -%}
+{% set _ = apart_keys.append(key) -%}
+{% endif -%}
+{% set flat = (value | string).split() | join(" ") -%}
+{% if flat not in apart_values -%}
+{% set _ = apart_values.append(flat) -%}
+{% endif -%}
 {% endfor -%}
 {% if prose and apart -%}
 {% set line = prose ~ " — " ~ (apart | join(", ")) -%}
@@ -283,6 +305,11 @@ discord_message = """\
 {% set _ = summaries.append(line) -%}
 {% endif -%}
 {% endfor -%}
+
+{# One label alone telling the instances apart gathers onto one line: a list of lines saying nothing but
+   `shard: 1` and `shard: 2` is a worse way to write `shard: 1, 2`. Two or more keys stay a line per
+   instance, because which value came with which is the information. -#}
+{% set gathered = (instances | length) > 1 and apart_keys | length == 1 and not prose_lines -%}
 
 {# The prose above and the link buttons are not repeated as lines to copy out of. `value_string` is the long form
    of `values`, dropped only when there is a `values` to read instead of it. -#}
@@ -309,7 +336,7 @@ discord_message = """\
 
 {# A group of one has said its summary above. A group of many says one per instance, even when only one of them
    turned out to carry anything of its own: that line is then the only thing naming what failed. -#}
-{% if summaries and (instances | length) > 1 %}
+{% if summaries and not gathered and (instances | length) > 1 %}
 **Summaries**
 {% for line in summaries[:20] -%}
 - {{ line }}
@@ -329,11 +356,17 @@ discord_message = """\
 {% endfor -%}
 {% endif -%}
 
-{% if agreed.keys() | reject("in", grouped_by) | list %}
+{% if agreed.keys() | reject("in", grouped_by) | list or gathered %}
 **Labels**
 {% for key, value in agreed.items() if key not in grouped_by -%}
 - {{ pair(key, value) | trim }}
 {% endfor -%}
+{% if gathered -%}
+- {{ apart_keys[0] }}: {% for value in apart_values[:20] -%}
+{{ value if "`" in value else "`" ~ value ~ "`" }}{{ ", " if not loop.last }}
+{%- endfor -%}
+{{ " and " ~ (apart_values | length - 20) ~ " more" if apart_values | length > 20 }}
+{% endif -%}
 {% endif -%}
 
 {% if notes %}

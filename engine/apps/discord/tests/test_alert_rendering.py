@@ -820,9 +820,38 @@ def test_an_instance_line_does_not_repeat_what_its_summary_already_says(integrat
 def test_a_summary_carries_a_label_as_a_word_and_not_as_a_syllable(integration):
     """A sentence carries a label when it says it as a word of its own, not when the characters happen to occur.
 
-    Matched anywhere in the sentence, `shard: 1` was read into "12 jobs" and dropped, and with every alert
-    written the same sentence the lines collapsed to one — the very defect naming instances was meant to fix,
-    reachable again through any label short enough to hide inside a number.
+    Matched anywhere in the sentence, `shard: 1` was read into "12 jobs" and dropped — and a label dropped is
+    an instance the card no longer tells apart, reachable through any label short enough to hide inside a
+    number.
+    """
+    rendered = apply_jinja_template(
+        import_module(f"config_integrations.{integration}").discord_message,
+        payload={
+            "groupLabels": {"alertname": "Queue has failed jobs"},
+            "commonLabels": {"alertname": "Queue has failed jobs", "team": "cloud"},
+            "commonAnnotations": {},
+            "alerts": [
+                {"status": "firing", "labels": {"alertname": "Queue has failed jobs", "team": "cloud", "shard": shard},
+                 "annotations": {"summary": f"The queue gained 1{shard} failed jobs."}}
+                for shard in ("1", "3")
+            ],
+        },
+        source_link="",
+        integration_name="Grafana Alerting",
+    )
+    lines = rendered.splitlines()
+
+    assert "- The queue gained 11 failed jobs. — shard: `1`" in lines
+    assert "- The queue gained 13 failed jobs. — shard: `3`" in lines
+
+
+@pytest.mark.parametrize("integration", ["alertmanager", "grafana_alerting"])
+def test_a_lone_varying_label_gathers_onto_one_line(integration):
+    """One label alone telling the instances apart gathers onto one line.
+
+    A sentence every instance says is the group's summary, whichever field the sender put it in, so it is said
+    once at the top. What is left telling the instances apart is one label, and a list of lines saying nothing
+    but `shard: 1` and `shard: 2` is a worse way to write `shard: 1, 2`.
     """
     rendered = apply_jinja_template(
         import_module(f"config_integrations.{integration}").discord_message,
@@ -841,8 +870,39 @@ def test_a_summary_carries_a_label_as_a_word_and_not_as_a_syllable(integration):
     )
     lines = rendered.splitlines()
 
-    assert "- The queue gained 12 failed jobs. — shard: `1`" in lines
-    assert "- The queue gained 12 failed jobs. — shard: `2`" in lines
+    assert "**Summaries**" not in lines
+    assert "- shard: `1`, `2`" in lines
+    assert rendered.count("The queue gained 12 failed jobs.") == 1
+    assert lines[0] == "The queue gained 12 failed jobs."
+
+
+@pytest.mark.parametrize("integration", ["alertmanager", "grafana_alerting"])
+def test_two_varying_labels_stay_a_line_per_instance(integration):
+    """Two or more keys stay a line per instance, because which value came with which is the information.
+
+    Gathered per key, `region: fra, syd` and `node: node-1, node-2` no longer say which node is in which
+    region. The shared sentence is still said once at the top rather than on every line.
+    """
+    rendered = apply_jinja_template(
+        import_module(f"config_integrations.{integration}").discord_message,
+        payload={
+            "groupLabels": {"alertname": "Disk filling"},
+            "commonLabels": {"alertname": "Disk filling", "team": "cloud"},
+            "commonAnnotations": {},
+            "alerts": [
+                _disk_alert("fra", "node-1", "Disk is nearly full."),
+                _disk_alert("syd", "node-2", "Disk is nearly full."),
+            ],
+        },
+        source_link="",
+        integration_name="Grafana Alerting",
+    )
+    lines = rendered.splitlines()
+
+    assert lines[0] == "Disk is nearly full."
+    assert rendered.count("Disk is nearly full.") == 1
+    assert "- region: `fra`, instance: `node-1`" in lines
+    assert "- region: `syd`, instance: `node-2`" in lines
 
 
 @pytest.mark.parametrize("integration", ["alertmanager", "grafana_alerting"])
