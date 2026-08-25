@@ -18,7 +18,7 @@ overrides:
   '@babel/core@<7.29.6': '>=7.29.6 <8'
   '@opentelemetry/core@<2.8.0': '>=2.8.0 <3'
   '@protobufjs/utf8@<1.1.1': '>=1.1.1 <2'
-  '@remix-run/router@<1.23.3': '>=1.23.3 <2'
+  '@remix-run/router@<1.23.4': '>=1.23.4 <2'
   ajv@<6.14.0: '>=6.14.0 <7'
   ajv@>=7.0.0 <8.18.0: '>=8.18.0 <9'
   brace-expansion@<1.1.18: '>=1.1.18 <2'
@@ -47,7 +47,7 @@ overrides:
   protobufjs@<7.6.3: '>=7.6.3 <8'
   protocol-buffers-schema@<3.6.1: '>=3.6.1 <4'
   qs@<6.15.2: '>=6.15.2 <7'
-  react-router@>=6.0.0 <6.30.4: '>=6.30.4 <7'
+  react-router@>=6.0.0 <6.30.6: '>=6.30.6 <7'
   serialize-javascript@<7.0.5: '>=7.0.5 <8'
   uuid@>=9.0.0 <11.1.1: '>=11.1.1 <12'
   webpack@>=5.49.0 <5.104.1: '>=5.104.1 <6'
@@ -1488,8 +1488,8 @@ packages:
     resolution: {integrity: sha512-pjr456gJzrbwPvBjFKlWOd9nZEcr/dp6XSH0c8ijWGWv5K+V0vpUUy2zaTAVsFAoCydx1miEoOcbLhWQ9WC2nw==}
     engines: {node: '>=14.19.0', npm: '>=7.0.0'}
 
-  '@remix-run/router@1.23.3':
-    resolution: {integrity: sha512-4An71tdz9X8+3sI4Qqqd2LWd9vS39J7sqd9EU4Scw7TJE/qB10Flv/UuqbPVgfQV9XoK8Np6jNquZitnZq5i+Q==}
+  '@remix-run/router@1.23.4':
+    resolution: {integrity: sha512-q7j5geK7xs3UJSdm9/iytUNclBnLmYx1EnSeCFXHPeutdqgIMeFeHtUZgS3EhlKxdBEAu8OwtJCwmLrEzpSs7Q==}
     engines: {node: '>=14.0.0'}
 
   '@sinclair/typebox@0.27.8':
@@ -5671,8 +5671,8 @@ packages:
     peerDependencies:
       react: '>=15'
 
-  react-router@6.30.4:
-    resolution: {integrity: sha512-SVUsDe+DybHM/WmYKIVYhZh1o5Dcuf16yM6WjG02Q9XVFMZIJyHYhwrr6bFBXZkVP6z69kNkMyBCujt8FaFLJA==}
+  react-router@6.30.6:
+    resolution: {integrity: sha512-5HfK7k5im7LTOB0EqCQmfvy4C13G92Ssj1VTmouTK3AJvyjKTnFuCV0vcMAD/JS+JC4DvDIBRrlAeJIFjh5VWg==}
     engines: {node: '>=14.0.0'}
     peerDependencies:
       react: '>=16.8'
@@ -7760,7 +7760,7 @@ snapshots:
 
   '@grafana/eslint-config@6.0.1':
     dependencies:
-      '@typescript-eslint/eslint-plugin': 5.59.9(@typescript-eslint/parser@5.59.9(eslint@8.42.0)(typescript@4.8.4))(eslint@8.42.0)(typescript@4.8.4)
+      '@typescript-eslint/eslint-plugin': 5.59.9(@typescript-eslint/parser@5.59.9(eslint@8.57.0)(typescript@5.1.6))(eslint@8.42.0)(typescript@4.8.4)
       '@typescript-eslint/parser': 5.59.9(eslint@8.42.0)(typescript@4.8.4)
       eslint: 8.42.0
       eslint-config-prettier: 8.8.0(eslint@8.42.0)
@@ -8643,7 +8643,7 @@ snapshots:
       - encoding
       - supports-color
 
-  '@remix-run/router@1.23.3': {}
+  '@remix-run/router@1.23.4': {}
 
   '@sinclair/typebox@0.27.8': {}
 
@@ -9008,7 +9008,7 @@ snapshots:
     dependencies:
       '@types/yargs-parser': 21.0.3
 
-  '@typescript-eslint/eslint-plugin@5.59.9(@typescript-eslint/parser@5.59.9(eslint@8.42.0)(typescript@4.8.4))(eslint@8.42.0)(typescript@4.8.4)':
+  '@typescript-eslint/eslint-plugin@5.59.9(@typescript-eslint/parser@5.59.9(eslint@8.57.0)(typescript@5.1.6))(eslint@8.42.0)(typescript@4.8.4)':
     dependencies:
       '@eslint-community/regexpp': 4.11.0
       '@typescript-eslint/parser': 5.59.9(eslint@8.42.0)(typescript@4.8.4)
@@ -13457,11 +13457,11 @@ snapshots:
 
   react-router-dom-v5-compat@6.26.1(react-dom@18.2.0(react@18.2.0))(react-router-dom@5.3.3(react@18.2.0))(react@18.2.0):
     dependencies:
-      '@remix-run/router': 1.23.3
+      '@remix-run/router': 1.23.4
       history: 5.3.0
       react: 18.2.0
       react-dom: 18.2.0(react@18.2.0)
-      react-router: 6.30.4(react@18.2.0)
+      react-router: 6.30.6(react@18.2.0)
       react-router-dom: 5.3.3(react@18.2.0)
 
   react-router-dom@5.3.3(react@18.2.0):
@@ -13489,9 +13489,9 @@ snapshots:
       tiny-invariant: 1.3.3
       tiny-warning: 1.0.3
 
-  react-router@6.30.4(react@18.2.0):
+  react-router@6.30.6(react@18.2.0):
     dependencies:
-      '@remix-run/router': 1.23.3
+      '@remix-run/router': 1.23.4
       react: 18.2.0
 
   react-select@5.8.0(@types/react@18.2.0)(react-dom@18.2.0(react@18.2.0))(react@18.2.0):

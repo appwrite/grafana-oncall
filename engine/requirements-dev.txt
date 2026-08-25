@@ -121,7 +121,7 @@ requests==2.34.2
     #   responses
 responses==0.25.8
     # via -r requirements-dev.in
-sqlparse==0.5.5
+sqlparse==0.6.0
     # via
     #   -c requirements.txt
     #   django

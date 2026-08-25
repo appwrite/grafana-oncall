@@ -442,7 +442,7 @@ social-auth-core==5.1.0
     # via social-auth-app-django
 soupsieve==2.9.2
     # via beautifulsoup4
-sqlparse==0.5.5
+sqlparse==0.6.0
     # via
     #   django
     #   django-debug-toolbar
