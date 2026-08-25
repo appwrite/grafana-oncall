@@ -535,6 +535,487 @@ def test_a_card_says_something_when_the_alert_carries_no_annotations():
     assert "- instance: `localhost:8082`" in rendered.splitlines()
 
 
+# The default Grafana route groups by grafana_folder and alertname only, so one rule watching many workers in many
+# regions arrives as a single group. service_name differs between the instances, which keeps it out of
+# commonLabels, and each summary is written from it, which keeps every summary out of commonAnnotations.
+QUEUE_FAILURES_PAYLOAD = {
+    "status": "firing",
+    "groupLabels": {"alertname": "Queue has failed jobs"},
+    "commonLabels": {
+        "alertname": "Queue has failed jobs",
+        "deployment_cluster_name": "cloud",
+        "grafana_folder": "Utopia",
+        "severity": "warning",
+        "team": "cloud",
+    },
+    "commonAnnotations": {"description": "This alert starts when a queue is holding more failed jobs than it was."},
+    "alerts": [
+        {
+            "status": "firing",
+            "labels": {
+                "alertname": "Queue has failed jobs",
+                "deployment_region_name": "fra",
+                "k8s_cluster_name": "cloud-fra1-prod",
+                "service_name": "builds",
+                "severity": "warning",
+            },
+            "annotations": {"summary": "The `builds` queue on `cloud-fra1-prod` gained 2384 failed jobs in an hour."},
+        },
+        {
+            "status": "firing",
+            "labels": {
+                "alertname": "Queue has failed jobs",
+                "deployment_region_name": "syd",
+                "k8s_cluster_name": "cloud-syd1-prod",
+                "service_name": "domains",
+                "severity": "warning",
+            },
+            "annotations": {"summary": "The `domains` queue on `cloud-syd1-prod` gained 12825 failed jobs in an hour."},
+        },
+    ],
+}
+
+
+@pytest.mark.parametrize("integration", ["alertmanager", "grafana_alerting"])
+def test_a_card_names_each_instance_a_group_holds(integration):
+    """A group of many says what is in it.
+
+    The card can only print what the instances share, and what they share is the part that does not identify
+    them. Without a line per instance the reader is told a queue somewhere has failed jobs and not which queue.
+    """
+    config = import_module(f"config_integrations.{integration}")
+    rendered = apply_jinja_template(
+        config.discord_message,
+        payload=QUEUE_FAILURES_PAYLOAD,
+        source_link="https://grafana.example/alerting/list",
+        integration_name="Grafana Alerting",
+    )
+    lines = rendered.splitlines()
+
+    assert "**Summaries**" in lines
+    for instance in (
+        "- The `builds` queue on `cloud-fra1-prod` gained 2384 failed jobs in an hour.",
+        "- The `domains` queue on `cloud-syd1-prod` gained 12825 failed jobs in an hour.",
+    ):
+        assert instance in lines, f"{instance} should be a line of its own"
+    # The sentence says the queue and the cluster as words of their own; the region hides in the cluster's name
+    # as a syllable, which is not saying it, so it is kept — gathered by key rather than trailing the sentence.
+    assert "- deployment_region_name: `fra`, `syd`" in lines
+    # The names that only the instances carry, which is the whole reason the card lists them.
+    for name in ("builds", "domains", "cloud-fra1-prod", "cloud-syd1-prod"):
+        assert name in rendered, f"{name} is in no common label and would be lost"
+    # What they do share is still said once, above.
+    assert "This alert starts when a queue is holding more failed jobs than it was." in rendered
+    assert "- team: `cloud`" in lines
+
+
+def test_a_card_does_not_list_the_one_instance_it_already_describes():
+    """A group of one has its labels and its summary in the lines above, so a list of it repeats them."""
+    rendered = apply_jinja_template(
+        import_module("config_integrations.grafana_alerting").discord_message,
+        payload={
+            "groupLabels": {"alertname": "Queue has failed jobs", "service_name": "builds"},
+            "commonLabels": {"alertname": "Queue has failed jobs", "service_name": "builds"},
+            "commonAnnotations": {"summary": "The `builds` queue gained 12 failed jobs in an hour."},
+            "alerts": [
+                {
+                    "status": "firing",
+                    "labels": {"alertname": "Queue has failed jobs", "service_name": "builds"},
+                    "annotations": {"summary": "The `builds` queue gained 12 failed jobs in an hour."},
+                }
+            ],
+        },
+        source_link="",
+        integration_name="Grafana Alerting",
+    )
+
+    assert "**Summaries**" not in rendered.splitlines()
+    # Said once, by the summary that a group of one puts in commonAnnotations.
+    assert rendered.count("The `builds` queue gained 12 failed jobs in an hour.") == 1
+
+
+@pytest.mark.parametrize("integration", ["alertmanager", "grafana_alerting"])
+def test_a_card_lists_the_one_instance_of_a_group_that_says_anything(integration):
+    """Whether a group is listed is decided by how many alerts it holds, not by how many of them had something
+    to say.
+
+    An instance whose labels are all common to the group and whose rule wrote no summary adds no line. Counting
+    lines rather than alerts, a pair like that read as a group of one and threw away the only line naming what
+    had failed.
+    """
+    rendered = apply_jinja_template(
+        import_module(f"config_integrations.{integration}").discord_message,
+        payload={
+            "groupLabels": {"alertname": "Queue has failed jobs"},
+            "commonLabels": {
+                "alertname": "Queue has failed jobs",
+                "deployment_region_name": "fra",
+                "team": "cloud",
+            },
+            "commonAnnotations": {"description": "This alert starts when a queue is holding more failed jobs."},
+            "alerts": [
+                {
+                    "status": "firing",
+                    "labels": {
+                        "alertname": "Queue has failed jobs",
+                        "deployment_region_name": "fra",
+                        "k8s_cluster_name": "cloud-fra1-prod",
+                        "service_name": "builds",
+                        "team": "cloud",
+                    },
+                    "annotations": {"summary": "The `builds` queue on `cloud-fra1-prod` has failed 2384 more jobs."},
+                },
+                {
+                    "status": "firing",
+                    "labels": {
+                        "alertname": "Queue has failed jobs",
+                        "deployment_region_name": "fra",
+                        "team": "cloud",
+                    },
+                    "annotations": {},
+                },
+            ],
+        },
+        source_link="",
+        integration_name="Grafana Alerting",
+    )
+    lines = rendered.splitlines()
+
+    assert "**Summaries**" in lines
+    assert "- The `builds` queue on `cloud-fra1-prod` has failed 2384 more jobs." in lines
+    # The names the group does not share, which no other line on the card carries.
+    for name in ("builds", "cloud-fra1-prod"):
+        assert name in rendered, f"{name} is in no common label and is on no other line"
+
+
+@pytest.mark.parametrize("integration", ["alertmanager", "grafana_alerting"])
+def test_a_card_says_an_instance_line_once(integration):
+    """A group whose alerts were all written the same sentence has that sentence in commonAnnotations already,
+    and a list of it repeats one line per alert."""
+    shared = "A queue is holding more failed jobs than it was."
+    rendered = apply_jinja_template(
+        import_module(f"config_integrations.{integration}").discord_message,
+        payload={
+            "groupLabels": {"alertname": "Queue has failed jobs"},
+            "commonLabels": {"alertname": "Queue has failed jobs", "team": "cloud"},
+            "commonAnnotations": {"summary": shared},
+            "alerts": [
+                {
+                    "status": "firing",
+                    "labels": {"alertname": "Queue has failed jobs", "team": "cloud"},
+                    "annotations": {"summary": shared},
+                }
+                for _ in range(3)
+            ],
+        },
+        source_link="",
+        integration_name="Grafana Alerting",
+    )
+
+    assert rendered.count(shared) == 1
+
+
+def _disk_alert(region, node, summary):
+    return {
+        "status": "firing",
+        "labels": {"alertname": "Disk filling", "team": "cloud", "region": region, "instance": node},
+        "annotations": {"summary": summary},
+    }
+
+
+@pytest.mark.parametrize("integration", ["alertmanager", "grafana_alerting"])
+def test_a_card_names_instances_a_shared_sentence_does_not(integration):
+    """A summary is prose, not an identity.
+
+    A rule is free to write two instances the same sentence, and then that sentence identifies neither of them.
+    Taking the sentence as the whole of the instance's line, a card reported two full disks as one and named
+    neither. The sentences read as prose — repeated ones once — and every region and node the group holds is
+    counted in the gathered labels below.
+    """
+    rendered = apply_jinja_template(
+        import_module(f"config_integrations.{integration}").discord_message,
+        payload={
+            "groupLabels": {"alertname": "Disk filling"},
+            "commonLabels": {"alertname": "Disk filling", "team": "cloud"},
+            "commonAnnotations": {"description": "A disk is above its watermark."},
+            "alerts": [
+                _disk_alert("fra", "node-1", "Disk is nearly full."),
+                _disk_alert("syd", "node-2", "Disk is nearly full."),
+                _disk_alert("tor", "node-3", "Root volume is nearly full."),
+            ],
+        },
+        source_link="",
+        integration_name="Grafana Alerting",
+    )
+    lines = rendered.splitlines()
+
+    assert "**Summaries**" in lines
+    assert "- Disk is nearly full." in lines
+    assert "- Root volume is nearly full." in lines
+    # Every region and node the group holds, counted whether or not its sentence was its own.
+    assert "- region: `fra`, `syd`, `tor`" in lines
+    assert "- instance: `node-1`, `node-2`, `node-3`" in lines
+
+
+@pytest.mark.parametrize("integration", ["alertmanager", "grafana_alerting"])
+def test_a_card_names_instances_when_every_summary_is_the_same(integration):
+    """The same defect with every alert written the same sentence, which puts it in commonAnnotations.
+
+    The card says that sentence once at the top. What is left to tell the instances apart is their labels, so a
+    line carries those and not the sentence again.
+    """
+    rendered = apply_jinja_template(
+        import_module(f"config_integrations.{integration}").discord_message,
+        payload={
+            "groupLabels": {"alertname": "Disk filling"},
+            "commonLabels": {"alertname": "Disk filling", "team": "cloud"},
+            "commonAnnotations": {"summary": "Disk is nearly full."},
+            "alerts": [
+                _disk_alert("fra", "node-1", "Disk is nearly full."),
+                _disk_alert("syd", "node-2", "Disk is nearly full."),
+                _disk_alert("tor", "node-3", "Disk is nearly full."),
+            ],
+        },
+        source_link="",
+        integration_name="Grafana Alerting",
+    )
+    lines = [line for line in rendered.splitlines() if line.startswith("- ")]
+
+    for region, node in (("fra", "node-1"), ("syd", "node-2"), ("tor", "node-3")):
+        assert any(
+            f"region: `{region}`" in line and f"instance: `{node}`" in line for line in lines
+        ), f"{region}/{node} is named nowhere on the card"
+    # Said once, at the top, rather than again on every line below it.
+    assert rendered.count("Disk is nearly full.") == 1
+
+
+@pytest.mark.parametrize("integration", ["alertmanager", "grafana_alerting"])
+def test_an_instance_line_does_not_repeat_what_its_summary_already_says(integration):
+    """A rule that names the instance in its summary has said it, and the line does not say it twice."""
+    rendered = apply_jinja_template(
+        import_module(f"config_integrations.{integration}").discord_message,
+        payload={
+            "groupLabels": {"alertname": "Queue has failed jobs"},
+            "commonLabels": {"alertname": "Queue has failed jobs", "team": "cloud"},
+            "commonAnnotations": {"description": "A queue is holding more failed jobs than it was."},
+            "alerts": [
+                {
+                    "status": "firing",
+                    "labels": {
+                        "alertname": "Queue has failed jobs",
+                        "team": "cloud",
+                        "service_name": service,
+                        "k8s_cluster_name": cluster,
+                    },
+                    "annotations": {"summary": f"The `{service}` queue on `{cluster}` has failed 12 more jobs."},
+                }
+                for service, cluster in (("builds", "cloud-fra1-prod"), ("domains", "cloud-syd1-prod"))
+            ],
+        },
+        source_link="",
+        integration_name="Grafana Alerting",
+    )
+    lines = [line for line in rendered.splitlines() if line.startswith("- ")]
+
+    assert "- The `builds` queue on `cloud-fra1-prod` has failed 12 more jobs." in lines
+    assert "- The `domains` queue on `cloud-syd1-prod` has failed 12 more jobs." in lines
+    # The labels the sentence already carries are not appended to it.
+    assert not any("service_name:" in line for line in lines)
+
+
+@pytest.mark.parametrize("integration", ["alertmanager", "grafana_alerting"])
+def test_a_summary_carries_a_label_as_a_word_and_not_as_a_syllable(integration):
+    """A sentence carries a label when it says it as a word of its own, not when the characters happen to occur.
+
+    Matched anywhere in the sentence, `shard: 1` was read into "12 jobs" and dropped — and a label dropped is
+    an instance the card no longer tells apart, reachable through any label short enough to hide inside a
+    number.
+    """
+    rendered = apply_jinja_template(
+        import_module(f"config_integrations.{integration}").discord_message,
+        payload={
+            "groupLabels": {"alertname": "Queue has failed jobs"},
+            "commonLabels": {"alertname": "Queue has failed jobs", "team": "cloud"},
+            "commonAnnotations": {},
+            "alerts": [
+                {
+                    "status": "firing",
+                    "labels": {"alertname": "Queue has failed jobs", "team": "cloud", "shard": shard},
+                    "annotations": {"summary": f"The queue gained 1{shard} failed jobs."},
+                }
+                for shard in ("1", "3")
+            ],
+        },
+        source_link="",
+        integration_name="Grafana Alerting",
+    )
+    lines = rendered.splitlines()
+
+    assert "- The queue gained 11 failed jobs." in lines
+    assert "- The queue gained 13 failed jobs." in lines
+    assert "- shard: `1`, `3`" in lines
+
+
+@pytest.mark.parametrize("integration", ["alertmanager", "grafana_alerting"])
+def test_a_lone_varying_label_gathers_onto_one_line(integration):
+    """One label alone telling the instances apart gathers onto one line.
+
+    A sentence every instance says is the group's summary, whichever field the sender put it in, so it is said
+    once at the top. What is left telling the instances apart is one label, and a list of lines saying nothing
+    but `shard: 1` and `shard: 2` is a worse way to write `shard: 1, 2`.
+    """
+    rendered = apply_jinja_template(
+        import_module(f"config_integrations.{integration}").discord_message,
+        payload={
+            "groupLabels": {"alertname": "Queue has failed jobs"},
+            "commonLabels": {"alertname": "Queue has failed jobs", "team": "cloud"},
+            "commonAnnotations": {},
+            "alerts": [
+                {
+                    "status": "firing",
+                    "labels": {"alertname": "Queue has failed jobs", "team": "cloud", "shard": shard},
+                    "annotations": {"summary": "The queue gained 12 failed jobs."},
+                }
+                for shard in ("1", "2")
+            ],
+        },
+        source_link="",
+        integration_name="Grafana Alerting",
+    )
+    lines = rendered.splitlines()
+
+    assert "**Summaries**" not in lines
+    assert "- shard: `1`, `2`" in lines
+    assert rendered.count("The queue gained 12 failed jobs.") == 1
+    assert lines[0] == "The queue gained 12 failed jobs."
+
+
+@pytest.mark.parametrize("integration", ["alertmanager", "grafana_alerting"])
+def test_two_varying_labels_stay_a_line_per_instance(integration):
+    """Two or more keys stay a line per instance, because which value came with which is the information.
+
+    Gathered per key, `region: fra, syd` and `node: node-1, node-2` no longer say which node is in which
+    region. The shared sentence is still said once at the top rather than on every line.
+    """
+    rendered = apply_jinja_template(
+        import_module(f"config_integrations.{integration}").discord_message,
+        payload={
+            "groupLabels": {"alertname": "Disk filling"},
+            "commonLabels": {"alertname": "Disk filling", "team": "cloud"},
+            "commonAnnotations": {},
+            "alerts": [
+                _disk_alert("fra", "node-1", "Disk is nearly full."),
+                _disk_alert("syd", "node-2", "Disk is nearly full."),
+            ],
+        },
+        source_link="",
+        integration_name="Grafana Alerting",
+    )
+    lines = rendered.splitlines()
+
+    assert lines[0] == "Disk is nearly full."
+    assert rendered.count("Disk is nearly full.") == 1
+    assert "- region: `fra`, instance: `node-1`" in lines
+    assert "- region: `syd`, instance: `node-2`" in lines
+
+
+@pytest.mark.parametrize("integration", ["alertmanager", "grafana_alerting"])
+def test_a_summary_carries_a_label_even_wrapped_in_punctuation(integration):
+    """The word the sentence says arrives fenced in backticks or trailed by a period, and is still that word."""
+    rendered = apply_jinja_template(
+        import_module(f"config_integrations.{integration}").discord_message,
+        payload={
+            "groupLabels": {"alertname": "Queue has failed jobs"},
+            "commonLabels": {"alertname": "Queue has failed jobs"},
+            "commonAnnotations": {},
+            "alerts": [
+                {
+                    "status": "firing",
+                    "labels": {
+                        "alertname": "Queue has failed jobs",
+                        "service_name": "builds",
+                        "k8s_cluster_name": "cloud-fra1-prod",
+                    },
+                    "annotations": {"summary": "The `builds` queue failed on cloud-fra1-prod."},
+                },
+                {
+                    "status": "firing",
+                    "labels": {
+                        "alertname": "Queue has failed jobs",
+                        "service_name": "domains",
+                        "k8s_cluster_name": "cloud-syd1-prod",
+                    },
+                    "annotations": {"summary": "The `domains` queue failed on cloud-syd1-prod."},
+                },
+            ],
+        },
+        source_link="",
+        integration_name="Grafana Alerting",
+    )
+    lines = rendered.splitlines()
+
+    # `builds` sits in backticks and cloud-fra1-prod before a period; the sentence carries both, so no label
+    # is appended to it.
+    assert "- The `builds` queue failed on cloud-fra1-prod." in lines
+    assert "- The `domains` queue failed on cloud-syd1-prod." in lines
+    assert not any("service_name:" in line or "k8s_cluster_name:" in line for line in lines)
+
+
+@pytest.mark.parametrize("integration", ["alertmanager", "grafana_alerting"])
+def test_a_card_keeps_what_the_route_grouped_by_apart_from_what_the_alerts_share(integration):
+    """Two questions, two headings.
+
+    `groupLabels` says why these alerts arrived as one card; `commonLabels` says what they turned out to have in
+    common once they had. Merged under one heading a reader cannot tell which is which, and the label that
+    explains the grouping is buried among labels that merely happen to agree.
+    """
+    rendered = apply_jinja_template(
+        import_module(f"config_integrations.{integration}").discord_message,
+        payload={
+            # The default Grafana policy: group_by = [grafana_folder, alertname].
+            "groupLabels": {"grafana_folder": "Utopia", "alertname": "Queue has failed jobs"},
+            "commonLabels": {
+                "alertname": "Queue has failed jobs",
+                "grafana_folder": "Utopia",
+                "deployment_cluster_name": "cloud",
+                "severity": "warning",
+                "team": "cloud",
+            },
+            "commonAnnotations": {"description": "A queue is holding more failed jobs than it was."},
+            "alerts": [
+                {
+                    "status": "firing",
+                    "labels": {
+                        "alertname": "Queue has failed jobs",
+                        "grafana_folder": "Utopia",
+                        "deployment_cluster_name": "cloud",
+                        "severity": "warning",
+                        "team": "cloud",
+                        "service_name": service,
+                    },
+                    "annotations": {"summary": f"The `{service}` queue has failed 12 more jobs."},
+                }
+                for service in ("builds", "domains")
+            ],
+        },
+        source_link="",
+        integration_name="Grafana Alerting",
+    )
+    lines = rendered.splitlines()
+
+    assert "**Group**" in lines
+    assert "**Labels**" in lines
+    group = lines.index("**Group**")
+    labels = lines.index("**Labels**")
+    # What the route grouped by, under Group. alertname is the card's title, so it is not a line.
+    assert "- grafana_folder: `Utopia`" in lines[group:labels]
+    assert not any("alertname:" in line for line in lines)
+    # What they merely share, under Labels, and not repeated under Group.
+    assert "- deployment_cluster_name: `cloud`" in lines[labels:]
+    assert "- team: `cloud`" in lines[labels:]
+    assert rendered.count("grafana_folder") == 1, "a label belongs to one heading, not both"
+
+
 @pytest.mark.django_db
 def test_a_dashboard_annotation_becomes_a_button_of_its_own(
     make_organization, make_user_for_organization, make_alert_receive_channel, make_alert_group, make_alert
