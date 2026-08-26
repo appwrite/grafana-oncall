@@ -6,9 +6,15 @@ from emoji import emojize
 
 from apps.alerts.incident_appearance.renderers.base_renderer import AlertBaseRenderer, AlertGroupBaseRenderer
 from apps.alerts.incident_appearance.templaters.alert_templater import AlertTemplater
-from apps.alerts.models import Alert, AlertGroup, ResolutionNote
+from apps.alerts.models import Alert, AlertGroup
 from apps.discord.client import THREAD_NAME_LIMIT
 from common.utils import is_string_with_visible_characters, str_or_backup
+
+if typing.TYPE_CHECKING:
+    # Only for annotation. Importing it at module level deadlocks startup: loading the
+    # messaging backends is part of initializing apps.alerts.models, and ResolutionNote
+    # is not bound there yet when this module is pulled in through DiscordBackend.
+    from apps.alerts.models import ResolutionNote
 
 # https://discord.com/developers/docs/resources/message#embed-object-embed-limits
 EMBED_TITLE_LIMIT = 256
@@ -95,7 +101,7 @@ def stamp(moment) -> str:
     return f"<t:{seconds}:t> (<t:{seconds}:R>)"
 
 
-def render_resolution_note(resolution_note: ResolutionNote) -> dict:
+def render_resolution_note(resolution_note: "ResolutionNote") -> dict:
     """A resolution note as a follow-up beside the card.
 
     The note is already capped at 3000 characters in OnCall, which fits an embed
