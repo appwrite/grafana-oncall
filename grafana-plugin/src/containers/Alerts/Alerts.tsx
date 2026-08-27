@@ -143,10 +143,10 @@ export const Alerts = observer(() => {
   function showChannelWarnings(): boolean {
     return Boolean(
       currentOrganization &&
-        currentUser &&
-        isUserActionAllowed(UserActions.UserSettingsWrite) &&
-        (!isPhoneVerified || !isChatOpsConnected) &&
-        !getItem(AlertID.CONNECTIVITY_WARNING)
+      currentUser &&
+      isUserActionAllowed(UserActions.UserSettingsWrite) &&
+      (!isPhoneVerified || !isChatOpsConnected) &&
+      !getItem(AlertID.CONNECTIVITY_WARNING)
     );
   }
 
@@ -163,10 +163,10 @@ export const Alerts = observer(() => {
   function showCurrentUserGoogleOAuth2TokenIsMissingScopes(): boolean {
     return Boolean(
       currentUserPk &&
-        currentUser &&
-        currentUser.has_google_oauth2_connected &&
-        currentUser.google_oauth2_token_is_missing_scopes &&
-        !getItem(AlertID.USER_GOOGLE_OAUTH2_TOKEN_MISSING_SCOPES)
+      currentUser &&
+      currentUser.has_google_oauth2_connected &&
+      currentUser.google_oauth2_token_is_missing_scopes &&
+      !getItem(AlertID.USER_GOOGLE_OAUTH2_TOKEN_MISSING_SCOPES)
     );
   }
 });

@@ -79,9 +79,9 @@ e.g. [container].helper.ts, [container].config.ts
 - Use named exports for all code you want to export from a file.
 - Export only the code that is meant to be used outside the module.
 
-### Don’t opt-out from eslint / TS rules
+### Don’t opt out from Oxlint or TypeScript rules
 
-- Avoid opting out from eslint or TS rules unless there is a strong reason / lack of possibility to follow the rule
+- Avoid opting out from Oxlint or TypeScript rules unless there is a strong reason or no practical way to follow the rule.
 
 ## Styling
 

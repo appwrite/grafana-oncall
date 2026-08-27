@@ -30,7 +30,7 @@ export class UserStore {
   notifyByOptions: any = [];
   currentUserPk?: ApiSchemas['User']['pk'];
   usersCurrentlyBeingFetched: { [pk: string]: boolean } = {};
-  personalWebhook: { webhook: string, context: object } = {
+  personalWebhook: { webhook: string; context: object } = {
     webhook: null,
     context: null,
   };
@@ -309,7 +309,7 @@ export class UserStore {
     return this.items[this.currentUserPk] as ApiSchemas['CurrentUser'];
   }
 
-  async addPersonalWebook(data: { webhook: string; context: object; }) {
+  async addPersonalWebook(data: { webhook: string; context: object }) {
     await makeRequest(`/webhooks/set_personal_notification`, {
       method: 'POST',
       data,

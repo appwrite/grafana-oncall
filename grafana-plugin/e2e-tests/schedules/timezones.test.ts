@@ -86,7 +86,5 @@ test.skip('dates in schedule are correct according to selected current timezone'
   await expect(page.getByTestId('rotation-form').getByPlaceholder('Date')).toHaveValue(
     firstDayOfTheWeek.format('MM/DD/YYYY')
   );
-  await expect(getTimeInput(page.getByTestId('rotation-form'))).toHaveValue(
-    '00:00'
-  );
+  await expect(getTimeInput(page.getByTestId('rotation-form'))).toHaveValue('00:00');
 });

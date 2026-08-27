@@ -276,8 +276,8 @@ const RegularEvent = (props: RegularEventProps) => {
         const title = isShiftSwap
           ? `Shift swap to ${getShiftName(shift)}`
           : showScheduleNameAsSlotTitle
-          ? schedule?.name
-          : getShiftName(shift);
+            ? schedule?.name
+            : getShiftName(shift);
 
         const { color, backgroundColor, border, textColor } = getScheduleSlotStyleParams(
           propsColor,

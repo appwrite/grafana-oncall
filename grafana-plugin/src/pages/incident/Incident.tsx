@@ -440,8 +440,8 @@ class _IncidentPage extends React.Component<IncidentPageProps, IncidentPageState
                       sourceLink === null
                         ? `The integration template Source Link is empty`
                         : parseURL(sourceLink) === ''
-                        ? 'The Integration template Source Link is invalid'
-                        : 'Go to source'
+                          ? 'The Integration template Source Link is invalid'
+                          : 'Go to source'
                     }
                   >
                     <a href={parseURL(sourceLink) || undefined} target="_blank" rel="noreferrer">
@@ -652,7 +652,6 @@ class _IncidentPage extends React.Component<IncidentPageProps, IncidentPageState
   };
 
   getPlaceholderReplaceFn = (entity: TimeLineItem) => {
-    // eslint-disable-next-line react/display-name
     return (match: string) => {
       switch (match) {
         case 'author':
@@ -663,7 +662,11 @@ class _IncidentPage extends React.Component<IncidentPageProps, IncidentPageState
           );
         case 'escalation_chain':
           return (
-            <a href={`${PLUGIN_ROOT}/escalations/${entity.escalation_chain?.pk}`} target="_blank" rel="noopener noreferrer">
+            <a
+              href={`${PLUGIN_ROOT}/escalations/${entity.escalation_chain?.pk}`}
+              target="_blank"
+              rel="noopener noreferrer"
+            >
               <Text underline>{entity.escalation_chain?.title}</Text>
             </a>
           );
@@ -681,7 +684,11 @@ class _IncidentPage extends React.Component<IncidentPageProps, IncidentPageState
           );
         case 'webhook':
           return (
-            <a href={`${PLUGIN_ROOT}/outgoing_webhooks/${entity.webhook?.pk}`} target="_blank" rel="noopener noreferrer">
+            <a
+              href={`${PLUGIN_ROOT}/outgoing_webhooks/${entity.webhook?.pk}`}
+              target="_blank"
+              rel="noopener noreferrer"
+            >
               <Text underline>{entity.webhook?.title}</Text>
             </a>
           );

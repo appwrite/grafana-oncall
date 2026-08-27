@@ -117,7 +117,7 @@ export default defineConfig({
     // },
   ]),
 
-  /* Folder for test artifacts such as screenshots, videos, traces, etc. 
+  /* Folder for test artifacts such as screenshots, videos, traces, etc.
   Set outside of grafana-plugin to prevent refreshing Grafana UI during e2e test runs */
   outputDir: '../test-results/',
 

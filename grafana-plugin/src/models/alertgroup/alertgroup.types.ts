@@ -1,10 +1,10 @@
 import { ApiSchemas } from 'network/oncall-api/api.types';
 
 export enum IncidentStatus {
-  'Firing',
-  'Acknowledged',
-  'Resolved',
-  'Silenced',
+  Firing,
+  Acknowledged,
+  Resolved,
+  Silenced,
 }
 
 export enum AlertAction {

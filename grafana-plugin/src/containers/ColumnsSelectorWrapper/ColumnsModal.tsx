@@ -188,14 +188,12 @@ export const ColumnsModal: React.FC<ColumnsModalProps> = observer(
         ...store.alertGroupStore.columns,
         ...searchResults
           .filter((item) => item.isChecked)
-          .map(
-            (item): AlertGroupColumn => ({
-              id: item.id,
-              name: item.name,
-              isVisible: false,
-              type: AlertGroupColumnType.LABEL,
-            })
-          ),
+          .map((item): AlertGroupColumn => ({
+            id: item.id,
+            name: item.name,
+            isVisible: false,
+            type: AlertGroupColumnType.LABEL,
+          })),
       ];
 
       const columns: { visible: AlertGroupColumn[]; hidden: AlertGroupColumn[] } = {

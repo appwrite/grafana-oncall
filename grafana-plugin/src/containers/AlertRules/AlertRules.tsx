@@ -36,11 +36,18 @@ export const ChatOpsConnectors = (props: ChatOpsConnectorsProps) => {
   }, []);
 
   const isMSTeamsInstalled = msteamsChannelStore.currentTeamToMSTeamsChannel?.length > 0;
-  const isMattermostInstalled = store.hasFeature(AppFeature.Mattermost) && Object.keys(mattermostChannelStore.items).length > 0;
+  const isMattermostInstalled =
+    store.hasFeature(AppFeature.Mattermost) && Object.keys(mattermostChannelStore.items).length > 0;
 
   const isDiscordInstalled = store.hasFeature(AppFeature.Discord) && Object.keys(discordChannelStore.items).length > 0;
 
-  if (!isSlackInstalled && !isTelegramInstalled && !isMSTeamsInstalled && !isMattermostInstalled && !isDiscordInstalled) {
+  if (
+    !isSlackInstalled &&
+    !isTelegramInstalled &&
+    !isMSTeamsInstalled &&
+    !isMattermostInstalled &&
+    !isDiscordInstalled
+  ) {
     return null;
   }
 
@@ -50,7 +57,7 @@ export const ChatOpsConnectors = (props: ChatOpsConnectorsProps) => {
         {isSlackInstalled && <SlackConnector channelFilterId={channelFilterId} />}
         {isTelegramInstalled && <TelegramConnector channelFilterId={channelFilterId} />}
         {isMSTeamsInstalled && <MSTeamsConnector channelFilterId={channelFilterId} />}
-        {isMattermostInstalled && <MattermostConnector channelFilterId={channelFilterId}/>}
+        {isMattermostInstalled && <MattermostConnector channelFilterId={channelFilterId} />}
         {isDiscordInstalled && <DiscordConnector channelFilterId={channelFilterId} />}
       </Stack>
     </Timeline.Item>

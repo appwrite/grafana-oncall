@@ -133,13 +133,13 @@ const MattermostChannelForm = (props: MattermostCreationModalProps) => {
 
 const getStyles = () => {
   return {
-    channelFormFieldInput: css `
+    channelFormFieldInput: css`
       border-top-right-radius: 0;
       border-bottom-right-radius: 0;
     `,
 
-    field: css `
+    field: css`
       flex-grow: 1;
-    `
-  }
-}
+    `,
+  };
+};

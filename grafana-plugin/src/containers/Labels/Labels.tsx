@@ -37,17 +37,13 @@ const _Labels = observer(
       setValue(value);
     };
 
-    useImperativeHandle(
-      ref,
-      () => {
-        return {
-          getValue() {
-            return value;
-          },
-        };
-      },
-      [value]
-    );
+    useImperativeHandle(ref, () => {
+      return {
+        getValue() {
+          return value;
+        },
+      };
+    }, [value]);
 
     const onLoadKeys = async (search?: string) => {
       const result = await labelsStore.loadKeys(search);

@@ -13,10 +13,7 @@ export const DragHandle = ({ disabled }: { disabled?: boolean }) => {
   const { handleProps } = useSortableNode();
 
   return (
-    <div
-      {...handleProps}
-      className={cx(styles.control, styles.handle, { [bem(styles.handle, 'disabled')]: disabled })}
-    >
+    <div {...handleProps} className={cx(styles.control, styles.handle, { [bem(styles.handle, 'disabled')]: disabled })}>
       <Icon name="draggabledots" />
     </div>
   );

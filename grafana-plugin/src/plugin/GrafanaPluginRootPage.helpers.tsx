@@ -1,4 +1,3 @@
-
 export function getQueryParams(): any {
   const searchParams = new URLSearchParams(window.location.search);
   const result = {};

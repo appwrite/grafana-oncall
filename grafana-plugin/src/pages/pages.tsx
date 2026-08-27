@@ -164,7 +164,7 @@ export const pages: { [id: string]: PageDefinition } = [
           parentItem: current.getParentItem ? current.getParentItem(pageTitle) : undefined,
           hideFromBreadcrumbs: current.hideFromBreadcrumbs,
           hideFromTabs: current.hideFromTabs,
-        } as NavModelItem),
+        }) as NavModelItem,
     };
   }
 

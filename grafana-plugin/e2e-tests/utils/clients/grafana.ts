@@ -114,13 +114,17 @@ class GrafanaAPIClient {
     expect(res.ok()).toBeTruthy();
   };
 
-  makeRequest = async (request: APIRequestContext, path: string, method: 'get' | 'post' | 'put' | 'delete' = 'post'): Promise<APIResponse> => {
+  makeRequest = async (
+    request: APIRequestContext,
+    path: string,
+    method: 'get' | 'post' | 'put' | 'delete' = 'post'
+  ): Promise<APIResponse> => {
     const res = await request[method](`${BASE_URL}/api/plugins/grafana-oncall-app/${path.replace(/^\//, '')}`, {
       headers: this.requestHeaders,
     });
     expect(res.ok()).toBeTruthy();
     return res;
-  }
+  };
 }
 
 const grafanaAPIClient = new GrafanaAPIClient(GRAFANA_ADMIN_USERNAME, GRAFANA_ADMIN_PASSWORD);

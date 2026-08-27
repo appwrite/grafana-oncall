@@ -33,5 +33,4 @@ test('Fills in Rotation time and  reacts to timezone change', async ({ adminRole
   // expect times to go back by -3
   await expect(getTimeInput(startEl)).toHaveValue('23:00');
   await expect(getTimeInput(endEl)).toHaveValue('09:00');
-
 });
