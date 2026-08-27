@@ -32,9 +32,6 @@ test('from_time and to_time for "Continue escalation if current UTC time is in r
 
   const clickAndInputValue = async (locator: Locator, value: string) => {
     await typeTime(locator, value);
-
-    // click anywhere to close the dropdown
-    await page.click('body');
   };
 
   // update from and to time values
