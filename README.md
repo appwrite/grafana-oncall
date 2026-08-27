@@ -9,16 +9,17 @@ New features:
 
 - A [Discord integration](docs/sources/manage/notify/discord/index.md). Alert groups are posted as
   cards with working buttons, forum channels get a post per alert group, routes choose a channel and
-  a severity, and escalation can mention a Discord role. Users link their account with
+  a severity, and escalation can mention a Discord role. Cards identify every alert instance in a
+  group, and resolution notes stay synchronized beside them. Users link their account with
   `/oncall-link`.
 - SMS through [MSG91](https://msg91.com), as a phone provider alongside Twilio, Zvonok and Exotel.
 
 Kept working:
 
-- Runs on Grafana 13 and React 19. Upstream's plugin crashes on mount there.
+- Runs on Grafana 13.2 and React 19. Upstream's plugin crashes on mount there.
 - Runs on Django 5.2 LTS. Upstream is on 4.2, whose extended support has ended.
 - The Insights page renders again. Its alert group variable produced invalid PromQL on Grafana 13.
-- Dependencies are patched, and end-to-end tests run against Grafana 12 and 13.
+- Dependencies are patched, and end-to-end tests run against Grafana 12.4 and 13.2.
 
 Published:
 
@@ -164,7 +165,7 @@ variable moves both. Set it to the [release](https://github.com/appwrite/grafana
 want in `.env`:
 
 ```shell
-echo "ONCALL_VERSION=1.19.1" >> .env
+echo "ONCALL_VERSION=1.24.3" >> .env
 
 docker-compose pull
 docker-compose up -d
