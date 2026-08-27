@@ -80,22 +80,22 @@ export const setTime = async (element: Locator, hour: string) => {
 };
 
 /**
- * Grafana 12 takes a typed time; 13 renders a combobox that only commits a value picked from its
- * list, so type first and correct it from the list when the typing did not stick.
+ * Grafana 12 takes sequential keystrokes followed by Enter; 13 renders a combobox that commits
+ * an atomically filled value through its matching list option.
  */
 export const typeTime = async (input: Locator, value: string) => {
-  // fill focuses and replaces the value in one action. Separate click/clear/type actions race with
-  // the controlled combobox remount introduced in Grafana 13.2.
-  await input.fill(value);
+  const isCombobox = (await input.getAttribute('role')) === 'combobox';
 
-  // grafana 13 renders a combobox that only commits a value picked from its list; 12 takes the
-  // typed value on Enter. Don't click the input again here — that would close the open list.
-  const option = input.page().getByRole('option', { name: value, exact: true }).first();
-
-  try {
-    await option.waitFor({ state: 'visible', timeout: 1_000 });
-    await option.click();
-  } catch {
+  if (isCombobox) {
+    // Grafana 13.2 remounts its controlled combobox between separate click/clear/type actions.
+    // Fill in one action, then commit the matching option from the open list.
+    await input.fill(value);
+    await input.page().getByRole('option', { name: value, exact: true }).first().click();
+  } else {
+    // Grafana 12 only applies the time after receiving real keystrokes followed by Enter.
+    await input.click();
+    await input.fill('');
+    await input.pressSequentially(value);
     await input.press('Enter');
   }
 
