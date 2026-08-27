@@ -88,9 +88,17 @@ export const typeTime = async (input: Locator, value: string) => {
 
   if (isCombobox) {
     // Grafana 13.2 remounts its controlled combobox between separate click/clear/type actions.
-    // Fill in one action, then commit the matching option from the open list.
+    // Fill in one action, then commit through the matching option when this picker provides one.
     await input.fill(value);
-    await input.page().getByRole('option', { name: value, exact: true }).first().click();
+    const option = input.page().getByRole('option', { name: value, exact: true }).first();
+
+    try {
+      await option.waitFor({ state: 'visible', timeout: 1_000 });
+      await option.click();
+    } catch {
+      // Schedule pickers use the same combobox role without rendering time options.
+      await input.press('Enter');
+    }
   } else {
     // Grafana 12 only applies the time after receiving real keystrokes followed by Enter.
     await input.click();
