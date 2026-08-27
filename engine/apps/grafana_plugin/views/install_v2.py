@@ -22,20 +22,15 @@ class InstallV2View(SyncV2View):
     def _is_authorized(request: Request) -> bool:
         configured_grafana_url = settings.SELF_HOSTED_SETTINGS["GRAFANA_API_URL"]
         try:
-            sync_settings = request.data["settings"]
-            supplied_grafana_url = sync_settings["grafana_url"]
-            grafana_token = sync_settings["grafana_token"]
+            grafana_token = request.data["settings"]["grafana_token"]
         except (KeyError, TypeError):
             return False
 
-        if (
-            not configured_grafana_url
-            or not isinstance(supplied_grafana_url, str)
-            or supplied_grafana_url.rstrip("/") != configured_grafana_url.rstrip("/")
-            or not GrafanaAPIClient.validate_grafana_token_format(grafana_token)
-        ):
+        if not configured_grafana_url or not GrafanaAPIClient.validate_grafana_token_format(grafana_token):
             return False
 
+        # Always authenticate against the operator-configured Grafana. The URL in the sync payload
+        # may be Grafana's different public URL and must not select the authorization authority.
         grafana_api_client = GrafanaAPIClient(api_url=configured_grafana_url, api_token=grafana_token)
         permissions, call_status = grafana_api_client.get_service_account_token_permissions()
         required_scope = f"plugins:id:{PluginID.ONCALL}"
