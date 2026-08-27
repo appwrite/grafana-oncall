@@ -99,6 +99,15 @@ export const typeTime = async (input: Locator, value: string) => {
     await input.press('Enter');
   }
 
+  // Grafana 12 can occasionally discard fill() updates when the controlled input rerenders.
+  // Retry with real key events in that case; Grafana 13 normally commits through the option above.
+  if ((await input.inputValue()) !== value) {
+    await input.click();
+    await input.fill('');
+    await input.pressSequentially(value);
+    await input.press('Enter');
+  }
+
   await expect(input).toHaveValue(value);
 };
 
