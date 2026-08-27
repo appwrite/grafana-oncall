@@ -13,10 +13,14 @@ from common.api_helpers.errors import INVALID_SELF_HOSTED_ID
 GRAFANA_URL = "http://trusted-grafana:3000"
 PUBLIC_GRAFANA_URL = "https://grafana.example.com"
 GRAFANA_TOKEN = "a-valid-grafana-token"
-SELF_HOSTED_SETTINGS = {**settings.SELF_HOSTED_SETTINGS, "GRAFANA_API_URL": GRAFANA_URL}
+SELF_HOSTED_SETTINGS = {
+    **settings.SELF_HOSTED_SETTINGS,
+    "GRAFANA_API_URL": GRAFANA_URL,
+    "GRAFANA_PUBLIC_URL": PUBLIC_GRAFANA_URL,
+}
 
 
-def install_data(grafana_url=GRAFANA_URL, grafana_token=GRAFANA_TOKEN):
+def install_data(grafana_url=PUBLIC_GRAFANA_URL, grafana_token=GRAFANA_TOKEN):
     return {"settings": {"grafana_url": grafana_url, "grafana_token": grafana_token}}
 
 
@@ -37,6 +41,21 @@ def test_install_v2_rejects_invalid_token():
 
     with patch("apps.grafana_plugin.views.install_v2.GrafanaAPIClient.get_service_account_token_permissions") as auth:
         response = client.post(reverse("grafana-plugin:install-v2"), install_data(grafana_token="short"), format="json")
+
+    assert response.status_code == status.HTTP_401_UNAUTHORIZED
+    auth.assert_not_called()
+
+
+@override_settings(SELF_HOSTED_SETTINGS=SELF_HOSTED_SETTINGS)
+def test_install_v2_rejects_untrusted_public_grafana_url():
+    client = APIClient()
+
+    with patch("apps.grafana_plugin.views.install_v2.GrafanaAPIClient.get_service_account_token_permissions") as auth:
+        response = client.post(
+            reverse("grafana-plugin:install-v2"),
+            install_data(grafana_url="https://attacker.example.com"),
+            format="json",
+        )
 
     assert response.status_code == status.HTTP_401_UNAUTHORIZED
     auth.assert_not_called()
