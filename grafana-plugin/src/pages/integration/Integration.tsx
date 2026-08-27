@@ -72,11 +72,7 @@ interface RouteProps {
 }
 
 interface IntegrationProps
-  extends WithDrawerConfig<IntegrationDrawerKey>,
-    WithStoreProps,
-    PageProps,
-    PropsWithRouter<RouteProps>,
-    Themeable2 {
+  extends WithDrawerConfig<IntegrationDrawerKey>, WithStoreProps, PageProps, PropsWithRouter<RouteProps>, Themeable2 {
   theme: GrafanaTheme2;
 }
 
@@ -259,7 +255,9 @@ class _IntegrationPage extends React.Component<IntegrationProps, IntegrationStat
                   <Alert
                     title={
                       (
-                        <div dangerouslySetInnerHTML={{ __html: dompurify.sanitize(alertReceiveChannel.description) }}></div>
+                        <div
+                          dangerouslySetInnerHTML={{ __html: dompurify.sanitize(alertReceiveChannel.description) }}
+                        ></div>
                       ) as any
                     }
                     severity="info"
@@ -698,7 +696,7 @@ class _IntegrationPage extends React.Component<IntegrationProps, IntegrationStat
               onRouteDelete={onRouteDelete}
             />
           ),
-        } as CollapsibleItem)
+        }) as CollapsibleItem
     ) as CollapsibleItem[];
   };
 

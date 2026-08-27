@@ -78,7 +78,8 @@ const _CloudPhoneSettings = observer((props: CloudPhoneSettingsProps) => {
         return (
           <Stack direction="column" gap={StackSize.lg}>
             <Text>
-              Your account successfully matched with the Grafana Cloud OnCall account. Please verify your phone number.{' '}
+              Your account successfully matched with the Grafana Cloud OnCall account. Please verify your phone
+              number.{' '}
             </Text>
             <Button variant="secondary" icon="external-link-alt" onClick={() => handleLinkClick(userLink)}>
               Verify phone number in Grafana Cloud OnCall
@@ -89,7 +90,8 @@ const _CloudPhoneSettings = observer((props: CloudPhoneSettingsProps) => {
         return (
           <Stack direction="column" gap={StackSize.lg}>
             <Text>
-              Your account successfully matched with the Grafana Cloud OnCall account. Your phone number is verified.{' '}
+              Your account successfully matched with the Grafana Cloud OnCall account. Your phone number is
+              verified.{' '}
             </Text>
             <Button variant="secondary" icon="external-link-alt" onClick={() => handleLinkClick(userLink)}>
               Open account in Grafana Cloud OnCall

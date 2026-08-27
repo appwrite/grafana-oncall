@@ -3,7 +3,6 @@ import type { Page } from '@playwright/test';
 import { getPluginId } from 'helpers/consts';
 import qs from 'query-string';
 
-
 import { BASE_URL } from './constants';
 
 type OnCallPage =

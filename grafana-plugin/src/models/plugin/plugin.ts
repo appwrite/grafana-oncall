@@ -12,7 +12,7 @@ import { RootBaseStore } from 'state/rootBaseStore/RootBaseStore';
 
 import { PluginHelper } from './plugin.helper';
 
-/* 
+/*
 High-level OnCall initialization process:
 On OSS:
   - On OnCall page / OnCall extension mount POST /status is called and it has pluginConfiguration object with different flags. 

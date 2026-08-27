@@ -12,11 +12,7 @@ let webhookID: string;
 test.afterAll(async ({ request }) => {
   // Delete the created webhook
   if (webhookID) {
-    await grafanaApiClient.makeRequest(
-      request,
-      `resources/webhooks/${webhookID}/`,
-      'delete',
-    )
+    await grafanaApiClient.makeRequest(request, `resources/webhooks/${webhookID}/`, 'delete');
   }
 });
 
@@ -26,7 +22,12 @@ test('Connects a personal notification webhook', async ({ adminRolePage: { page 
   await page.getByRole('button', { name: 'New Outgoing Webhook' }).click();
 
   // Choose Advanced webhook
-  await page.getByTestId('create-outgoing-webhook-modal').locator('div').filter({ hasText: 'AdvancedAn advanced webhook' }).first().click();
+  await page
+    .getByTestId('create-outgoing-webhook-modal')
+    .locator('div')
+    .filter({ hasText: 'AdvancedAn advanced webhook' })
+    .first()
+    .click();
 
   // Give it a name
   await page.locator('input[name="name"]').fill(WEBHOOK_NAME);
@@ -67,7 +68,7 @@ test('Connects a personal notification webhook', async ({ adminRolePage: { page 
   await page.getByRole('tab', { name: 'User info' }).click();
   await expect(page.getByTestId('personal-webhook-name')).toHaveValue(WEBHOOK_NAME);
 
-  // Disconnect 
+  // Disconnect
   await page.getByRole('tab', { name: 'Webhook connection' }).click();
   await page.getByRole('button', { name: 'Disconnect' }).click();
   await page.getByTestId('data-testid Confirm Modal Danger Button').click();
@@ -75,4 +76,4 @@ test('Connects a personal notification webhook', async ({ adminRolePage: { page 
   // Check connection is no longer shown
   await page.getByRole('tab', { name: 'User info' }).click();
   await expect(page.getByTestId('personal-webhook-name')).toBeHidden();
-})
+});

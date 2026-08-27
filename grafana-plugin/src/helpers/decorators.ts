@@ -66,7 +66,6 @@ export function WithGlobalNotification({
 }: GlobalNotificationConfig) {
   return function (_target: object, _key: string, descriptor: PropertyDescriptor) {
     const childFunction = descriptor.value;
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     descriptor.value = async function (...args: any) {
       try {
         const response = await childFunction.apply(this, args);

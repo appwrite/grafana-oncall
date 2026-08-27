@@ -97,5 +97,4 @@ export class MattermostChannelStore extends BaseStore {
   async deleteMattermostChannel(id: MattermostChannel['id']) {
     return super.delete(id);
   }
-
 }

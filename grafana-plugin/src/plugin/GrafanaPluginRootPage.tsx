@@ -75,12 +75,10 @@ export const Root = observer((props: AppRootProps) => {
   }, []);
 
   useEffect(() => {
-    // eslint-disable-next-line deprecation/deprecation
     let link = document.createElement('link');
     link.type = 'text/css';
     link.rel = 'stylesheet';
 
-    // eslint-disable-next-line deprecation/deprecation
     const styleEl = document.createElement('style');
     const head = document.head || document.getElementsByTagName('head')[0];
     styleEl.appendChild(document.createTextNode(grafanaGlobalStyle));
@@ -116,7 +114,7 @@ export const Root = observer((props: AppRootProps) => {
           css`
             position: relative;
             flex-grow: 1;
-          `,
+          `
         )}
       >
         <RenderConditionally

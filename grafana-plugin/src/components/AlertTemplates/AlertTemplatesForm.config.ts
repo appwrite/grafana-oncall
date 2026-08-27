@@ -1,19 +1,19 @@
-import { merge } from 'lodash-es'
+import { merge } from 'lodash-es';
 
 import { AppFeature } from 'state/features';
 
 import { TemplateForEdit, commonTemplateForEdit } from './CommonAlertTemplatesForm.config';
 
 export const getTemplatesForEdit = (features: Record<string, boolean>) => {
-  const templatesForEdit = {...commonTemplateForEdit}
+  const templatesForEdit = { ...commonTemplateForEdit };
   if (features?.[AppFeature.MsTeams]) {
-    merge(templatesForEdit, msteamsTemplateForEdit)
+    merge(templatesForEdit, msteamsTemplateForEdit);
   }
   if (features?.[AppFeature.Mattermost]) {
-    merge(templatesForEdit, mattermostTemplateForEdit)
+    merge(templatesForEdit, mattermostTemplateForEdit);
   }
   if (features?.[AppFeature.Discord]) {
-    merge(templatesForEdit, discordTemplateForEdit)
+    merge(templatesForEdit, discordTemplateForEdit);
   }
   return templatesForEdit;
 };

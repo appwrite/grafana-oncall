@@ -4,15 +4,15 @@ import { UserGroup } from 'models/user_group/user_group.types';
 import { ApiSchemas } from 'network/oncall-api/api.types';
 
 export enum ScheduleType {
-  'Calendar',
-  'Ical',
-  'API',
+  Calendar,
+  Ical,
+  API,
 }
 
 export enum ScheduleView {
-  'OneWeek' = 'Week',
-  'TwoWeeks' = '2 weeks',
-  'OneMonth' = 'Month',
+  OneWeek = 'Week',
+  TwoWeeks = '2 weeks',
+  OneMonth = 'Month',
 }
 
 export interface Schedule {

@@ -60,7 +60,10 @@ export const getRotationStyles = (theme: GrafanaTheme2) => {
     pointer: css`
       position: absolute;
       top: -9px;
-      transition: left 500ms ease, opacity 500ms ease, transform 500ms ease;
+      transition:
+        left 500ms ease,
+        opacity 500ms ease,
+        transform 500ms ease;
       transform-origin: bottom center;
       opacity: 0;
       transform: scale(0);

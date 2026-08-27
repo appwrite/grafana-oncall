@@ -1,7 +1,7 @@
 import { Faro, initializeFaro, LogLevel, getWebInstrumentations, BrowserConfig } from '@grafana/faro-web-sdk';
 import { AxiosResponse } from 'axios';
 
-import plugin from '../../package.json'; // eslint-disable-line
+import plugin from '../../package.json'; // oxlint-disable-line import/no-relative-parent-imports
 import {
   FARO_ENDPOINT_DEV,
   FARO_ENDPOINT_OPS,

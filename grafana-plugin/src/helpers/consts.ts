@@ -2,7 +2,7 @@ import { GrafanaBootConfig } from '@grafana/runtime';
 import { OnCallAppPluginMeta } from 'app-types';
 
 //@ts-ignore
-import plugin from '../../package.json'; // eslint-disable-line
+import plugin from '../../package.json'; // oxlint-disable-line import/no-relative-parent-imports
 
 export const PluginId = {
   OnCall: 'grafana-oncall-app',

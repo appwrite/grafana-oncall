@@ -144,7 +144,11 @@ class _DiscordSettings extends Component<DiscordProps, DiscordState> {
 
   renderActionButtons = (record: DiscordChannel) => (
     <Stack justifyContent="flex-end">
-      <Button onClick={() => this.makeDiscordChannelDefault(record.id)} disabled={record.is_default_channel} fill="text">
+      <Button
+        onClick={() => this.makeDiscordChannelDefault(record.id)}
+        disabled={record.is_default_channel}
+        fill="text"
+      >
         Make default
       </Button>
       <WithConfirm title="Are you sure to disconnect?">

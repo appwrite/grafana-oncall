@@ -1,5 +1,5 @@
 // @ts-ignore
-export default global.matchMedia =
+export default (global.matchMedia =
   global.matchMedia ||
   function (query) {
     return {
@@ -12,4 +12,4 @@ export default global.matchMedia =
       removeEventListener: jest.fn(),
       dispatchEvent: jest.fn(),
     };
-  };
+  });

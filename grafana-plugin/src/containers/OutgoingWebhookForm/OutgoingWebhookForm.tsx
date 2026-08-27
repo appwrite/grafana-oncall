@@ -100,11 +100,7 @@ export const OutgoingWebhookForm = observer((props: OutgoingWebhookFormProps) =>
     defaultValues: data,
   });
 
-  const {
-    setValue,
-    reset,
-    setError,
-  } = formMethods;
+  const { setValue, reset, setError } = formMethods;
 
   const onSubmit = useCallback(
     async (rawData: Partial<ApiSchemas['Webhook']>) => {
