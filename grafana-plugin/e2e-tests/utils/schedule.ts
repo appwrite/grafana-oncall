@@ -1,4 +1,4 @@
-import { Locator, Page } from '@playwright/test';
+import { expect, Locator, Page } from '@playwright/test';
 import dayjs from 'dayjs';
 
 import { clickButton, selectDropdownValue } from './forms';
@@ -84,9 +84,9 @@ export const setTime = async (element: Locator, hour: string) => {
  * list, so type first and correct it from the list when the typing did not stick.
  */
 export const typeTime = async (input: Locator, value: string) => {
-  await input.click();
-  await input.fill('');
-  await input.pressSequentially(value);
+  // fill focuses and replaces the value in one action. Separate click/clear/type actions race with
+  // the controlled combobox remount introduced in Grafana 13.2.
+  await input.fill(value);
 
   // grafana 13 renders a combobox that only commits a value picked from its list; 12 takes the
   // typed value on Enter. Don't click the input again here — that would close the open list.
@@ -98,6 +98,8 @@ export const typeTime = async (input: Locator, value: string) => {
   } catch {
     await input.press('Enter');
   }
+
+  await expect(input).toHaveValue(value);
 };
 
 /** the open menu of a grafana Select, which is portalled out of its container */

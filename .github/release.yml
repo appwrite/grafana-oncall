@@ -11,4 +11,4 @@ changelog:
         - release:enhancement
     - title: Other Changes
       labels:
-        - release:patch
+        - "*"
