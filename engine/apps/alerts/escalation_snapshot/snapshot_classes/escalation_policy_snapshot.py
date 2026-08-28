@@ -111,7 +111,7 @@ class EscalationPolicySnapshot:
 
     @property
     def sorted_users_queue(self) -> typing.List["User"]:
-        return sorted(self.notify_to_users_queue, key=lambda user: (user.username or "", user.pk))
+        return sorted(self.notify_to_users_queue or [], key=lambda user: (user.username or "", user.pk))
 
     @property
     def next_user_in_sorted_queue(self) -> "User":
@@ -237,7 +237,7 @@ class EscalationPolicySnapshot:
                 escalation_policy_step=self.step,
             )
 
-            for user in self.notify_to_users_queue:
+            for user in self.notify_to_users_queue or []:
                 notify_task = notify_user_task.signature(
                     (
                         user.pk,

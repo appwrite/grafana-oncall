@@ -1,0 +1,6 @@
+line-length = 88
+
+[lint]
+select = ["E", "F", "W", "I"]
+# The formatter wraps at 88; a line only it cannot split is not an error.
+ignore = ["E501"]

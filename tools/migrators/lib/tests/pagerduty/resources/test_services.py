@@ -361,9 +361,9 @@ def test_service_name_normalization(input_name, expected_name):
     component = _transform_service(service)
 
     # Check that the name was normalized correctly
-    assert (
-        component["metadata"]["name"] == expected_name
-    ), f"Expected '{expected_name}' for input '{input_name}', got '{component['metadata']['name']}'"
+    assert component["metadata"]["name"] == expected_name, (
+        f"Expected '{expected_name}' for input '{input_name}', got '{component['metadata']['name']}'"
+    )
 
 
 def test_validate_component():

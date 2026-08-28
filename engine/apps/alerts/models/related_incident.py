@@ -6,7 +6,7 @@ from django.db import models
 from common.constants.plugin_ids import PluginID
 
 if typing.TYPE_CHECKING:
-    from django.db.models.manager import RelatedManager
+    from django.db.models.fields.related_descriptors import RelatedManager
 
     from apps.alerts.models import AlertGroup, ChannelFilter
     from apps.user_management.models import Organization

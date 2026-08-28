@@ -24,7 +24,7 @@ class SimplePhoneProvider(PhoneProvider):
         except Exception as e:
             # example of handling provider exceptions and converting them to exceptions from core OnCall code.
             logger.error(f"SimplePhoneProvider.send_sms: failed {e}")
-            raise FailedToSendSMS
+            raise FailedToSendSMS from e
 
     def send_verification_sms(self, number):
         code = str(randint(100000, 999999))
@@ -34,7 +34,7 @@ class SimplePhoneProvider(PhoneProvider):
         except Exception as e:
             # Example of handling provider exceptions and converting them to exceptions from core OnCall code.
             logger.error(f"SimplePhoneProvider.send_verification_sms: failed {e}")
-            raise FailedToStartVerification
+            raise FailedToStartVerification from e
 
     def finish_verification(self, number, code):
         has = cache.get(self._cache_key(number))

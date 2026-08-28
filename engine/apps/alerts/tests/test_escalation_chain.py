@@ -44,7 +44,7 @@ def test_copy_escalation_chain(
     fields_to_compare = list(map(lambda f: f.name, filter(lambda f: f.name not in fields_to_not_compare, all_fields)))
     copied_chain = escalation_chain.make_copy(f"copy_{escalation_chain.name}", None)
     for policy_from_original, policy_from_copy in zip(
-        escalation_chain.escalation_policies.all(), copied_chain.escalation_policies.all()
+        escalation_chain.escalation_policies.all(), copied_chain.escalation_policies.all(), strict=False
     ):
         for field in fields_to_compare:
             assert getattr(policy_from_original, field) == getattr(policy_from_copy, field)

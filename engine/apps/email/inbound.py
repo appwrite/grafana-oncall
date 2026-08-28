@@ -76,7 +76,7 @@ class InboundEmailWebhookView(AlertChannelDefiningMixin, APIView):
 
         # http_method_names can't be used due to how AlertChannelDefiningMixin is implemented
         # todo: refactor AlertChannelDefiningMixin
-        if not request.method.lower() in ["head", "post"]:
+        if request.method.lower() not in ["head", "post"]:
             return HttpResponseNotAllowed(permitted_methods=["head", "post"])
 
         self.check_inbound_email_settings_set()
@@ -289,5 +289,5 @@ class InboundEmailWebhookView(AlertChannelDefiningMixin, APIView):
                 f"get_sender_from_email_message: issue during parsing sender from email message, getting raw value "
                 f"instead. Exception: {e}"
             )
-            sender = ", ".join(email.get_all("From"))
+            sender = ", ".join(email.get_all("From") or [])
         return sender

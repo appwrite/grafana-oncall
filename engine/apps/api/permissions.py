@@ -313,9 +313,9 @@ class RBACPermission(permissions.BasePermission):
         rbac_permissions: typing.Optional[RBACPermissionsAttribute] = getattr(view, RBAC_PERMISSIONS_ATTR, None)
 
         # first check that the rbac_permissions dict attribute is defined
-        assert (
-            rbac_permissions is not None
-        ), f"Must define a {RBAC_PERMISSIONS_ATTR} dict on the ViewSet that is consuming the RBACPermission class"
+        assert rbac_permissions is not None, (
+            f"Must define a {RBAC_PERMISSIONS_ATTR} dict on the ViewSet that is consuming the RBACPermission class"
+        )
 
         action_required_permissions: typing.Optional[typing.List] = rbac_permissions.get(action, None)
 
@@ -355,7 +355,7 @@ ALL_PERMISSION_CLASSES: LegacyAccessControlCompatiblePermissions = [
     getattr(RBACPermission.Permissions, permission_name) for permission_name in ALL_PERMISSION_NAMES
 ]
 ALL_PERMISSION_CHOICES: typing.List[typing.Tuple[str, str]] = []
-for permission_class, permission_name in zip(ALL_PERMISSION_CLASSES, ALL_PERMISSION_NAMES):
+for permission_class, permission_name in zip(ALL_PERMISSION_CLASSES, ALL_PERMISSION_NAMES, strict=False):
     ALL_PERMISSION_CHOICES += [
         (permission_class.value, permission_name),
         (convert_oncall_permission_to_irm(permission_class), permission_name),

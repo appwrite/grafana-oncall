@@ -258,7 +258,7 @@ class LoginMattermostOAuth2(BaseOAuth2):
         except (MattermostAPITokenInvalid, MattermostAPIException) as ex:
             raise UserLoginOAuth2MattermostException(
                 f"Error while trying to fetch mattermost user: {ex.msg} status: {ex.status}"
-            )
+            ) from ex
         response = {}
         response["user"] = {}
         response["user"]["user_id"] = user.user_id

@@ -53,10 +53,10 @@ class ZvonokPhoneProvider(PhoneProvider):
 
         except requests.exceptions.HTTPError as http_err:
             logger.error(f"ZvonokPhoneProvider.make_notification_call: failed {http_err}")
-            raise FailedToMakeCall(graceful_msg=self._get_graceful_msg(body, number))
+            raise FailedToMakeCall(graceful_msg=self._get_graceful_msg(body, number)) from http_err
         except (requests.exceptions.ConnectionError, requests.exceptions.JSONDecodeError, TypeError) as err:
             logger.error(f"ZvonokPhoneProvider.make_notification_call: failed {err}")
-            raise FailedToMakeCall(graceful_msg=f"Failed make notification call to {number}")
+            raise FailedToMakeCall(graceful_msg=f"Failed make notification call to {number}") from err
 
     def make_call(self, number: str, message: str):
         body = None
@@ -78,10 +78,10 @@ class ZvonokPhoneProvider(PhoneProvider):
 
         except requests.exceptions.HTTPError as http_err:
             logger.error(f"ZvonokPhoneProvider.make_call: failed {http_err}")
-            raise FailedToMakeCall(graceful_msg=self._get_graceful_msg(body, number))
+            raise FailedToMakeCall(graceful_msg=self._get_graceful_msg(body, number)) from http_err
         except (requests.exceptions.ConnectionError, requests.exceptions.JSONDecodeError, TypeError) as err:
             logger.error(f"ZvonokPhoneProvider.make_call: failed {err}")
-            raise FailedToMakeCall(graceful_msg=f"Failed make call to {number}")
+            raise FailedToMakeCall(graceful_msg=f"Failed make call to {number}") from err
 
     def _call_create(self, number: str, text: str, speaker: Optional[str] = None):
         params = {
@@ -129,10 +129,10 @@ class ZvonokPhoneProvider(PhoneProvider):
             response.raise_for_status()
         except requests.exceptions.HTTPError as http_err:
             logger.error(f"ZvonokPhoneProvider.make_verification_call: failed {http_err}")
-            raise FailedToStartVerification(graceful_msg=self._get_graceful_msg(body, number))
+            raise FailedToStartVerification(graceful_msg=self._get_graceful_msg(body, number)) from http_err
         except (requests.exceptions.ConnectionError, requests.exceptions.JSONDecodeError, TypeError) as err:
             logger.error(f"ZvonokPhoneProvider.make_verification_call: failed {err}")
-            raise FailedToStartVerification(graceful_msg=f"Failed make verification call to {number}")
+            raise FailedToStartVerification(graceful_msg=f"Failed make verification call to {number}") from err
 
     def finish_verification(self, number, code):
         has = cache.get(self._cache_key(number))

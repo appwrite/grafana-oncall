@@ -23,7 +23,7 @@ from common.insight_log import ChatOpsEvent, ChatOpsTypePlug, write_chatops_insi
 from common.public_primary_keys import generate_public_primary_key, increase_public_primary_key_length
 
 if typing.TYPE_CHECKING:
-    from django.db.models.manager import RelatedManager
+    from django.db.models.fields.related_descriptors import RelatedManager
 
     from apps.alerts.models import AlertReceiveChannel
     from apps.auth_token.models import (
@@ -101,7 +101,7 @@ class Organization(MaintainableObject):
     user_schedule_export_token: "RelatedManager['UserScheduleExportAuthToken']"
     users: "RelatedManager['User']"
 
-    objects: models.Manager["Organization"] = OrganizationManager()
+    objects: typing.ClassVar[models.Manager["Organization"]] = OrganizationManager()
     objects_with_deleted = models.Manager()
 
     public_primary_key = models.CharField(

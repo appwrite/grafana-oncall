@@ -28,8 +28,8 @@ class RouteRegexDebuggerView(APIView):
             return Response([])
         try:
             re.compile(regex)
-        except re.error:
-            raise BadRequest(detail={"regex": ["Invalid regex."]})
+        except re.error as e:
+            raise BadRequest(detail={"regex": ["Invalid regex."]}) from e
 
         incidents_matching_regex = []
         MAX_INCIDENTS_TO_SHOW = 5

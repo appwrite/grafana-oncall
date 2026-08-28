@@ -33,13 +33,16 @@ export const MattermostConnector = observer((props: MattermostConnectorProps) =>
 
   const channelFilter = alertReceiveChannelStore.channelFilters[channelFilterId];
 
-  const handleMattermostChannelChange = useCallback((_value: MattermostChannel['id'], mattermostChannel: MattermostChannel) => {
-    alertReceiveChannelStore.saveChannelFilter(channelFilterId, {
-      notification_backends: {
-        MATTERMOST: { channel: mattermostChannel?.id || null },
-      },
-    });
-  }, []);
+  const handleMattermostChannelChange = useCallback(
+    (_value: MattermostChannel['id'], mattermostChannel: MattermostChannel) => {
+      alertReceiveChannelStore.saveChannelFilter(channelFilterId, {
+        notification_backends: {
+          MATTERMOST: { channel: mattermostChannel?.id || null },
+        },
+      });
+    },
+    []
+  );
 
   const handleChannelFilterNotifyInMattermostChange = useCallback((event: React.ChangeEvent<HTMLInputElement>) => {
     alertReceiveChannelStore.saveChannelFilter(channelFilterId, {

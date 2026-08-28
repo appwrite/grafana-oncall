@@ -317,7 +317,7 @@ def test_get_filter_resolved_by_multiple_values(
     url = reverse("api-internal:alertgroup-list")
 
     first_response = client.get(
-        url + f"?resolved_by={first_user.public_primary_key}&" f"resolved_by={second_user.public_primary_key}",
+        url + f"?resolved_by={first_user.public_primary_key}&resolved_by={second_user.public_primary_key}",
         format="json",
         **make_user_auth_headers(first_user, token),
     )
@@ -411,7 +411,7 @@ def test_get_filter_acknowledged_by_multiple_values(
     url = reverse("api-internal:alertgroup-list")
 
     first_response = client.get(
-        url + f"?acknowledged_by={first_user.public_primary_key}" f"&acknowledged_by={second_user.public_primary_key}",
+        url + f"?acknowledged_by={first_user.public_primary_key}&acknowledged_by={second_user.public_primary_key}",
         format="json",
         **make_user_auth_headers(first_user, token),
     )
@@ -596,7 +596,7 @@ def test_get_filter_invitees_are_multiple_values(
     url = reverse("api-internal:alertgroup-list")
 
     first_response = client.get(
-        url + f"?invitees_are={first_user.public_primary_key}" f"&invitees_are={second_user.public_primary_key}",
+        url + f"?invitees_are={first_user.public_primary_key}&invitees_are={second_user.public_primary_key}",
         format="json",
         **make_user_auth_headers(first_user, token),
     )
@@ -641,7 +641,7 @@ def test_get_filter_invitees_are_ag_with_multiple_logs(
     url = reverse("api-internal:alertgroup-list")
 
     first_response = client.get(
-        url + f"?invitees_are={first_user.public_primary_key}" f"&invitees_are={second_user.public_primary_key}",
+        url + f"?invitees_are={first_user.public_primary_key}&invitees_are={second_user.public_primary_key}",
         format="json",
         **make_user_auth_headers(first_user, token),
     )
@@ -1026,7 +1026,7 @@ def test_get_title_search(
     alert_groups = []
     for i in range(3):
         alert_group = make_alert_group(
-            alert_receive_channel, channel_filter=channel_filter, web_title_cache=f"testing {i+1}"
+            alert_receive_channel, channel_filter=channel_filter, web_title_cache=f"testing {i + 1}"
         )
         # alert groups starting every months going back
         alert_group.started_at = timezone.now() - timezone.timedelta(days=10 + 30 * i)

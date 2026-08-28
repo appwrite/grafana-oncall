@@ -980,7 +980,7 @@ def reload_urls(settings):
     Reloads Django URLs, especially useful when testing conditionally registered URLs
     """
 
-    def _reload_urls(app_url_file_to_reload: str = None):
+    def _reload_urls(app_url_file_to_reload: typing.Optional[str] = None):
         clear_url_caches()
 
         # this can be useful when testing conditionally registered URLs

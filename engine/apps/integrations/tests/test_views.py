@@ -34,7 +34,6 @@ class DatabaseBlocker(DjangoDbBlocker):
 
     def _blocking_wrapper(*args, **kwargs):
         __tracebackhide__ = True
-        __tracebackhide__  # Silence pyflakes
         # mimic DB unavailable error
         raise OperationalError("Database access disabled")
 

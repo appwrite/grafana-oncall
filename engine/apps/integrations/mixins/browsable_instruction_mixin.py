@@ -12,7 +12,7 @@ class BrowsableInstructionMixin:
         template = loader.get_template("integration_link.html")
         # TODO Create associative array for integrations
         base_integration_docs_url = create_engine_url("/#/integrations/", override_base=settings.DOCS_URL)
-        docs_url = f'{base_integration_docs_url}{request.get_full_path().split("/")[3]}'
+        docs_url = f"{base_integration_docs_url}{request.get_full_path().split('/')[3]}"
         if request.alert_receive_channel.config.example_payload:
             payload = request.alert_receive_channel.config.example_payload
             payload = json.dumps(payload)

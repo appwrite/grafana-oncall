@@ -1,4 +1,4 @@
-import { clone } from 'lodash-es'
+import { clone } from 'lodash-es';
 
 import { MONACO_INPUT_HEIGHT_SMALL, MONACO_INPUT_HEIGHT_TALL } from 'pages/integration/IntegrationCommon.config';
 import { AppFeature } from 'state/features';
@@ -69,15 +69,15 @@ const additionalTemplatesToRender: TemplateBlock[] = [
 ];
 
 export const getTemplatesToRender = (features?: Record<string, boolean>) => {
-  const templatesToRender = clone(commonTemplatesToRender)
+  const templatesToRender = clone(commonTemplatesToRender);
   if (features?.[AppFeature.MsTeams]) {
     templatesToRender.push(additionalTemplatesToRender[0]);
   }
   if (features?.[AppFeature.Mattermost]) {
-    templatesToRender.push(additionalTemplatesToRender[1])
+    templatesToRender.push(additionalTemplatesToRender[1]);
   }
   if (features?.[AppFeature.Discord]) {
-    templatesToRender.push(additionalTemplatesToRender[2])
+    templatesToRender.push(additionalTemplatesToRender[2]);
   }
   return templatesToRender;
 };

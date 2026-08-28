@@ -119,10 +119,10 @@ class GoogleCalendarAPIClient:
                 # https://raintank-corp.slack.com/archives/C05AMEGMLCT/p1723556508149689
                 # https://raintank-corp.slack.com/archives/C04JCU51NF8/p1723493330369349
                 logger.error(f"GoogleCalendarAPIClient - HttpError 403 when fetching out of office events: {e}")
-                raise GoogleCalendarUnauthorizedHTTPError(e)
+                raise GoogleCalendarUnauthorizedHTTPError(e) from e
 
             logger.error(f"GoogleCalendarAPIClient - HttpError when fetching out of office events: {e}")
-            raise GoogleCalendarGenericHTTPError(e)
+            raise GoogleCalendarGenericHTTPError(e) from e
         except RefreshError as e:
             # we see RefreshError in two different scenarios:
             # 1. RefreshError('invalid_grant: Account has been deleted', {'error': 'invalid_grant', 'error_description': 'Account has been deleted'})
@@ -143,6 +143,6 @@ class GoogleCalendarAPIClient:
                 f"GoogleCalendarAPIClient - RefreshError when fetching out of office events: {e} "
                 f"error_description={error_description}"
             )
-            raise GoogleCalendarRefreshError(e)
+            raise GoogleCalendarRefreshError(e) from e
 
         return [GoogleCalendarEvent(event) for event in events_result.get("items", [])]

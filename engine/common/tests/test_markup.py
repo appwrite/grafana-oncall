@@ -15,17 +15,9 @@ def test_clean_visual_basics():
 
 def test_clean_block_quotes():
     original = (
-        "This is unquoted text\n"
-        "&gt; This is quoted text\n"
-        "&gt; This is still quoted text\n"
-        "This is unquoted text again"
+        "This is unquoted text\n&gt; This is quoted text\n&gt; This is still quoted text\nThis is unquoted text again"
     )
-    expected = (
-        "This is unquoted text\n"
-        "> This is quoted text\n"
-        "> This is still quoted text\n"
-        "This is unquoted text again"
-    )
+    expected = "This is unquoted text\n> This is quoted text\n> This is still quoted text\nThis is unquoted text again"
 
     assert clean_markup(original) == expected
 

@@ -49,7 +49,7 @@ def schedule_perform_notification_task(
 ):
     task = perform_notification.apply_async((log_record_pk, use_default_notification_policy_fallback))
     task_logger.info(
-        f"Created perform_notification task {task} log_record={log_record_pk} " f"alert_group={alert_group_pk}"
+        f"Created perform_notification task {task} log_record={log_record_pk} alert_group={alert_group_pk}"
     )
 
 

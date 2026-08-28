@@ -202,11 +202,14 @@ def test_declare_incident_resolved_update(setup_alert_group_and_escalation_step)
 
     with patch("common.incident_api.client.IncidentAPIClient.get_incident") as mock_get_incident:
         with patch("common.incident_api.client.IncidentAPIClient.create_incident") as mock_create_incident:
-            mock_get_incident.return_value = {
-                "incidentID": incident_id,
-                "title": "Incident1",
-                "status": "resolved",
-            }, None
+            mock_get_incident.return_value = (
+                {
+                    "incidentID": incident_id,
+                    "title": "Incident1",
+                    "status": "resolved",
+                },
+                None,
+            )
             mock_create_incident.return_value = {"incidentID": new_incident_id, "title": "Incident2"}, None
             declare_incident(alert_group.pk, declare_incident_step.pk)
 

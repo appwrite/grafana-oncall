@@ -21,8 +21,8 @@ class MobileAppVerificationTokenAuthentication(BaseAuthentication):
     def authenticate_credentials(self, token_string: str) -> Tuple[User, MobileAppVerificationToken]:
         try:
             auth_token = self.model.validate_token_string(token_string)
-        except InvalidToken:
-            raise exceptions.AuthenticationFailed("Invalid token")
+        except InvalidToken as e:
+            raise exceptions.AuthenticationFailed("Invalid token") from e
 
         return auth_token.user, auth_token
 

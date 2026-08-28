@@ -41,6 +41,16 @@ def test_update_message():
 
 @pytest.mark.django_db
 @responses.activate
+def test_delete_message():
+    responses.add(responses.DELETE, f"{DISCORD_API_URL}/channels/123/messages/456", status=204)
+
+    DiscordClient().delete_message(channel_id="123", message_id="456")
+
+    assert len(responses.calls) == 1
+
+
+@pytest.mark.django_db
+@responses.activate
 def test_get_channel():
     responses.add(
         responses.GET,

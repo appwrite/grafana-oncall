@@ -535,7 +535,7 @@ class SlackEventApiEndpointView(APIView):
                 step.open_warning_window(payload, warning_text)
             except SlackAPIError as e:
                 logger.info(
-                    f"Failed to open pop-up for unpopulated SlackTeamIdentity {slack_team_identity.pk}\n" f"Error: {e}"
+                    f"Failed to open pop-up for unpopulated SlackTeamIdentity {slack_team_identity.pk}\nError: {e}"
                 )
 
     def _open_warning_for_unconnected_user(self, slack_client: SlackClient, payload: EventPayload) -> None:

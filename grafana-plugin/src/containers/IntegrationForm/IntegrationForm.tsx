@@ -465,13 +465,11 @@ export const IntegrationForm = observer(
         }
 
         if (IntegrationHelper.isSpecificIntegration(selectedIntegration.value, 'grafana_alerting')) {
-          await (formData.is_existing
-            ? AlertReceiveChannelHelper.connectContactPoint
-            : AlertReceiveChannelHelper.createContactPoint)(
-            response.id,
-            formData.alert_manager,
-            formData.contact_point
-          );
+          await (
+            formData.is_existing
+              ? AlertReceiveChannelHelper.connectContactPoint
+              : AlertReceiveChannelHelper.createContactPoint
+          )(response.id, formData.alert_manager, formData.contact_point);
         }
 
         pushHistory(response.id);

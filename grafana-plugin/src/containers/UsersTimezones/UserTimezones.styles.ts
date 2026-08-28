@@ -79,7 +79,9 @@ export const getUserTimezonesStyles = (theme: GrafanaTheme2) => {
     avatar: css`
       position: absolute;
       top: 0;
-      transition: opacity 200ms ease, left 200ms ease;
+      transition:
+        opacity 200ms ease,
+        left 200ms ease;
       border-radius: 50%;
     `,
 
@@ -100,7 +102,9 @@ export const getUserTimezonesStyles = (theme: GrafanaTheme2) => {
       color: #ccccdc;
       border-radius: 8px;
       text-align: center;
-      transition: opacity 200ms ease, left 200ms ease;
+      transition:
+        opacity 200ms ease,
+        left 200ms ease;
       pointer-events: none;
     `,
 

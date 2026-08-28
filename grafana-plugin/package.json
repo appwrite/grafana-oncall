@@ -4,8 +4,10 @@
   "packageManager": "pnpm@12.0.0",
   "description": "Grafana OnCall Plugin",
   "scripts": {
-    "lint": "eslint --ext .js,.jsx,.ts,.tsx --max-warnings=20 ./src ./e2e-tests",
-    "lint:fix": "eslint --max-warnings=20 --fix --ext .js,.jsx,.ts,.tsx ./src ./e2e-tests",
+    "lint": "oxlint --max-warnings=20 ./src ./e2e-tests",
+    "lint:fix": "oxlint --fix --max-warnings=20 ./src ./e2e-tests",
+    "format": "oxfmt --write \"**/*.{css,js,json,jsonc,jsx,scss,ts,tsx}\"",
+    "format:check": "oxfmt --check \"**/*.{css,js,json,jsonc,jsx,scss,ts,tsx}\"",
     "stylelint": "stylelint ./src/**/*.{css,scss,module.css,module.scss}",
     "stylelint:fix": "stylelint --fix ./src/**/*.{css,scss,module.css,module.scss}",
     "build": "NODE_ENV=production webpack -c ./webpack.config.ts --env production",
@@ -42,22 +44,21 @@
     "url": "git+https://github.com/grafana/oncall.git"
   },
   "lint-staged": {
-    "*.ts?(x)": [
-      "prettier --write",
-      "eslint --fix"
+    "*.{js,jsx,ts,tsx}": [
+      "oxlint --fix --no-error-on-unmatched-pattern",
+      "oxfmt --write --no-error-on-unmatched-pattern"
     ],
-    "*.js?(x)": [
-      "prettier --write",
-      "eslint --fix"
+    "*.{css,scss}": [
+      "stylelint --fix",
+      "oxfmt --write --no-error-on-unmatched-pattern"
     ],
-    "*.css": [
-      "stylelint --fix"
+    "*.{json,jsonc}": [
+      "oxfmt --write --no-error-on-unmatched-pattern"
     ]
   },
   "author": "Grafana Labs",
   "license": "Apache-2.0",
   "devDependencies": {
-    "@grafana/eslint-config": "^6.0.0",
     "@grafana/tsconfig": "^1.2.0-rc1",
     "@jest/globals": "^27.5.1",
     "@playwright/test": "1.55.1",
@@ -82,19 +83,9 @@
     "@types/react-test-renderer": "^18.0.5",
     "@types/testing-library__jest-dom": "5.14.8",
     "@types/throttle-debounce": "^5.0.0",
-    "@typescript-eslint/eslint-plugin": "^5.40.1",
     "copy-webpack-plugin": "^11.0.0",
     "css-loader": "^6.7.3",
     "dompurify": "^3.2.4",
-    "eslint": "^8.25.0",
-    "eslint-plugin-deprecation": "^2.0.0",
-    "eslint-plugin-jsdoc": "^44.2.4",
-    "eslint-plugin-promise": "^6.1.1",
-    "eslint-plugin-react": "^7.31.10",
-    "eslint-plugin-react-hooks": "^4.6.0",
-    "eslint-plugin-rulesdir": "^0.2.1",
-    "eslint-plugin-unused-imports": "^3.1.0",
-    "eslint-webpack-plugin": "^4.0.1",
     "express": "^4.21.2",
     "fork-ts-checker-webpack-plugin": "^8.0.0",
     "glob": "^10.2.7",
@@ -108,8 +99,9 @@
     "mailslurp-client": "^15.14.1",
     "moment-timezone": "0.5.45",
     "openapi-typescript": "^7.4.0",
+    "oxfmt": "0.65.0",
+    "oxlint": "1.80.0",
     "postcss-loader": "^7.0.1",
-    "prettier": "^2.8.7",
     "react-test-renderer": "^18.0.2",
     "replace-in-file-webpack-plugin": "^1.0.6",
     "sass": "1.63.2",
@@ -117,8 +109,7 @@
     "semver": "^7.6.0",
     "serve": "^14.2.3",
     "style-loader": "3.3.3",
-    "stylelint-config-prettier": "^9.0.3",
-    "stylelint-prettier": "^2.0.0",
+    "stylelint": "13.13.1",
     "swc-loader": "^0.2.3",
     "ts-jest": "29.4.1",
     "ts-node": "^10.9.1",
@@ -149,7 +140,6 @@
     "circular-dependency-plugin": "^5.2.2",
     "classnames": "^2.3.2",
     "dayjs": "^1.11.5",
-    "eslint-plugin-import": "^2.29.1",
     "immutability-helper": "^3.1.1",
     "linkify-react": "^4.3.2",
     "linkifyjs": "^4.3.2",
@@ -172,7 +162,6 @@
     "react-router-dom-v5-compat": "^6.25.1",
     "react-string-replace": "^0.4.4",
     "react-use": "^17.4.0",
-    "stylelint": "^14.0.0",
     "stylelint-config-standard": "^22.0.0",
     "throttle-debounce": "^2.1.0",
     "tinycolor2": "^1.6.0",

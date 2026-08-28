@@ -488,9 +488,9 @@ def get_cached_oncall_users_for_multiple_schedules(schedules: typing.List["OnCal
     new_results_to_update_in_cache: typing.Dict[str, typing.List[str]] = {}
     for schedule, oncall_users in results.items():
         oncall_user_public_primary_keys = [user.public_primary_key for user in oncall_users]
-        new_results_to_update_in_cache[
-            _generate_cache_key_for_schedule_oncall_users(schedule)
-        ] = oncall_user_public_primary_keys
+        new_results_to_update_in_cache[_generate_cache_key_for_schedule_oncall_users(schedule)] = (
+            oncall_user_public_primary_keys
+        )
 
     cache.set_many(new_results_to_update_in_cache, timeout=SCHEDULE_ONCALL_CACHE_TTL)
 
@@ -554,7 +554,7 @@ def parse_priority_from_string(string: str) -> int:
     return priority
 
 
-def parse_event_uid(string: str, sequence: str = None, recurrence_id: str = None):
+def parse_event_uid(string: str, sequence: str | None = None, recurrence_id: str | None = None):
     pk = None
     source = None
     source_verbal = None
@@ -671,7 +671,7 @@ def ical_date_to_datetime(date, tz, start):
     all_day = False
     if type(date) is datetime.date:
         all_day = True
-        calendar_timezone_offset = datetime.datetime.now().astimezone(tz).utcoffset()
+        calendar_timezone_offset = datetime.datetime.now().astimezone(tz).utcoffset() or datetime.timedelta()
         date = datetime.datetime.combine(date, datetime_to_combine).astimezone(tz) - calendar_timezone_offset
         if not start:
             date -= datetime.timedelta(seconds=1)

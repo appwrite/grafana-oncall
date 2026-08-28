@@ -57,14 +57,15 @@ class PathPrefixedPagePagination(BasePathPrefixedPagination, PageNumberPaginatio
 
     def paginate_queryset(self, queryset, request, view=None):
         request.build_absolute_uri = lambda: create_engine_url(request.get_full_path())
-        per_page = request.query_params.get(self.page_size_query_param, self.page_size)
+        default_per_page = self.page_size or self.max_page_size
+        per_page = request.query_params.get(self.page_size_query_param, default_per_page)
         try:
             per_page = int(per_page)
-        except ValueError:
-            per_page = self.page_size
+        except (TypeError, ValueError):
+            per_page = default_per_page
 
         if per_page < 1:
-            per_page = self.page_size
+            per_page = default_per_page
 
         paginator = self.django_paginator_class(queryset, per_page)
         page_number = request.query_params.get(self.page_query_param, 1)

@@ -91,9 +91,10 @@ def test_on_create_alert_posts_once_while_another_task_holds_the_lock(
     make_discord_channel(organization=organization, is_default_channel=True)
     _, alert_group, alert = make_alert_for_channel(organization)
 
-    with patch("apps.discord.tasks.task_lock") as lock, patch(
-        "apps.discord.tasks.DiscordClient.create_message"
-    ) as create_message:
+    with (
+        patch("apps.discord.tasks.task_lock") as lock,
+        patch("apps.discord.tasks.DiscordClient.create_message") as create_message,
+    ):
         lock.return_value.__enter__.return_value = False
         on_create_alert_async(alert.pk)
 

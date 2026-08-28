@@ -6,7 +6,6 @@ import { useStyles2 } from '@grafana/ui';
 import { PluginPage } from 'PluginPage';
 import { observer } from 'mobx-react';
 
-
 interface DefaultPageLayoutProps extends AppRootProps {
   children?: any;
   page: string;

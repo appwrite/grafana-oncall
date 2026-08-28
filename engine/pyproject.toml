@@ -1,89 +1,44 @@
-[tool.isort]
-profile = "black"
-line_length=120
-float_to_top=true
-py_version=311
-extend_skip_glob = "**/migrations/**"
-
-[tool.black]
+[tool.ruff]
 line-length = 120
-target-version = ["py311"]
-force-exclude = "migrations"
+target-version = "py313"
+extend-exclude = ["migrations"]
 
-[tool.mypy]
-mypy_path = "$MYPY_CONFIG_FILE_DIR/type_stubs"
-implicit_reexport = true
-plugins = [
-    "mypy_django_plugin.main",
-    "mypy_drf_plugin.main",
-]
-exclude = [
-    # TOML's double-quoted strings require escaping backslashes
-    "tests/test_.*\\.py$",    # test files
-    "migrations/\\d*.*\\.py",  # migration files
-]
-disable_error_code = [
-    "abstract",
-    "annotation-unchecked",
-    "arg-type",
-    "assignment",
-    "attr-defined",
-    "call-arg",
-    "call-overload",
-    "has-type",
-    "index",
-    "misc",
-    "name-defined",
-    "operator",
-    "return-value",
-    "typeddict-item",
-    "union-attr",
-]
+[tool.ruff.lint]
+# The flake8 setup this replaces: pycodestyle/pyflakes defaults plus flake8-bugbear (B) and
+# flake8-tidy-imports (TID), with isort (I) folded in.
+select = ["E", "F", "W", "B", "I", "TID"]
 
-# mypy per-module options
-[[tool.mypy.overrides]]
-module = [
-    # the following setting should eventually be removed, one module at a time.
-    # It's only being added to temporarily surpress the:
-    # "module is installed, but missing library stubs or py.typed marker" errors
-    # we can slowly either start to add library stubs ourselves, or try and upgrade these libraries to see if
-    # a newer version includes type stubs
-    "anymail.*",
-    "celery.utils.debug",
-    "debug_toolbar.*",
-    "django_deprecate_fields.*",
-    "django_migration_linter",
-    "django_sns_view.*",
-    "factory.*",
-    "fcm_django.*",
-    "firebase_admin.*",
-    "google.auth.exceptions.*",
-    "googleapiclient.discovery.*",
-    "googleapiclient.errors.*",
-    "google.oauth2.credentials.*",
-    "humanize.*",
-    "ipware.*",
-    "markdown2.*",
-    "mirage.*",
-    "ordered_model.*",
-    "phonenumbers.*",
-    "polymorphic.*",
-    "pyroscope.*",
-    "ratelimit.*",
-    "regex.*",
-    "recurring_ical_events.*",
-    "responses.*",
-    "rest_polymorphic.*",
-    "slackclient.*",
-    "slackviewer.*",
-    "social_core.*",
-    "social_django.*",
-    "twilio.*",
-    "uwsgidecorators.*",
-    "whitenoise.*",
-    "uwsgi.*",
-]
-ignore_missing_imports = true
+[tool.ruff.lint.pycodestyle]
+# The formatter wraps at 120; a line only it cannot split is tolerated up to here.
+max-line-length = 180
 
-[tool.django-stubs]
-django_settings_module = "settings.dev"
+[tool.ruff.lint.flake8-tidy-imports]
+ban-relative-imports = "parents"
+
+[tool.ruff.lint.flake8-tidy-imports.banned-api]
+"jinja2.Template".msg = "Use apply_jinja_template instead"
+"django.apps.apps".msg = "Import models directly instead"
+
+[tool.ty.environment]
+extra-paths = ["type_stubs"]
+
+[tool.ty.src]
+exclude = ["**/tests/", "**/test_*.py", "**/migrations/"]
+
+# Django builds managers, related descriptors, and settings at runtime; without a plugin for that, these
+# rules read as noise here the same way their mypy counterparts did (its disable_error_code list). Lift
+# them one at a time as annotations catch up.
+# Django builds managers, related descriptors, and settings at runtime; without a plugin for that,
+# these rules read as noise here (hundreds to thousands of sites each). Everything else ty checks is
+# enforced, with per-site `ty: ignore` comments where a library's types fall short. Lift these one at
+# a time as annotations catch up.
+[tool.ty.rules]
+call-non-callable = "ignore"
+invalid-argument-type = "ignore"
+invalid-assignment = "ignore"
+invalid-key = "ignore"
+invalid-method-override = "ignore"
+invalid-return-type = "ignore"
+missing-typed-dict-key = "ignore"
+not-subscriptable = "ignore"
+unresolved-attribute = "ignore"

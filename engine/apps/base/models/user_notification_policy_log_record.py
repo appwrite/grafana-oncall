@@ -53,7 +53,9 @@ class UserNotificationPolicyLogRecord(models.Model):
     author: typing.Optional["User"]
     notification_policy: typing.Optional[UserNotificationPolicy]
 
-    objects: models.Manager["UserNotificationPolicyLogRecord"] = UserNotificationPolicyLogRecordQuerySet.as_manager()
+    objects: typing.ClassVar[models.Manager["UserNotificationPolicyLogRecord"]] = (
+        UserNotificationPolicyLogRecordQuerySet.as_manager()
+    )
 
     (
         TYPE_PERSONAL_NOTIFICATION_TRIGGERED,

@@ -197,9 +197,9 @@ def make_request(
                 except JSONDecodeError:
                     status["content"] = response.content.decode("utf-8")
             else:
-                status[
-                    "content"
-                ] = f"Response content {content_length} exceeds {WEBHOOK_RESPONSE_LIMIT} character limit"
+                status["content"] = (
+                    f"Response content {content_length} exceeds {WEBHOOK_RESPONSE_LIMIT} character limit"
+                )
 
         return triggered, status, None, None
     except InvalidWebhookUrl as e:

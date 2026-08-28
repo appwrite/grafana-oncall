@@ -10,6 +10,12 @@ from apps.alerts.models import Alert, AlertGroup
 from apps.discord.client import THREAD_NAME_LIMIT
 from common.utils import is_string_with_visible_characters, str_or_backup
 
+if typing.TYPE_CHECKING:
+    # Only for annotation. Importing it at module level deadlocks startup: loading the
+    # messaging backends is part of initializing apps.alerts.models, and ResolutionNote
+    # is not bound there yet when this module is pulled in through DiscordBackend.
+    from apps.alerts.models import ResolutionNote
+
 # https://discord.com/developers/docs/resources/message#embed-object-embed-limits
 EMBED_TITLE_LIMIT = 256
 EMBED_DESCRIPTION_LIMIT = 4096
@@ -93,6 +99,26 @@ def stamp(moment) -> str:
     """A moment as Discord renders it: the reader's own clock, and how long ago in their own words."""
     seconds = int(moment.timestamp())
     return f"<t:{seconds}:t> (<t:{seconds}:R>)"
+
+
+def render_resolution_note(resolution_note: "ResolutionNote") -> dict:
+    """A resolution note as a follow-up beside the card.
+
+    The note is already capped at 3000 characters in OnCall, which fits an embed
+    description. Mentions are never resolved: the text is attacker-adjacent the
+    same way an alert annotation is.
+    """
+    author = resolution_note.author.username if resolution_note.author else "OnCall"
+    return {
+        "embeds": [
+            {
+                "title": "Investigation",
+                "description": truncate(resolution_note.text or "", EMBED_DESCRIPTION_LIMIT),
+                "footer": {"text": truncate(f"Note from {author}", EMBED_FOOTER_LIMIT)},
+            }
+        ],
+        "allowed_mentions": {"parse": []},
+    }
 
 
 def route_config(alert_group: AlertGroup) -> dict:

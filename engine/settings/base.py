@@ -156,9 +156,9 @@ DATABASE_PORT = os.getenv("DATABASE_PORT") or os.getenv("MYSQL_PORT")
 DATABASE_OPTIONS = os.getenv("DATABASE_OPTIONS")
 if DATABASE_OPTIONS:
     try:
-        DATABASE_OPTIONS = dict([tuple(i.split("=")) for i in str(DATABASE_OPTIONS).split(" ")])
-    except Exception:
-        raise Exception("Bad database options. Check DATABASE_OPTIONS variable")
+        DATABASE_OPTIONS = {key: value for key, value in (item.split("=") for item in str(DATABASE_OPTIONS).split(" "))}
+    except Exception as e:
+        raise Exception("Bad database options. Check DATABASE_OPTIONS variable") from e
 else:
     DATABASE_OPTIONS = {}
 
@@ -871,6 +871,7 @@ SELF_HOSTED_SETTINGS = {
     "ORG_TITLE": os.environ.get("SELF_HOSTED_ORG_TITLE", "Self-Hosted Organization"),
     "REGION_SLUG": os.environ.get("SELF_HOSTED_REGION_SLUG", "self_hosted_region"),
     "GRAFANA_API_URL": os.environ.get("GRAFANA_API_URL", default=None),
+    "GRAFANA_PUBLIC_URL": os.environ.get("GRAFANA_PUBLIC_URL") or os.environ.get("GRAFANA_API_URL", default=None),
     "CLUSTER_SLUG": os.environ.get("SELF_HOSTED_CLUSTER_SLUG", "self_hosted_cluster"),
 }
 

@@ -127,7 +127,7 @@ class WebhookSerializer(LabelsSerializerMixin, serializers.ModelSerializer):
         try:
             apply_jinja_template(template, alert_payload=defaultdict(str), alert_group_id="alert_group_1")
         except JinjaTemplateError as e:
-            raise serializers.ValidationError(e.fallback_message)
+            raise serializers.ValidationError(e.fallback_message) from e
         except JinjaTemplateWarning:
             # Suppress render exceptions since we do not have a representative payload to test with
             pass

@@ -11,7 +11,7 @@ FALLBACK_LOCALE = "en"
 
 
 def _format_dt(
-    func: typing.Callable[[timezone.datetime, typing.Optional[str]], str],
+    func: typing.Callable[..., str],
     dt: timezone.datetime,
     locale: typing.Optional[str],
 ) -> str:

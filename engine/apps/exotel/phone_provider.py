@@ -50,10 +50,10 @@ class ExotelPhoneProvider(PhoneProvider):
 
         except requests.exceptions.HTTPError as http_err:
             logger.error(f"ExotelPhoneProvider.make_notification_call: failed {http_err}")
-            raise FailedToMakeCall(graceful_msg=f"Failed make notification call to {number} http error")
+            raise FailedToMakeCall(graceful_msg=f"Failed make notification call to {number} http error") from http_err
         except (requests.exceptions.ConnectionError, requests.exceptions.JSONDecodeError, TypeError) as err:
             logger.error(f"ExotelPhoneProvider.make_notification_call: failed {err}")
-            raise FailedToMakeCall(graceful_msg=f"Failed make notification call to {number}")
+            raise FailedToMakeCall(graceful_msg=f"Failed make notification call to {number}") from err
 
     def make_call(self, number: str, message: str):
         body = None
@@ -76,10 +76,10 @@ class ExotelPhoneProvider(PhoneProvider):
 
         except requests.exceptions.HTTPError as http_err:
             logger.error(f"ExotelPhoneProvider.make_call: failed {http_err}")
-            raise FailedToMakeCall(graceful_msg=f"Failed make call to {number} http error")
+            raise FailedToMakeCall(graceful_msg=f"Failed make call to {number} http error") from http_err
         except (requests.exceptions.ConnectionError, requests.exceptions.JSONDecodeError, TypeError) as err:
             logger.error(f"ExotelPhoneProvider.make_call: failed {err}")
-            raise FailedToMakeCall(graceful_msg=f"Failed make call to {number}")
+            raise FailedToMakeCall(graceful_msg=f"Failed make call to {number}") from err
 
     def _call_create(self, number: str, with_callback: bool = True):
         params = {
@@ -132,10 +132,10 @@ class ExotelPhoneProvider(PhoneProvider):
                 raise FailedToStartVerification(graceful_msg=self._get_graceful_msg(body, number))
         except requests.exceptions.HTTPError as http_err:
             logger.error(f"ExotelPhoneProvider.send_verification_sms: failed {http_err}")
-            raise FailedToStartVerification(graceful_msg=self._get_graceful_msg(body, number))
+            raise FailedToStartVerification(graceful_msg=self._get_graceful_msg(body, number)) from http_err
         except (requests.exceptions.ConnectionError, requests.exceptions.JSONDecodeError, TypeError) as err:
             logger.error(f"ExotelPhoneProvider.send_verification_sms: failed {err}")
-            raise FailedToStartVerification(graceful_msg=f"Failed sending verification SMS to {number}")
+            raise FailedToStartVerification(graceful_msg=f"Failed sending verification SMS to {number}") from err
 
     def _send_verification_code(self, number: str, body: str):
         params = {

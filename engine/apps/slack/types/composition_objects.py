@@ -14,11 +14,6 @@ class _TextBase(typing.TypedDict):
     [Documentation](https://api.slack.com/reference/block-kit/composition-objects#text)
     """
 
-    type: typing.Literal["plain_text"] | typing.Literal["mrkdwn"]
-    """
-    The formatting to use for this text object. Can be one of `plain_text` or `mrkdwn`.
-    """
-
     text: str
     """
     The text for the block. This field accepts any of the standard

@@ -29,7 +29,6 @@ class AddIndexSkipMySQL(migrations.AddIndex):
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
         ("fcm_django", "0010_unique_registration_id"),
     ]

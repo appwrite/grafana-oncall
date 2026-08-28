@@ -1,7 +1,7 @@
 import datetime
 import logging
 import typing
-import urllib
+import urllib.parse
 from collections import namedtuple
 from functools import partial
 
@@ -36,7 +36,7 @@ from common.utils import clean_markup, str_or_backup
 from .alert_group_counter import AlertGroupCounter
 
 if typing.TYPE_CHECKING:
-    from django.db.models.manager import RelatedManager
+    from django.db.models.fields.related_descriptors import RelatedManager
 
     from apps.alerts.models import (
         Alert,
@@ -100,6 +100,7 @@ class Permalinks(typing.TypedDict):
     slack: typing.Optional[str]
     slack_app: typing.Optional[str]
     telegram: typing.Optional[str]
+    discord: typing.Optional[str]
     web: str
 
 
@@ -209,7 +210,7 @@ class AlertGroup(AlertGroupSlackRenderingMixin, EscalationSnapshotMixin, models.
     slack_messages: "RelatedManager['SlackMessage']"
     users: "RelatedManager['User']"
 
-    objects: models.Manager["AlertGroup"] = AlertGroupQuerySet.as_manager()
+    objects: typing.ClassVar[models.Manager["AlertGroup"]] = AlertGroupQuerySet.as_manager()
 
     (
         NEW,
@@ -545,11 +546,48 @@ class AlertGroup(AlertGroupSlackRenderingMixin, EscalationSnapshotMixin, models.
         return main_telegram_message.link if main_telegram_message else None
 
     @property
+    def discord_permalink(self) -> typing.Optional[str]:
+        """A Discord URL for the card, or None when Discord is off or the card was never posted.
+
+        A forum post is itself a channel, so the thread id is the destination. A card in a text
+        channel needs the message id as well, or the link opens the channel rather than the card.
+        """
+        if not settings.FEATURE_DISCORD_INTEGRATION_ENABLED:
+            return None
+
+        from apps.discord.models import DiscordChannel, DiscordMessage
+
+        try:
+            discord_message = self.prefetched_discord_messages[0] if self.prefetched_discord_messages else None
+        except AttributeError:
+            discord_message = (
+                self.discord_messages.filter(message_type=DiscordMessage.ALERT_GROUP_MESSAGE)
+                .order_by("created_at")
+                .first()
+            )
+        if discord_message is None:
+            return None
+
+        guild_id = discord_message.guild_id
+        if not guild_id:
+            channel = DiscordChannel.objects.filter(
+                organization=self.channel.organization, channel_id=discord_message.channel_id
+            ).first()
+            guild_id = channel.guild_id if channel else None
+        if not guild_id:
+            return None
+
+        if discord_message.thread_id:
+            return f"https://discord.com/channels/{guild_id}/{discord_message.thread_id}"
+        return f"https://discord.com/channels/{guild_id}/{discord_message.channel_id}/{discord_message.message_id}"
+
+    @property
     def permalinks(self) -> Permalinks:
         return {
             "slack": self.slack_permalink,
             "slack_app": self.slack_app_link,
             "telegram": self.telegram_permalink,
+            "discord": self.discord_permalink,
             "web": self.web_link,
         }
 
@@ -1401,7 +1439,7 @@ class AlertGroup(AlertGroupSlackRenderingMixin, EscalationSnapshotMixin, models.
                 type=AlertGroupLogRecord.TYPE_UN_SILENCE, author=user, reason="Bulk action acknowledge"
             )
 
-        for alert_group, previous_state in zip(alert_groups_to_acknowledge_list, previous_states):
+        for alert_group, previous_state in zip(alert_groups_to_acknowledge_list, previous_states, strict=False):
             # update metrics cache
             alert_group._update_metrics(
                 organization_id=user.organization_id,
@@ -1476,7 +1514,7 @@ class AlertGroup(AlertGroupSlackRenderingMixin, EscalationSnapshotMixin, models.
                 type=AlertGroupLogRecord.TYPE_UN_SILENCE, author=user, reason="Bulk action resolve"
             )
 
-        for alert_group, previous_state in zip(alert_groups_to_resolve_list, previous_states):
+        for alert_group, previous_state in zip(alert_groups_to_resolve_list, previous_states, strict=False):
             # update metrics cache
             alert_group._update_metrics(
                 organization_id=user.organization_id,
@@ -1761,7 +1799,7 @@ class AlertGroup(AlertGroupSlackRenderingMixin, EscalationSnapshotMixin, models.
                 reason="Bulk action silence",
             )
 
-        for alert_group, previous_state in zip(alert_groups_to_silence_list, previous_states):
+        for alert_group, previous_state in zip(alert_groups_to_silence_list, previous_states, strict=False):
             # update metrics cache
             alert_group._update_metrics(
                 organization_id=user.organization_id,

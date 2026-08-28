@@ -37,7 +37,7 @@ def run_async(coro: Coroutine[Any, Any, T]) -> T:
     # Apply nest_asyncio to allow nested event loops
     # This is required for proper async/sync bridging in Django/Celery
     try:
-        import nest_asyncio  # type: ignore
+        import nest_asyncio
 
         # Only apply once
         if not hasattr(run_async, "_nest_applied"):

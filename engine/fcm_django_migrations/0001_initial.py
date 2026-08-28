@@ -6,7 +6,6 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     operations = [
         migrations.CreateModel(
             name="FCMDevice",
@@ -22,9 +21,7 @@ class Migration(migrations.Migration):
                 ),
                 (
                     "name",
-                    models.CharField(
-                        blank=True, max_length=255, null=True, verbose_name="Name"
-                    ),
+                    models.CharField(blank=True, max_length=255, null=True, verbose_name="Name"),
                 ),
                 (
                     "active",
@@ -36,9 +33,7 @@ class Migration(migrations.Migration):
                 ),
                 (
                     "date_created",
-                    models.DateTimeField(
-                        auto_now_add=True, null=True, verbose_name="Creation date"
-                    ),
+                    models.DateTimeField(auto_now_add=True, null=True, verbose_name="Creation date"),
                 ),
                 (
                     "device_id",
@@ -56,9 +51,7 @@ class Migration(migrations.Migration):
                 ),
                 (
                     "type",
-                    models.CharField(
-                        choices=[("ios", "ios"), ("android", "android")], max_length=10
-                    ),
+                    models.CharField(choices=[("ios", "ios"), ("android", "android")], max_length=10),
                 ),
                 (
                     "user",

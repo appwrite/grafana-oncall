@@ -195,9 +195,7 @@ def test_list_users_to_notify_from_ical_ignore_cancelled(make_organization_and_u
         STATUS:CANCELLED
         END:VEVENT
         END:VCALENDAR
-    """.format(
-            user.username, now.strftime("%Y%m%dT%H%M%SZ"), end.strftime("%Y%m%dT%H%M%SZ")
-        )
+    """.format(user.username, now.strftime("%Y%m%dT%H%M%SZ"), end.strftime("%Y%m%dT%H%M%SZ"))
     )
     schedule = make_schedule(organization, schedule_class=OnCallScheduleICal, cached_ical_file_primary=ical_data)
 

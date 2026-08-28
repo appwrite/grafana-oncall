@@ -196,6 +196,7 @@ CELERY_TASK_ROUTES = {
     # DISCORD
     "apps.discord.tasks.on_create_alert_async": {"queue": "discord"},
     "apps.discord.tasks.on_alert_group_action_triggered_async": {"queue": "discord"},
+    "apps.discord.tasks.on_resolution_note_async": {"queue": "discord"},
     "apps.discord.tasks.notify_user_about_alert_async": {"queue": "discord"},
     "apps.discord.shifts.announce_shift_starts_for_schedule": {"queue": "discord"},
     "apps.discord.shifts.announce_shift_starts_for_all_schedules": {"queue": "discord"},

@@ -151,7 +151,7 @@ export const useOnMount = (callback: () => void) => {
 };
 
 export const useInitializePlugin = () => {
-  /* 
+  /*
   We need to rely on rootStore imported directly (not provided via context)
   because this hook is invoked out of plugin root (in plugin extension)
   */

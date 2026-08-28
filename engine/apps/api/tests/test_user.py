@@ -486,8 +486,8 @@ def test_notification_chain_verbal(
     url = reverse("api-internal:user-detail", kwargs={"pk": admin.public_primary_key})
 
     expected_notification_chain = {
-        "default": "Slack - 5 min - \U0000260E - Telegram",
-        "important": "Slack - 5 min - \U0000260E - Telegram",
+        "default": "Slack - 5 min - \U0000260e - Telegram",
+        "important": "Slack - 5 min - \U0000260e - Telegram",
     }
 
     response = client.get(url, format="json", **make_user_auth_headers(admin, token))

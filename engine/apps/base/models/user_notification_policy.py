@@ -14,7 +14,7 @@ from common.ordered_model.ordered_model import OrderedModel
 from common.public_primary_keys import generate_public_primary_key, increase_public_primary_key_length
 
 if typing.TYPE_CHECKING:
-    from django.db.models.manager import RelatedManager
+    from django.db.models.fields.related_descriptors import RelatedManager
 
     from apps.base.models import UserNotificationPolicyLogRecord
 
@@ -66,8 +66,8 @@ def validate_channel_choice(value):
         return
     try:
         _notification_channels(value)
-    except ValueError:
-        raise ValidationError("%(value)s is not a valid option", params={"value": value})
+    except ValueError as e:
+        raise ValidationError("%(value)s is not a valid option", params={"value": value}) from e
 
 
 class UserNotificationPolicy(OrderedModel):
@@ -202,9 +202,9 @@ class NotificationChannelOptions:
 class NotificationChannelAPIOptions(NotificationChannelOptions):
     LABELS = {
         UserNotificationPolicy.NotificationChannel.SLACK: "Slack mentions",
-        UserNotificationPolicy.NotificationChannel.SMS: "SMS \U00002709\U0001F4F2",
-        UserNotificationPolicy.NotificationChannel.PHONE_CALL: "Phone call \U0000260E",
-        UserNotificationPolicy.NotificationChannel.TELEGRAM: "Telegram \U0001F916",
+        UserNotificationPolicy.NotificationChannel.SMS: "SMS \U00002709\U0001f4f2",
+        UserNotificationPolicy.NotificationChannel.PHONE_CALL: "Phone call \U0000260e",
+        UserNotificationPolicy.NotificationChannel.TELEGRAM: "Telegram \U0001f916",
     }
     LABELS.update(
         {
@@ -216,7 +216,7 @@ class NotificationChannelAPIOptions(NotificationChannelOptions):
     SHORT_LABELS = {
         UserNotificationPolicy.NotificationChannel.SLACK: "Slack",
         UserNotificationPolicy.NotificationChannel.SMS: "SMS",
-        UserNotificationPolicy.NotificationChannel.PHONE_CALL: "\U0000260E",
+        UserNotificationPolicy.NotificationChannel.PHONE_CALL: "\U0000260e",
         UserNotificationPolicy.NotificationChannel.TELEGRAM: "Telegram",
     }
     SHORT_LABELS.update(

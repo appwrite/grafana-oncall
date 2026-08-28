@@ -44,8 +44,7 @@ def check_recaptcha_v3(value: str, action: str, score: float, client_ip: str, ho
             return False
         if recaptcha_response["score"] <= float(score):
             logger.info(
-                f"check_recaptcha_v3: failed:"
-                f' received score {recaptcha_response["score"]} lower then required {score}'
+                f"check_recaptcha_v3: failed: received score {recaptcha_response['score']} lower then required {score}"
             )
             return False
         if settings.RECAPTCHA_V3_HOSTNAME_VALIDATION:
@@ -57,7 +56,7 @@ def check_recaptcha_v3(value: str, action: str, score: float, client_ip: str, ho
             if recaptcha_response["hostname"] != hostname:
                 logger.info(
                     f"check_recaptcha_v3:"
-                    f' failed: received response from hostname {recaptcha_response["hostname"]},'
+                    f" failed: received response from hostname {recaptcha_response['hostname']},"
                     f" started from {hostname}"
                 )
                 return False

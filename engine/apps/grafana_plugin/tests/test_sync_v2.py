@@ -306,7 +306,7 @@ def test_sync_batch_tasks(make_organization, settings):
                 and actual.kwargs["countdown"] == expected.kwargs["countdown"]
             )
 
-        for actual_call, expected_call in zip(mock_sync.call_args_list, expected_calls):
+        for actual_call, expected_call in zip(mock_sync.call_args_list, expected_calls, strict=False):
             assert check_call(actual_call, expected_call)
 
         assert mock_sync.call_count == len(expected_calls)

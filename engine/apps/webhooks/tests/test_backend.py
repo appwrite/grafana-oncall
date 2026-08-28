@@ -54,7 +54,7 @@ def test_unlink_webhook(
     backend.unlink_user(user)
     user.refresh_from_db()
     with pytest.raises(ObjectDoesNotExist):
-        user.personal_webhook
+        _ = user.personal_webhook
 
 
 @pytest.mark.django_db

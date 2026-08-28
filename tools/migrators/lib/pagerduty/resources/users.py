@@ -6,7 +6,7 @@ from lib.utils import find_by_id
 
 
 def filter_users(
-    users: typing.List[typing.Dict[str, typing.Any]]
+    users: typing.List[typing.Dict[str, typing.Any]],
 ) -> typing.List[typing.Dict[str, typing.Any]]:
     """
     Filter users based on PAGERDUTY_FILTER_USERS.

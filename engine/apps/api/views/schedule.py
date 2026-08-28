@@ -17,7 +17,7 @@ from rest_framework.fields import BooleanField
 from rest_framework.filters import SearchFilter
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.request import Request
-from rest_framework.views import Response
+from rest_framework.response import Response
 from rest_framework.viewsets import ModelViewSet
 
 from apps.alerts.models import EscalationChain, EscalationPolicy
@@ -271,8 +271,8 @@ class ScheduleView(
 
         try:
             obj = queryset.get()
-        except ObjectDoesNotExist:
-            raise NotFound
+        except ObjectDoesNotExist as e:
+            raise NotFound from e
 
         # May raise a permission denied
         self.check_object_permissions(self.request, obj)
@@ -288,8 +288,8 @@ class ScheduleView(
         if date_param is not None:
             try:
                 date = dateparse.parse_date(date_param)
-            except ValueError:
-                raise BadRequest(detail="Invalid date format")
+            except ValueError as e:
+                raise BadRequest(detail="Invalid date format") from e
             else:
                 if date is None:
                     raise BadRequest(detail="Invalid date format")
@@ -495,8 +495,8 @@ class ScheduleView(
         if self.request.method == "GET":
             try:
                 token = ScheduleExportAuthToken.objects.get(user_id=self.request.user.id, schedule_id=schedule.id)
-            except ScheduleExportAuthToken.DoesNotExist:
-                raise NotFound
+            except ScheduleExportAuthToken.DoesNotExist as e:
+                raise NotFound from e
 
             response = {
                 "created_at": token.created_at,
@@ -512,8 +512,8 @@ class ScheduleView(
                     request.user, request.user.organization, schedule
                 )
                 write_resource_insight_log(instance=instance, author=self.request.user, event=EntityEvent.CREATED)
-            except IntegrityError:
-                raise Conflict("Schedule export token for user already exists")
+            except IntegrityError as e:
+                raise Conflict("Schedule export token for user already exists") from e
 
             export_url = create_engine_url(
                 reverse("api-public:schedules-export", kwargs={"pk": schedule.public_primary_key})
@@ -529,8 +529,8 @@ class ScheduleView(
                 token = ScheduleExportAuthToken.objects.get(user_id=self.request.user.id, schedule_id=schedule.id)
                 write_resource_insight_log(instance=token, author=self.request.user, event=EntityEvent.DELETED)
                 token.delete()
-            except ScheduleExportAuthToken.DoesNotExist:
-                raise NotFound
+            except ScheduleExportAuthToken.DoesNotExist as e:
+                raise NotFound from e
 
             return Response(status=status.HTTP_204_NO_CONTENT)
 

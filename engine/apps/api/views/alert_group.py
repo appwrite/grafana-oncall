@@ -111,8 +111,8 @@ class AlertGroupFilter(DateRangeFilterMixin, ModelFieldFilterMixin, filters.Filt
             return queryset
         try:
             statuses = list(map(int, value))
-        except ValueError:
-            raise BadRequest(detail="Invalid status value")
+        except ValueError as e:
+            raise BadRequest(detail="Invalid status value") from e
 
         filters = {}
         q_objects = Q()
@@ -202,8 +202,8 @@ class AlertGroupTeamFilteringMixin(TeamFilteringMixin):
 
             try:
                 obj = queryset.get(public_primary_key=self.kwargs["pk"])
-            except ObjectDoesNotExist:
-                raise NotFound
+            except ObjectDoesNotExist as e:
+                raise NotFound from e
 
             obj_team = self._getattr_with_related(obj, self.TEAM_LOOKUP)
 
@@ -447,7 +447,7 @@ class AlertGroupView(
         MAX_COUNT = 100001
         alert_groups = self.filter_queryset(self.get_queryset())[:MAX_COUNT]
         count = alert_groups.count()
-        count = f"{MAX_COUNT-1}+" if count == MAX_COUNT else str(count)
+        count = f"{MAX_COUNT - 1}+" if count == MAX_COUNT else str(count)
         return Response({"count": count})
 
     @extend_schema(responses=AlertGroupSerializer)
@@ -686,13 +686,13 @@ class AlertGroupView(
 
         try:
             user_id = request.data["user_id"]
-        except KeyError:
-            raise BadRequest(detail="Please specify user_id")
+        except KeyError as e:
+            raise BadRequest(detail="Please specify user_id") from e
 
         try:
             user = organization.users.get(public_primary_key=user_id)
-        except User.DoesNotExist:
-            raise BadRequest(detail="User not found")
+        except User.DoesNotExist as e:
+            raise BadRequest(detail="User not found") from e
 
         unpage_user(alert_group=alert_group, user=user, from_user=from_user)
         return Response(status=status.HTTP_200_OK)

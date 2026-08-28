@@ -12,7 +12,6 @@ import { UserHelper } from 'models/user/user.helpers';
 import { ApiSchemas } from 'network/oncall-api/api.types';
 import { useStore } from 'state/useStore';
 
-// eslint-disable-next-line @typescript-eslint/naming-convention
 interface ICalConnectorProps {
   id: ApiSchemas['User']['pk'];
 }

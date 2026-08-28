@@ -9,7 +9,7 @@ from apps.base.models import UserNotificationPolicy
 from apps.base.models.user_notification_policy import validate_channel_choice
 
 if typing.TYPE_CHECKING:
-    from django.db.models.manager import RelatedManager
+    from django.db.models.fields.related_descriptors import RelatedManager
 
     from apps.alerts.models import AlertGroup, AlertReceiveChannel
     from apps.user_management.models import User

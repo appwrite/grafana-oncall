@@ -38,8 +38,8 @@ export const DiscordInfo = observer(() => {
         <Text.Title level={2}>Connect Discord account</Text.Title>
 
         <Text type="secondary">
-          Linking your Discord account lets the Acknowledge and Resolve buttons on an alert group act as you, and lets
-          a notification policy reach you in Discord.
+          Linking your Discord account lets the Acknowledge and Resolve buttons on an alert group act as you, and lets a
+          notification policy reach you in Discord.
         </Text>
 
         <Text type="secondary">1. Copy this verification code, which is valid for ten minutes:</Text>

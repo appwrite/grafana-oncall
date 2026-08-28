@@ -71,6 +71,7 @@ def construct_expected_response_from_alert_groups(alert_groups):
                     "slack": None,
                     "slack_app": None,
                     "telegram": None,
+                    "discord": None,
                     "web": alert_group.web_link,
                 },
                 "silenced_at": silenced_at,

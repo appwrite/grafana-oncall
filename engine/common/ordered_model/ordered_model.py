@@ -145,8 +145,8 @@ class OrderedModel(models.Model):
             _self = next(instance for instance in instances if instance.pk == self.pk)
             self.order = _self.order
             assert self.order is not None
-        except StopIteration:
-            raise self.DoesNotExist()
+        except StopIteration as e:
+            raise self.DoesNotExist() from e
 
         # If the order is already correct, do nothing.
         if self.order == order:
@@ -201,8 +201,8 @@ class OrderedModel(models.Model):
                 _self = next(instance for instance in instances if instance.pk == self.pk)
                 self.order = _self.order
                 assert self.order is not None
-            except StopIteration:
-                raise self.DoesNotExist()
+            except StopIteration as e:
+                raise self.DoesNotExist() from e
 
             # If the order is already correct, do nothing.
             if self.order == order:

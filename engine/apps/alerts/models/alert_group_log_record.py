@@ -570,7 +570,7 @@ class AlertGroupLogRecord(models.Model):
                     f"because it is already attached or resolved."
                 )
         elif self.type == AlertGroupLogRecord.TYPE_RESOLVED:
-            result += f"resolved {f'by {author_name}'if author_name else ''}"
+            result += f"resolved {f'by {author_name}' if author_name else ''}"
         elif self.type == AlertGroupLogRecord.TYPE_UN_RESOLVED:
             result += f"unresolved by {author_name}"
         elif self.type == AlertGroupLogRecord.TYPE_WIPED:
@@ -638,7 +638,7 @@ class AlertGroupLogRecord(models.Model):
                     f" there are no users to notify for this schedule slot."
                 )
             elif self.escalation_error_code == AlertGroupLogRecord.ERROR_ESCALATION_WAIT_STEP_IS_NOT_CONFIGURED:
-                result += 'escalation step "Wait" is not configured. ' "Default delay is 5 minutes."
+                result += 'escalation step "Wait" is not configured. Default delay is 5 minutes.'
             elif self.escalation_error_code == AlertGroupLogRecord.ERROR_ESCALATION_USER_GROUP_IS_EMPTY:
                 if self.escalation_policy is not None:
                     group_name = f" <!subteam^{self.escalation_policy.notify_to_group}> "
@@ -703,7 +703,7 @@ class AlertGroupLogRecord(models.Model):
 
     def delete(self):
         logger.debug(
-            f"alert_group_log_record for alert_group deleted" f"alert_group={self.alert_group.pk} log_id={self.pk}"
+            f"alert_group_log_record for alert_group deletedalert_group={self.alert_group.pk} log_id={self.pk}"
         )
         super().delete()
 

@@ -45,8 +45,8 @@ class AmazonSNS(BrowsableInstructionMixin, AlertChannelDefiningMixin, Integratio
     def handle_message(self, message, payload):
         try:
             alert_receive_channel = self.request.alert_receive_channel
-        except AlertReceiveChannel.DoesNotExist:
-            raise PermissionDenied("Integration key was not found. Permission denied.")
+        except AlertReceiveChannel.DoesNotExist as e:
+            raise PermissionDenied("Integration key was not found. Permission denied.") from e
 
         if type(message) is str:
             try:

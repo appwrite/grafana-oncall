@@ -1,7 +1,8 @@
 import json
 import logging
 import typing
-from datetime import datetime
+
+from django.utils import timezone
 
 from apps.alerts.constants import ActionSource
 from apps.alerts.incident_appearance.renderers.constants import DEFAULT_BACKUP_TITLE
@@ -847,7 +848,7 @@ class AcknowledgeConfirmationStep(AcknowledgeGroupStep):
                     user_verbal = alert_group.acknowledged_by_user.get_username_with_slack_verbal()
                     text = f"{user_verbal} confirmed that the Alert Group is still acknowledged."
                     self._slack_client.chat_update(channel=channel, ts=message_ts, text=text)
-                    alert_group.acknowledged_by_confirmed = datetime.utcnow()
+                    alert_group.acknowledged_by_confirmed = timezone.now()
                     alert_group.save(update_fields=["acknowledged_by_confirmed"])
                 else:
                     self._slack_client.chat_postEphemeral(
@@ -859,7 +860,7 @@ class AcknowledgeConfirmationStep(AcknowledgeGroupStep):
                 user_verbal = self.user.get_username_with_slack_verbal()
                 text = f"{user_verbal} confirmed that the Alert Group is still acknowledged."
                 self._slack_client.chat_update(channel=channel, ts=message_ts, text=text)
-                alert_group.acknowledged_by_confirmed = datetime.utcnow()
+                alert_group.acknowledged_by_confirmed = timezone.now()
                 alert_group.save(update_fields=["acknowledged_by_confirmed"])
         else:
             self._slack_client.chat_delete(channel=channel, ts=message_ts)

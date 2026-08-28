@@ -59,7 +59,7 @@ class ShiftSwapRequest(models.Model):
     schedule: "OnCallSchedule"
     slack_message: typing.Optional["SlackMessage"]
 
-    objects: models.Manager["ShiftSwapRequest"] = ShiftSwapRequestManager()
+    objects: typing.ClassVar[models.Manager["ShiftSwapRequest"]] = ShiftSwapRequestManager()
     objects_with_deleted: models.Manager["ShiftSwapRequest"] = models.Manager()
 
     FOLLOWUP_OFFSETS = [
@@ -200,7 +200,7 @@ class ShiftSwapRequest(models.Model):
 
     def shifts(self) -> "ScheduleEvents":
         """Return shifts affected by this swap request."""
-        schedule = typing.cast("OnCallSchedule", self.schedule.get_real_instance())
+        schedule = self.schedule.get_real_instance()
         events = schedule.final_events(self.swap_start, self.swap_end)
         related_shifts = [
             e

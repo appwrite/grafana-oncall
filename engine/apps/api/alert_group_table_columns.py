@@ -16,7 +16,7 @@ def alert_group_table_user_settings(user: "User") -> AlertGroupTableColumns:
     default_organization_columns = default_columns()
     if not user.organization.alert_group_table_columns:
         user.organization.update_alert_group_table_columns(default_organization_columns)
-    organization_columns = user.organization.alert_group_table_columns
+    organization_columns = user.organization.alert_group_table_columns or []
     if user.alert_group_table_selected_columns:
         visible_columns = [
             column for column in user.alert_group_table_selected_columns if column in organization_columns

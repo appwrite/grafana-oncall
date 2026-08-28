@@ -199,9 +199,9 @@ def test_pagerduty_user_already_exists(
             already_exists_message_found = True
             break
 
-    assert (
-        already_exists_message_found
-    ), 'Expected "already exists" message not found in print calls'
+    assert already_exists_message_found, (
+        'Expected "already exists" message not found in print calls'
+    )
     # Verify sys.exit was not called
     mock_exit.assert_not_called()
 
@@ -348,9 +348,9 @@ def test_splunk_user_already_exists(
             already_exists_message_found = True
             break
 
-    assert (
-        already_exists_message_found
-    ), 'Expected "already exists" message not found in print calls'
+    assert already_exists_message_found, (
+        'Expected "already exists" message not found in print calls'
+    )
     # Verify sys.exit was not called
     mock_exit.assert_not_called()
 
@@ -535,7 +535,7 @@ def test_opsgenie_user_already_exists(
             already_exists_message_found = True
             break
 
-    assert (
-        already_exists_message_found
-    ), 'Expected "already exists" message not found in print calls'
+    assert already_exists_message_found, (
+        'Expected "already exists" message not found in print calls'
+    )
     mock_exit.assert_not_called()

@@ -29,7 +29,6 @@ class InstallView(GrafanaHeadersMixin, APIView):
 
         sync_organization(organization)
         logger.info(
-            f"install - sync organization finished org={organization.pk} "
-            f"token_status={organization.api_token_status}"
+            f"install - sync organization finished org={organization.pk} token_status={organization.api_token_status}"
         )
         return Response(status=status.HTTP_204_NO_CONTENT)

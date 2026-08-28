@@ -89,11 +89,9 @@ class HttpMethod(typing.Protocol):
     """
 
     @property
-    def __name__(self) -> str:
-        ...
+    def __name__(self) -> str: ...
 
-    def __call__(self, *args, **kwargs) -> requests.Response:
-        ...
+    def __call__(self, *args, **kwargs) -> requests.Response: ...
 
 
 class APIClient:
@@ -390,7 +388,7 @@ class GcomAPIClient(APIClient):
                 previous_cursor = cursor
                 page, call_status = self.api_get(f"{query}&cursor={cursor}&pageSize={page_size}")
 
-                if "nextCursor" in page:
+                if page and "nextCursor" in page:
                     cursor = page["nextCursor"]
                     yield page
                 elif retry_count == MAX_RETRIES:

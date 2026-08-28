@@ -30,6 +30,12 @@ which alert group it is, and how many alerts the group holds.
 The **Timeline** field is written in Discord's own timestamps, so everyone reads it on their own clock and in their
 own timezone — "Fired 00:12 (3 hours ago)", then who acknowledged it and when, then how long it took to resolve.
 
+When an alert group contains several alert instances, the card lists each distinct instance summary under
+**Summaries**. Labels that vary between instances are gathered by key under **Labels**, while the labels that made
+Grafana group the alerts stay separate under **Group**. This keeps a grouped notification compact without hiding
+which queue, shard, host, or other instance actually fired. A card shows up to 20 summaries and 20 values for each
+gathered label, followed by the number of remaining items.
+
 Acknowledging or resolving — from Discord or anywhere else — edits the same message in place:
 
 ![The same alert group after being acknowledged, showing who acknowledged it](img/alert-acknowledged.png)
@@ -123,6 +129,10 @@ Channel** or **Notify Group**, OnCall replies to the alert group's card mentioni
 This is deliberately only the loud part. Reaching the right people is still the escalation chain's job, through
 their own notification policies, so that who gets woken respects who is actually on call. Nothing is posted if the
 alert group has already been acknowledged, silenced or resolved by the time the step runs.
+
+A resolution note created from the OnCall UI or the public API is posted the same way: beside the card, in the
+forum post or as a reply in a text channel. Editing or deleting the note updates or removes its Discord message.
+Mentions stay off. The alert group's `permalinks.discord` is a URL to that card.
 
 ## Split critical alerts from the rest
 

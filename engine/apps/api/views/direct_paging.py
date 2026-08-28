@@ -44,9 +44,9 @@ class DirectPagingAPIView(APIView):
                 users=[(user["instance"], user["important"]) for user in validated_data["users"]],
                 alert_group=validated_data["alert_group"],
             )
-        except DirectPagingAlertGroupResolvedError:
-            raise BadRequest(detail=DirectPagingAlertGroupResolvedError.DETAIL)
-        except DirectPagingUserTeamValidationError:
-            raise BadRequest(detail=DirectPagingUserTeamValidationError.DETAIL)
+        except DirectPagingAlertGroupResolvedError as e:
+            raise BadRequest(detail=DirectPagingAlertGroupResolvedError.DETAIL) from e
+        except DirectPagingUserTeamValidationError as e:
+            raise BadRequest(detail=DirectPagingUserTeamValidationError.DETAIL) from e
 
         return Response(data={"alert_group_id": alert_group.public_primary_key}, status=status.HTTP_200_OK)

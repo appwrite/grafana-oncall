@@ -46,7 +46,11 @@ const DragHandle = () => {
 };
 
 /** the row that moves while dragging; picks its sortable wiring up from context */
-const SortableRow = ({ className, onClick, children }: React.PropsWithChildren<{ className: string; onClick?: () => void }>) => {
+const SortableRow = ({
+  className,
+  onClick,
+  children,
+}: React.PropsWithChildren<{ className: string; onClick?: () => void }>) => {
   const { setNodeRef, style } = useSortableNode();
 
   return (

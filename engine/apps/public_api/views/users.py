@@ -2,7 +2,7 @@ from django_filters import rest_framework as filters
 from rest_framework.decorators import action
 from rest_framework.exceptions import NotFound
 from rest_framework.permissions import IsAuthenticated
-from rest_framework.views import Response
+from rest_framework.response import Response
 from rest_framework.viewsets import ReadOnlyModelViewSet
 
 from apps.api.permissions import LegacyAccessControlRole, RBACPermission
@@ -80,8 +80,8 @@ class UserView(RateLimitHeadersMixin, ShortSerializerMixin, ReadOnlyModelViewSet
 
         try:
             user = User.objects.get(public_primary_key=public_primary_key, organization=organization)
-        except User.DoesNotExist:
-            raise NotFound
+        except User.DoesNotExist as e:
+            raise NotFound from e
 
         return user
 
