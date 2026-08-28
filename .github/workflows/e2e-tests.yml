@@ -54,7 +54,17 @@ jobs:
         uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         with:
           path: grafana-plugin/dist
-          key: ${{ runner.os }}-plugin-frontend-${{ hashFiles('grafana-plugin/src/**', 'grafana-plugin/public/**', 'grafana-plugin/package.json', 'grafana-plugin/pnpm-lock.yaml', 'grafana-plugin/webpack.config.ts', 'grafana-plugin/tsconfig.json') }}
+          key: >-
+            ${{ runner.os }}-plugin-frontend-${{
+              hashFiles(
+                'grafana-plugin/src/**',
+                'grafana-plugin/public/**',
+                'grafana-plugin/package.json',
+                'grafana-plugin/pnpm-lock.yaml',
+                'grafana-plugin/webpack.config.ts',
+                'grafana-plugin/tsconfig.json'
+              )
+            }}
 
       - name: Build plugin frontend
         if: steps.cache-plugin-frontend.outputs.cache-hit != 'true'
