@@ -154,7 +154,7 @@ export const ShiftSwapForm = (props: ShiftSwapFormProps) => {
           defaultClassName="draggable"
           positionOffset={{ x: 0, y: offsetTop }}
           position={draggablePosition}
-          bounds={{ ...bounds } || 'body'}
+          bounds={bounds || 'body'}
           onStart={onDraggableInit}
           onStop={(_e, data) => setDraggablePosition({ x: data.x, y: data.y })}
         >

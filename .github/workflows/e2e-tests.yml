@@ -12,9 +12,6 @@ on:
 
 jobs:
   end-to-end-tests:
-    # default "ubuntu-latest" runners only provide 2 CPU cores + 7GB of RAM. this seems to lead to HTTP 504s from
-    # the oncall backend, and hence, flaky tests. Let's use CI runners w/ more resources to avoid this (plus
-    # this will allow us to run more backend containers and parralelize the tests)
     runs-on: ubuntu-latest
     name: "Grafana: ${{ inputs.grafana_version }}"
     permissions:
@@ -57,12 +54,12 @@ jobs:
         uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         with:
           path: grafana-plugin/dist
-          key: ${{ runner.os }}-plugin-frontend-${{ hashFiles('grafana-plugin/src/**/*', 'grafana-plugin/pnpm.lock') }}
+          key: ${{ runner.os }}-plugin-frontend-${{ hashFiles('grafana-plugin/src/**', 'grafana-plugin/public/**', 'grafana-plugin/package.json', 'grafana-plugin/pnpm-lock.yaml', 'grafana-plugin/webpack.config.ts', 'grafana-plugin/tsconfig.json') }}
 
       - name: Build plugin frontend
         if: steps.cache-plugin-frontend.outputs.cache-hit != 'true'
         working-directory: grafana-plugin
-        run: pnpm build:dev
+        run: pnpm build
 
       # helpful reference for properly caching the playwright binaries/dependencies
       # https://playwrightsolutions.com/playwright-github-action-to-cache-the-browser-binaries/
@@ -86,7 +83,11 @@ jobs:
       - name: Install Playwright deps
         shell: bash
         working-directory: grafana-plugin
-        run: pnpm playwright install
+        env:
+          BROWSERS: ${{ inputs.browsers }}
+        run: |
+          IFS=',' read -ra browsers <<< "$BROWSERS"
+          pnpm playwright install "${browsers[@]}"
 
       - name: Install Go
         uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7.0.0
