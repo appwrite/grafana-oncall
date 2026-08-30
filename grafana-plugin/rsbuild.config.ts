@@ -75,7 +75,14 @@ export default defineConfig(({ envMode }) => {
   const isProduction = envMode === 'production';
 
   return {
-    plugins: [pluginReact(), replacePluginMetadata()],
+    plugins: [
+      pluginReact({
+        // Grafana provides React to plugins through AMD. The automatic JSX
+        // runtime would bundle react/jsx-runtime and mix it with that host copy.
+        swcReactOptions: { runtime: 'classic' },
+      }),
+      replacePluginMetadata(),
+    ],
     source: {
       decorators: {
         version: 'legacy',
