@@ -1,5 +1,6 @@
 import {
   test as setup,
+  expect,
   chromium,
   type BrowserContext,
   type FullConfig,
@@ -56,8 +57,12 @@ const generateLoginStorageStateAndOptionallCreateUser = async (
 
 const idempotentlyInitializePlugin = async (page: Page) => {
   await goToOnCallPage(page, 'alert-groups');
-  await page.waitForTimeout(1000);
   const openPluginConfigurationButton = page.getByRole('button', { name: 'Open configuration' });
+
+  // Grafana 13 can take longer than the navigation helper's initial delay to
+  // finish checking the plugin connection. Wait for either terminal state.
+  await expect(openPluginConfigurationButton.or(page.getByTestId('page-title'))).toBeVisible({ timeout: 30_000 });
+
   if (await openPluginConfigurationButton.isVisible()) {
     await openPluginConfigurationButton.click();
     await page.getByTestId('connect-plugin').click();

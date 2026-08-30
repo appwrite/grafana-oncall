@@ -14,5 +14,12 @@
     "noImplicitAny": false,
     "skipLibCheck": true,
     "useDefineForClassFields": true
+  },
+  "ts-node": {
+    "compilerOptions": {
+      "module": "commonjs",
+      "moduleResolution": "node"
+    },
+    "transpileOnly": true
   }
 }
