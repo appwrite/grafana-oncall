@@ -169,6 +169,12 @@ export default defineConfig(({ envMode }) => {
           uniqueName: pluginJson.id,
         };
         config.resolve ??= {};
+        config.resolve.alias = {
+          ...config.resolve.alias,
+          // exenv's UMD wrapper mistakes Grafana's global RequireJS `define`
+          // for its own loader and never assigns the bundled CommonJS export.
+          exenv: path.join(sourceDir, 'shims/exenv.ts'),
+        };
         config.resolve.modules = [sourceDir, 'node_modules'];
         config.module ??= {};
         config.module.parser = {
@@ -186,15 +192,12 @@ export default defineConfig(({ envMode }) => {
       },
       swc(config) {
         config.jsc ??= {};
-        // Keep the legacy MobX decorator/class-field transform used by the
-        // previous Grafana Webpack build. Rsbuild's modern browser target can
-        // otherwise leave decorated state in a form that does not notify
-        // observers after asynchronous store updates.
-        config.env = undefined;
-        config.jsc.target = 'es2015';
         config.jsc.transform = {
           ...config.jsc.transform,
           decoratorMetadata: false,
+          // MobX legacy decorators require declared fields to exist before
+          // makeObservable(this), including fields without initializers.
+          useDefineForClassFields: true,
         };
         return config;
       },
