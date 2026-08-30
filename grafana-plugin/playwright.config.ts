@@ -56,7 +56,9 @@ export default defineConfig({
    * to flaky tests.. let's allow 1 retry per test
    */
   retries: 1,
-  workers: 4,
+  // These tests share one OnCall engine and mutate plugin, integration, and
+  // schedule state. Parallel workers make those mutations race each other.
+  workers: IS_CI ? 1 : undefined,
   /* Shared settings for all the projects below. See https://playwright.dev/docs/api/class-testoptions. */
   use: {
     /**
