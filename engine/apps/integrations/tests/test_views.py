@@ -44,7 +44,13 @@ def setup_failing_redis_cache(settings):
     settings.CACHES = {
         "default": {
             "BACKEND": "django_redis.cache.RedisCache",
-            "LOCATION": "redis://no-redis-here/",
+            # Use a closed loopback port so the connection fails immediately.
+            # A nonexistent hostname can block while the CI runner retries DNS.
+            "LOCATION": "redis://127.0.0.1:1/0",
+            "OPTIONS": {
+                "SOCKET_CONNECT_TIMEOUT": 0.1,
+                "SOCKET_TIMEOUT": 0.1,
+            },
         }
     }
 
