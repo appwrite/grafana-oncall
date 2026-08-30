@@ -212,7 +212,8 @@ def test_list_users_to_notify_from_ical_until_terminated_event(
     other_user = make_user_for_organization(organization)
 
     schedule = make_schedule(organization, schedule_class=OnCallScheduleWeb)
-    date = timezone.now().replace(microsecond=0)
+    # Keep this date on a Monday so the Sunday recurrence starts after its termination date.
+    date = datetime.datetime(2024, 1, 1, 12, tzinfo=datetime.timezone.utc)
 
     data = {
         "start": date,
