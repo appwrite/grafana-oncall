@@ -3,13 +3,14 @@ label = "OnCall.Plugin"
 is_ci=config.tilt_subcommand == "ci"
 grafana_plugin_dir="../../grafana-plugin"
 
-# On CI dependencies are installed separately so we just build prod bundle to be consumed by Grafana dev server
+# CI restores or builds the production bundle before Tilt starts. Keep this resource so Grafana retains its
+# dependency on the bundle without compiling the frontend a second time.
 if is_ci:
     local_resource(
         "build-ui",
         labels=[label],
         dir=grafana_plugin_dir,
-        cmd="pnpm build",
+        cmd="test -f dist/plugin.json",
         allow_parallel=True,
     )
 
