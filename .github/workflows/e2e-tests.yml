@@ -59,6 +59,7 @@ jobs:
               hashFiles(
                 'grafana-plugin/src/**',
                 'grafana-plugin/public/**',
+                'grafana-plugin/.config/webpack/**',
                 'grafana-plugin/package.json',
                 'grafana-plugin/pnpm-lock.yaml',
                 'grafana-plugin/webpack.config.ts',
