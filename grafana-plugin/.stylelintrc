@@ -2,6 +2,8 @@
   "extends": ["stylelint-config-standard"],
   "rules": {
     "block-no-empty": [true, { "severity": "warning" }],
+    "keyframes-name-pattern": null,
+    "selector-class-pattern": null,
     "selector-max-type": [ 0, {
       "severity": "error",
       "ignore": ["child", "compounded", "descendant", "next-sibling"]

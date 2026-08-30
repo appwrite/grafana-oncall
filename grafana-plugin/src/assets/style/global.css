@@ -1,11 +1,11 @@
 .theme-light {
-  --working-hours-shades-color: rgba(17, 18, 23, 0.15);
-  --working-hours-shades-color-light: rgba(17, 18, 23, 0.04);
+  --working-hours-shades-color: rgb(17 18 23 / 15%);
+  --working-hours-shades-color-light: rgb(17 18 23 / 4%);
 }
 
 .theme-dark:not(.theme-light) {
-  --working-hours-shades-color: rgba(17, 18, 23, 0.15);
-  --working-hours-shades-color-light: rgba(17, 18, 23, 0.1);
+  --working-hours-shades-color: rgb(17 18 23 / 15%);
+  --working-hours-shades-color-light: rgb(17 18 23 / 10%);
 }
 
 .configure-plugin {
@@ -57,8 +57,8 @@
 td.rc-table-cell {
   height: 44px !important;
 
-  /* works better than break-all, especially for table headers */
-  word-break: break-word;
+  /* Works better than break-all, especially for table headers. */
+  overflow-wrap: break-word;
 }
 
 .grecaptcha-badge {

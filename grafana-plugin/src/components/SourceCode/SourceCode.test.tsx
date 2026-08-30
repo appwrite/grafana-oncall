@@ -8,14 +8,12 @@ import { SourceCode } from './SourceCode';
 describe('SourceCode', () => {
   test("SourceCode doesn't render clipboard for [showCopyToClipboard=false]", () => {
     render(<SourceCode showCopyToClipboard={false} />);
-    const codeEl = screen.queryByRole<HTMLElement>('code');
-    expect(codeEl).toBeNull();
+    expect(screen.queryByRole('button', { name: 'Copy' })).toBeNull();
   });
 
   test('SourceCode renders clipboard for [showCopyToClipboard=true]', () => {
     render(<SourceCode showCopyToClipboard />);
-    const codeEl = screen.queryByRole<HTMLElement>('code');
-    expect(codeEl).toBeDefined();
+    expect(screen.getByRole('button', { name: 'Copy' })).toBeDefined();
   });
 
   test('SourceCode displays just copy icon for [showClipboardIconOnly=true]', () => {
