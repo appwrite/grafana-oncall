@@ -186,6 +186,12 @@ export default defineConfig(({ envMode }) => {
       },
       swc(config) {
         config.jsc ??= {};
+        // Keep the legacy MobX decorator/class-field transform used by the
+        // previous Grafana Webpack build. Rsbuild's modern browser target can
+        // otherwise leave decorated state in a form that does not notify
+        // observers after asynchronous store updates.
+        config.env = undefined;
+        config.jsc.target = 'es2015';
         config.jsc.transform = {
           ...config.jsc.transform,
           decoratorMetadata: false,
