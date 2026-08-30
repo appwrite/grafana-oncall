@@ -10,8 +10,11 @@ const IS_CI = !!process.env.CI;
 const BROWSERS = process.env.BROWSERS || 'chromium';
 
 const SETUP_PROJECT_NAME = 'setup';
+const CONFIGURATION_PROJECT_NAME = 'configuration';
 const getEnabledBrowsers = (browsers: PlaywrightTestProject[]) =>
-  browsers.filter(({ name }) => name === SETUP_PROJECT_NAME || BROWSERS.includes(name));
+  browsers.filter(
+    ({ name }) => name === SETUP_PROJECT_NAME || name === CONFIGURATION_PROJECT_NAME || BROWSERS.includes(name)
+  );
 
 /**
  * See https://playwright.dev/docs/test-configuration.
@@ -53,7 +56,7 @@ export default defineConfig({
    * to flaky tests.. let's allow 1 retry per test
    */
   retries: 1,
-  workers: 4,
+  workers: IS_CI ? 4 : undefined,
   /* Shared settings for all the projects below. See https://playwright.dev/docs/api/class-testoptions. */
   use: {
     /**
@@ -77,19 +80,28 @@ export default defineConfig({
       testMatch: /globalSetup\.ts/,
     },
     {
-      name: 'chromium',
+      name: CONFIGURATION_PROJECT_NAME,
+      testMatch: /pluginInitialization\/configuration\.test\.ts/,
       use: devices['Desktop Chrome'],
       dependencies: [SETUP_PROJECT_NAME],
     },
     {
+      name: 'chromium',
+      use: devices['Desktop Chrome'],
+      testIgnore: /pluginInitialization\/configuration\.test\.ts/,
+      dependencies: [CONFIGURATION_PROJECT_NAME],
+    },
+    {
       name: 'firefox',
       use: devices['Desktop Firefox'],
-      dependencies: [SETUP_PROJECT_NAME],
+      testIgnore: /pluginInitialization\/configuration\.test\.ts/,
+      dependencies: [CONFIGURATION_PROJECT_NAME],
     },
     {
       name: 'webkit',
       use: devices['Desktop Safari'],
-      dependencies: [SETUP_PROJECT_NAME],
+      testIgnore: /pluginInitialization\/configuration\.test\.ts/,
+      dependencies: [CONFIGURATION_PROJECT_NAME],
     },
 
     /* Test against mobile viewports. */

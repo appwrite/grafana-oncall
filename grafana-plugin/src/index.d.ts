@@ -8,6 +8,10 @@ declare module 'phone' {
 declare module 'js-cookie';
 
 declare module '*.css';
+declare module '*.css?raw' {
+  const content: string;
+  export default content;
+}
 declare module '*.jpg';
 declare module '*.png';
 declare module '*.svg';

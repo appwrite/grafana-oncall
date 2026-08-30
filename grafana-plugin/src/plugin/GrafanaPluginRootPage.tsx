@@ -35,8 +35,8 @@ import { useStore } from 'state/useStore';
 
 import { getQueryParams } from './GrafanaPluginRootPage.helpers';
 
-import globalStyles from '!raw-loader!assets/style/global.css';
-import grafanaGlobalStyle from '!raw-loader!assets/style/grafanaGlobalStyles.css';
+import globalStyles from 'assets/style/global.css?raw';
+import grafanaGlobalStyle from 'assets/style/grafanaGlobalStyles.css?raw';
 
 export const GrafanaPluginRootPage = observer((props: AppRootProps) => {
   useOnMount(() => {
