@@ -88,6 +88,8 @@ export default defineConfig(({ envMode }) => {
         version: 'legacy',
       },
       define: {
+        // Preserve the environment contract from the previous Webpack build.
+        'process.env.NODE_ENV': JSON.stringify('development'),
         'process.env.PLUGIN_ID': JSON.stringify(pluginJson.id),
       },
       entry: {
