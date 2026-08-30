@@ -28,15 +28,15 @@ repos:
         files: ^grafana-plugin/.*\.(css|js|json|jsonc|jsx|scss|ts|tsx)$
 
   - repo: https://github.com/thibaudcolas/pre-commit-stylelint
-    rev: v13.13.1
+    rev: v17.14.1
     hooks:
       - id: stylelint
         entry: bash -c "cd grafana-plugin && stylelint --fix ${@/grafana-plugin\//}" --
         types: [file]
         files: ^grafana-plugin/src/.*\.css$
         additional_dependencies:
-          - stylelint@^13.13.1
-          - stylelint-config-standard@^22.0.0
+          - stylelint@17.14.1
+          - stylelint-config-standard@40.0.0
 
   - repo: https://github.com/igorshubovych/markdownlint-cli
     rev: v0.32.2
