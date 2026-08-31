@@ -90,7 +90,7 @@ jobs:
           push: true
           provenance: mode=max
           sbom: true
-          tags: ${{ env.IMAGE }}:${{ github.ref_name }}-${{ matrix.arch }}
+          tags: ${{ env.IMAGE }}:staging-${{ github.run_id }}-${{ matrix.arch }}
 
   plugin:
     name: Package Grafana plugin
@@ -199,24 +199,24 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Create versioned multi-architecture image
+      - name: Create staged multi-architecture image
         env:
-          RELEASE_TAG: ${{ github.ref_name }}
+          STAGING_TAG: staging-${{ github.run_id }}
         run: |
           set -euo pipefail
           docker buildx imagetools create \
-            --tag "$IMAGE:$RELEASE_TAG" \
-            "$IMAGE:$RELEASE_TAG-amd64" \
-            "$IMAGE:$RELEASE_TAG-arm64"
+            --tag "$IMAGE:$STAGING_TAG" \
+            "$IMAGE:$STAGING_TAG-amd64" \
+            "$IMAGE:$STAGING_TAG-arm64"
 
       - name: Resolve image digest
         id: image
         env:
-          RELEASE_TAG: ${{ github.ref_name }}
+          STAGING_TAG: staging-${{ github.run_id }}
         run: |
           set -euo pipefail
           digest=$(
-            docker buildx imagetools inspect "$IMAGE:$RELEASE_TAG" \
+            docker buildx imagetools inspect "$IMAGE:$STAGING_TAG" \
               --format '{{json .Manifest.Digest}}' | tr -d '"'
           )
           if [[ ! "$digest" =~ ^sha256:[0-9a-f]{64}$ ]]; then
@@ -228,7 +228,7 @@ jobs:
       - name: Generate engine SBOM
         uses: anchore/sbom-action@3ad7283483fc7af8ff2b4ea19663c2d5ca935e26 # v0.24.2
         with:
-          image: ${{ env.IMAGE }}:${{ github.ref_name }}-amd64
+          image: ${{ env.IMAGE }}:staging-${{ github.run_id }}-amd64
           format: spdx-json
           output-file: release-assets/engine-amd64-sbom.spdx.json
           upload-artifact: false
@@ -236,7 +236,7 @@ jobs:
       - name: Generate ARM64 engine SBOM
         uses: anchore/sbom-action@3ad7283483fc7af8ff2b4ea19663c2d5ca935e26 # v0.24.2
         with:
-          image: ${{ env.IMAGE }}:${{ github.ref_name }}-arm64
+          image: ${{ env.IMAGE }}:staging-${{ github.run_id }}-arm64
           format: spdx-json
           output-file: release-assets/engine-arm64-sbom.spdx.json
           upload-artifact: false
@@ -280,14 +280,28 @@ jobs:
 
           gh release upload "$RELEASE_TAG" release-assets/* --clobber
 
-      - name: Promote image to latest
-        env:
-          IMAGE_DIGEST: ${{ steps.image.outputs.digest }}
-        run: docker buildx imagetools create --tag "$IMAGE:latest" "$IMAGE@$IMAGE_DIGEST"
-
       - name: Publish GitHub release
+        id: release
         env:
           GH_REPO: ${{ github.repository }}
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           RELEASE_TAG: ${{ github.ref_name }}
         run: gh release edit "$RELEASE_TAG" --draft=false --latest
+
+      - name: Promote signed engine image
+        env:
+          IMAGE_DIGEST: ${{ steps.image.outputs.digest }}
+          RELEASE_TAG: ${{ github.ref_name }}
+        run: |
+          docker buildx imagetools create \
+            --tag "$IMAGE:$RELEASE_TAG" \
+            --tag "$IMAGE:latest" \
+            "$IMAGE@$IMAGE_DIGEST"
+
+      - name: Restore draft release after failed image promotion
+        if: failure() && steps.release.outcome == 'success'
+        env:
+          GH_REPO: ${{ github.repository }}
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          RELEASE_TAG: ${{ github.ref_name }}
+        run: gh release edit "$RELEASE_TAG" --draft
