@@ -54,6 +54,7 @@ export const SlackConnector = observer((props: SlackConnectorProps) => {
               />
               <WithConfirm title="Are you sure to disconnect your Slack account?" confirmText="Disconnect">
                 <Button
+                  aria-label="Disconnect Slack account"
                   variant="destructive"
                   icon="times"
                   onClick={handleUnlinkSlackAccount}

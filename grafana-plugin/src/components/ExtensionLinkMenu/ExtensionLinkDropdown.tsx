@@ -1,11 +1,7 @@
-import React, { ReactElement, useEffect, useMemo, useState } from 'react';
+import React, { ReactElement, useEffect, useState } from 'react';
 
-import { PluginExtensionLink, SelectableValue } from '@grafana/data';
-import {
-  type GetPluginExtensionsOptions,
-  getPluginLinkExtensions,
-  usePluginLinks as originalUsePluginLinks,
-} from '@grafana/runtime';
+import { SelectableValue } from '@grafana/data';
+import { usePluginLinks } from '@grafana/runtime';
 import { Button, Dropdown, Modal, Select, Stack, ToolbarButton } from '@grafana/ui';
 import { OnCallPluginExtensionPoints } from 'app-types';
 import { StackSize } from 'helpers/consts';
@@ -23,9 +19,6 @@ interface Props {
   declareIncidentLink?: string;
   grafanaIncidentId: string | null;
 }
-
-// `usePluginLinks()` is only available in Grafana>=11.1.0, so we have a fallback for older versions
-const usePluginLinks = originalUsePluginLinks === undefined ? usePluginLinksFallback : originalUsePluginLinks;
 
 export function ExtensionLinkDropdown({
   alertGroup,
@@ -140,34 +133,6 @@ const TriggerManualWebhookModal = observer(
 
 function useExtensionPointContext(incident: ApiSchemas['AlertGroup']): PluginExtensionOnCallAlertGroupContext {
   return { alertGroup: incident };
-}
-
-function usePluginLinksFallback({ context, extensionPointId, limitPerPlugin }: GetPluginExtensionsOptions): {
-  links: PluginExtensionLink[];
-  isLoading: boolean;
-} {
-  return useMemo(() => {
-    // getPluginLinkExtensions is available in Grafana>=10.0,
-    // so will be undefined in earlier versions. Just return an
-    // empty list of extensions in this case.
-    if (getPluginLinkExtensions === undefined) {
-      return {
-        links: [],
-        isLoading: false,
-      };
-    }
-
-    const { extensions } = getPluginLinkExtensions({
-      extensionPointId,
-      context,
-      limitPerPlugin,
-    });
-
-    return {
-      links: extensions,
-      isLoading: false,
-    };
-  }, [context]);
 }
 
 // This is the 'context' that will be passed to plugin extensions when they

@@ -305,7 +305,7 @@ class _SchedulePage extends React.Component<SchedulePageProps, SchedulePageState
                             >
                               <ButtonGroup>
                                 <Button>Add</Button>
-                                <Button icon="angle-down" />
+                                <Button aria-label="More add options" icon="angle-down" />
                               </ButtonGroup>
                             </Dropdown>
                           </Stack>

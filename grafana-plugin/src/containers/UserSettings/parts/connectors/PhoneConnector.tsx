@@ -118,10 +118,20 @@ export const PhoneConnector = observer((props: PhoneConnectorProps) => {
                 <Stack gap={StackSize.xs}>
                   <Input disabled={true} value={storeUser.verified_phone_number} />
                   {isCurrentUser ? (
-                    <Button variant="secondary" icon="edit" onClick={handleClickConfirmPhoneButton} />
+                    <Button
+                      aria-label="Edit phone number"
+                      variant="secondary"
+                      icon="edit"
+                      onClick={handleClickConfirmPhoneButton}
+                    />
                   ) : (
                     <WithConfirm title="Are you sure you want to edit other's phone number?" confirmText="Proceed">
-                      <Button variant="secondary" icon="edit" onClick={handleClickConfirmPhoneButton} />
+                      <Button
+                        aria-label="Edit phone number"
+                        variant="secondary"
+                        icon="edit"
+                        onClick={handleClickConfirmPhoneButton}
+                      />
                     </WithConfirm>
                   )}
                 </Stack>

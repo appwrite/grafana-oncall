@@ -1,5 +1,6 @@
 import { OrgRole } from '@grafana/data';
-import { expect, APIRequestContext, APIResponse } from '@playwright/test';
+import { expect } from '@grafana/plugin-e2e';
+import type { APIRequestContext, APIResponse } from '@playwright/test';
 
 import { BASE_URL, GRAFANA_ADMIN_PASSWORD, GRAFANA_ADMIN_USERNAME } from '../constants';
 

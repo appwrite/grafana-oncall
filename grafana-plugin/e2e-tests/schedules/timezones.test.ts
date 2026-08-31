@@ -1,9 +1,8 @@
-import { expect } from '@playwright/test';
 import dayjs from 'dayjs';
 import isoWeek from 'dayjs/plugin/isoWeek';
 import utc from 'dayjs/plugin/utc';
 
-import { test } from '../fixtures';
+import { expect, test } from '../fixtures';
 import { MOSCOW_TIMEZONE } from '../utils/constants';
 import { clickButton, generateRandomValue } from '../utils/forms';
 import { setTimezoneInProfile } from '../utils/grafanaProfile';

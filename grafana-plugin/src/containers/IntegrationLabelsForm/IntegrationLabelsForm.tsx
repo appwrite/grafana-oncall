@@ -172,6 +172,7 @@ export const IntegrationLabelsForm = observer((props: IntegrationLabelsFormProps
                   valid JSON dictionary.
                 </Text>
                 <Button
+                  aria-label="Edit label template"
                   variant="secondary"
                   icon="edit"
                   onClick={() => {
@@ -343,6 +344,7 @@ const CustomLabels = (props: CustomLabelsProps) => {
                 value={option.value.name}
                 addonAfter={
                   <Button
+                    aria-label="Edit label value template"
                     variant="secondary"
                     icon="edit"
                     onClick={() => {

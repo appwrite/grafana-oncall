@@ -36,6 +36,7 @@ export const IntegrationSendDemoAlertModal: React.FC<IntegrationSendDemoPayloadM
 
   return (
     <Modal
+      ariaLabel="Send demo alert"
       closeOnBackdropClick={false}
       closeOnEscape
       isOpen={isOpen}

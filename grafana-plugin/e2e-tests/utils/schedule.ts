@@ -1,4 +1,5 @@
-import { expect, Locator, Page } from '@playwright/test';
+import { expect } from '@grafana/plugin-e2e';
+import type { Locator, Page } from '@playwright/test';
 import dayjs from 'dayjs';
 
 import { clickButton, selectDropdownValue } from './forms';

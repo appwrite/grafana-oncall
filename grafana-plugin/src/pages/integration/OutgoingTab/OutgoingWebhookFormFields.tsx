@@ -107,6 +107,7 @@ export const OutgoingWebhookFormFields: FC<OutgoingWebhookFormFieldsProps> = ({ 
                 <span>Webhook URL</span>
               </Label>
               <Button
+                aria-label="Edit webhook URL template"
                 icon="edit"
                 variant="secondary"
                 onClick={() => {
@@ -148,6 +149,7 @@ export const OutgoingWebhookFormFields: FC<OutgoingWebhookFormFieldsProps> = ({ 
             <Stack width="100%" justifyContent="space-between">
               <Label className={styles.switcherLabel}>Data template</Label>
               <Button
+                aria-label="Edit webhook data template"
                 icon="edit"
                 variant="secondary"
                 onClick={() => {
@@ -205,6 +207,7 @@ export const OutgoingWebhookFormFields: FC<OutgoingWebhookFormFieldsProps> = ({ 
                   onChange={field.onChange}
                 />
                 <Button
+                  aria-label="Edit webhook trigger template"
                   icon="edit"
                   variant="secondary"
                   className={styles.editTriggerTemplateBtn}

@@ -58,6 +58,7 @@ export const AttachIncidentForm = observer(({ id, onUpdate, onHide }: AttachInci
 
   return (
     <Modal
+      ariaLabel="Attach to another alert group"
       isOpen
       icon="link"
       title={

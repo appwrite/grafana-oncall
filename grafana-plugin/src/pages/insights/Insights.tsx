@@ -149,6 +149,7 @@ const getRootScene = (config: InsightsConfig, variables: ReturnType<typeof getVa
       new SceneAppPage({
         title: 'OnCall Insights',
         url: `${PLUGIN_ROOT}/insights`,
+        routePath: '/',
         getScene: () =>
           new EmbeddedScene({
             $timeRange: new SceneTimeRange({ from: 'now-24h', to: 'now' }),

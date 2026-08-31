@@ -1,4 +1,4 @@
-import { ComponentClass } from 'react';
+import type { ComponentClass } from 'react';
 
 import { AppPlugin, PluginExtensionPoints } from '@grafana/data';
 import { getIsIrmPluginPresent, IRM_TAB } from 'helpers/consts';
@@ -20,23 +20,12 @@ const plugin = new AppPlugin<OnCallPluginMetaJSONData>().setRootPage(GrafanaPlug
 if (isUseProfileExtensionPointEnabled()) {
   const extensionPointId = PluginExtensionPoints.UserProfileTab;
 
-  if (plugin.addComponent) {
-    // v11+ (including v12)
-    plugin.addComponent({
-      title: IRM_TAB,
-      description: 'IRM settings',
-      component: MobileAppConnectionWrapper,
-      targets: [extensionPointId],
-    });
-  } else if ('configureExtensionComponent' in plugin) {
-    // v10 only (configureExtensionComponent removed in v12)
-    plugin.configureExtensionComponent({
-      component: MobileAppConnectionWrapper,
-      title: IRM_TAB,
-      description: 'IRM settings',
-      extensionPointId: extensionPointId,
-    });
-  }
+  plugin.addComponent({
+    title: IRM_TAB,
+    description: 'IRM settings',
+    component: MobileAppConnectionWrapper,
+    targets: [extensionPointId],
+  });
 }
 
 function isUseProfileExtensionPointEnabled(): boolean {
@@ -45,7 +34,7 @@ function isUseProfileExtensionPointEnabled(): boolean {
     PluginExtensionPoints != null &&
     'UserProfileTab' in PluginExtensionPoints &&
     !getIsIrmPluginPresent() &&
-    !!(plugin.addComponent || 'configureExtensionComponent' in plugin)
+    !!plugin.addComponent
   );
 }
 
