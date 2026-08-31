@@ -31,7 +31,7 @@ botocore==1.43.70
     #   s3transfer
 cachecontrol==0.14.4
     # via firebase-admin
-celery==5.3.6
+celery==5.6.3
     # via -r requirements.in
 certifi==2026.7.22
     # via
@@ -205,7 +205,7 @@ h11==0.16.0
     # via httpcore
 h2==4.4.1
     # via httpx
-hiredis==2.2.3
+hiredis==3.4.1
     # via -r requirements.in
 hpack==4.2.0
     # via h2
@@ -395,11 +395,11 @@ pyyaml==6.0.3
     #   pymdown-extensions
 recurring-ical-events==2.1.0
     # via -r requirements.in
-redis==5.0.1
+redis==6.4.0
     # via
     #   -r requirements.in
-    #   celery
     #   django-redis
+    #   kombu
 referencing==0.37.0
     # via
     #   jsonschema
@@ -464,9 +464,9 @@ typing-extensions==4.16.0
     #   opentelemetry-sdk
     #   opentelemetry-semantic-conventions
 tzdata==2026.3
-    # via
-    #   celery
-    #   kombu
+    # via kombu
+tzlocal==5.4.4
+    # via celery
 uritemplate==4.2.0
     # via
     #   drf-spectacular
