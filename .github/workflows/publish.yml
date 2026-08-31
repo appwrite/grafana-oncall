@@ -299,27 +299,7 @@ jobs:
           engine-*-sbom.spdx.json release-manifest.json > SHA256SUMS
 
       - name: Create draft release and upload assets
-        env:
-          GH_REPO: ${{ github.repository }}
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          RELEASE_TAG: ${{ github.ref_name }}
-        run: |
-          set -euo pipefail
-
-          if gh release view "$RELEASE_TAG" >/dev/null 2>&1; then
-            is_draft=$(gh release view "$RELEASE_TAG" --json isDraft --jq .isDraft)
-            if [[ "$is_draft" != "true" ]]; then
-              echo "Release $RELEASE_TAG already exists and is not a draft"
-              exit 1
-            fi
-          else
-            gh release create "$RELEASE_TAG" --draft --generate-notes --title "$RELEASE_TAG"
-          fi
-
-          gh release upload "$RELEASE_TAG" release-assets/* --clobber
-
-      - name: Commit matched release
-        id: release
+        id: draft
         env:
           GH_REPO: ${{ github.repository }}
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -328,20 +308,64 @@ jobs:
         run: |
           set -euo pipefail
 
-          # The published release and its manifest are authoritative. Publish
-          # them before exposing the optional human-readable container alias so
-          # cancellation cannot leave an engine alias without its plugin.
-          gh release edit "$RELEASE_TAG" --draft=false --latest
+          if gh release view "$RELEASE_TAG" >/dev/null 2>&1; then
+            is_draft=$(gh release view "$RELEASE_TAG" --json isDraft --jq .isDraft)
+            if [[ "$is_draft" != "true" ]]; then
+              repair_dir=$(mktemp -d)
+              gh release download "$RELEASE_TAG" \
+                --pattern release-manifest.json \
+                --dir "$repair_dir"
+              published_digest=$(jq -r '.engine.digest' "$repair_dir/release-manifest.json")
+              if [[ ! "$published_digest" =~ ^sha256:[0-9a-f]{64}$ ]]; then
+                echo "Published release has an invalid engine digest"
+                exit 1
+              fi
+              echo "already_published=true" >> "$GITHUB_OUTPUT"
+              echo "image_digest=$published_digest" >> "$GITHUB_OUTPUT"
+              exit 0
+            fi
+          else
+            gh release create "$RELEASE_TAG" --draft --generate-notes --title "$RELEASE_TAG"
+          fi
 
-          docker buildx imagetools create \
-            --tag "$IMAGE:$RELEASE_TAG" \
-            "$IMAGE@$IMAGE_DIGEST"
+          gh release upload "$RELEASE_TAG" release-assets/* --clobber
+          echo "already_published=false" >> "$GITHUB_OUTPUT"
+          echo "image_digest=$IMAGE_DIGEST" >> "$GITHUB_OUTPUT"
 
-          alias_digest=$(
-            docker buildx imagetools inspect "$IMAGE:$RELEASE_TAG" \
-              --format '{{json .Manifest.Digest}}' | tr -d '"'
-          )
-          if [[ "$alias_digest" != "$IMAGE_DIGEST" ]]; then
-            echo "Version alias points to $alias_digest instead of $IMAGE_DIGEST"
+      - name: Commit matched release
+        id: release
+        env:
+          GH_REPO: ${{ github.repository }}
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          ALREADY_PUBLISHED: ${{ steps.draft.outputs.already_published }}
+          IMAGE_DIGEST: ${{ steps.draft.outputs.image_digest }}
+          RELEASE_TAG: ${{ github.ref_name }}
+        run: |
+          set -euo pipefail
+
+          if [[ "$ALREADY_PUBLISHED" != "true" ]]; then
+            # The manifest digest remains deployable even if alias creation
+            # needs repair. A rerun reads that published digest above.
+            gh release edit "$RELEASE_TAG" --draft=false --latest
+          fi
+
+          alias_verified=false
+          for attempt in 1 2 3 4 5; do
+            if docker buildx imagetools create \
+              --tag "$IMAGE:$RELEASE_TAG" \
+              "$IMAGE@$IMAGE_DIGEST"; then
+              if alias_digest=$(
+                docker buildx imagetools inspect "$IMAGE:$RELEASE_TAG" \
+                  --format '{{json .Manifest.Digest}}' | tr -d '"'
+              ) && [[ "$alias_digest" == "$IMAGE_DIGEST" ]]; then
+                alias_verified=true
+                break
+              fi
+            fi
+            sleep $((attempt * 2))
+          done
+
+          if [[ "$alias_verified" != "true" ]]; then
+            echo "Version alias does not point to $IMAGE_DIGEST"
             exit 1
           fi
