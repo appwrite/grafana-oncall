@@ -32,7 +32,8 @@ Published:
   frontend by version.
 - New releases publish signed container images, software bills of materials, and build provenance.
 - Each release includes an atomic manifest that matches the plugin archive to an immutable engine digest.
-- Container deployments must pin a release tag. The floating `latest` image is not updated.
+- Container deployments must pin a version tag only after its matching GitHub release is published. A container tag
+  without a published release is incomplete and unsupported. The floating `latest` image is not updated.
 
 ## What it does not offer
 

@@ -343,12 +343,6 @@ jobs:
         run: |
           set -euo pipefail
 
-          if [[ "$ALREADY_PUBLISHED" != "true" ]]; then
-            # The manifest digest remains deployable even if alias creation
-            # needs repair. A rerun reads that published digest above.
-            gh release edit "$RELEASE_TAG" --draft=false --latest
-          fi
-
           alias_verified=false
           for attempt in 1 2 3 4 5; do
             if docker buildx imagetools create \
@@ -368,4 +362,10 @@ jobs:
           if [[ "$alias_verified" != "true" ]]; then
             echo "Version alias does not point to $IMAGE_DIGEST"
             exit 1
+          fi
+
+          # Publishing the matched GitHub release is the availability boundary.
+          # A version alias created before this point is not a stable release.
+          if [[ "$ALREADY_PUBLISHED" != "true" ]]; then
+            gh release edit "$RELEASE_TAG" --draft=false --latest
           fi
