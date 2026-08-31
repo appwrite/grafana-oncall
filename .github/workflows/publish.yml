@@ -327,32 +327,12 @@ jobs:
           RELEASE_TAG: ${{ github.ref_name }}
         run: |
           set -euo pipefail
-          alias_created=false
-          published=false
 
-          remove_unpublished_alias() {
-            if [[ "$alias_created" != "true" || "$published" == "true" ]]; then
-              return
-            fi
+          # The published release and its manifest are authoritative. Publish
+          # them before exposing the optional human-readable container alias so
+          # cancellation cannot leave an engine alias without its plugin.
+          gh release edit "$RELEASE_TAG" --draft=false --latest
 
-            removed=false
-            for attempt in 1 2 3 4 5; do
-              if crane delete "$IMAGE:$RELEASE_TAG"; then
-                if ! crane digest "$IMAGE:$RELEASE_TAG" >/dev/null 2>&1; then
-                  removed=true
-                  break
-                fi
-              fi
-              sleep $((attempt * 2))
-            done
-            if [[ "$removed" != "true" ]]; then
-              echo "Failed to remove unpublished alias $IMAGE:$RELEASE_TAG"
-              return 1
-            fi
-          }
-          trap remove_unpublished_alias EXIT
-
-          alias_created=true
           docker buildx imagetools create \
             --tag "$IMAGE:$RELEASE_TAG" \
             "$IMAGE@$IMAGE_DIGEST"
@@ -365,6 +345,3 @@ jobs:
             echo "Version alias points to $alias_digest instead of $IMAGE_DIGEST"
             exit 1
           fi
-
-          gh release edit "$RELEASE_TAG" --draft=false --latest
-          published=true
