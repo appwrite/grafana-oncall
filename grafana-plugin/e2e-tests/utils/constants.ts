@@ -1,4 +1,6 @@
 export const BASE_URL = process.env.BASE_URL || 'http://localhost:3000';
+export const PLUGIN_ID = process.env.PLUGIN_ID || 'grafana-irm-app';
+export const PLUGIN_CONFIG_PATH = `/plugins/${PLUGIN_ID}`;
 export const MAILSLURP_API_KEY = process.env.MAILSLURP_API_KEY;
 
 export const GRAFANA_VIEWER_USERNAME = process.env.GRAFANA_VIEWER_USERNAME || 'viewer';
