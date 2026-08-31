@@ -1,5 +1,5 @@
 import { LocationHelper } from 'helpers/LocationHelper';
-import { useParams } from 'react-router-dom';
+import { useParams } from 'react-router-dom-v5-compat';
 
 import { useStore } from 'state/useStore';
 

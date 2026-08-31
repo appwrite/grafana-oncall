@@ -7,7 +7,7 @@ import dayjs from 'dayjs';
 import { PLUGIN_ROOT, StackSize } from 'helpers/consts';
 import { useIsLoading } from 'helpers/hooks';
 import { observer } from 'mobx-react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom-v5-compat';
 
 import { Avatar } from 'components/Avatar/Avatar';
 import { RenderConditionally } from 'components/RenderConditionally/RenderConditionally';

@@ -1,7 +1,7 @@
 import { NavModelItem } from '@grafana/data';
 import { UserActions, UserAction, isUserActionAllowed } from 'helpers/authorization/authorization';
 import { PLUGIN_ROOT } from 'helpers/consts';
-import { matchPath } from 'react-router-dom';
+import { matchPath } from 'react-router-dom-v5-compat';
 
 import { AppFeature } from 'state/features';
 import { RootBaseStore } from 'state/rootBaseStore/RootBaseStore';

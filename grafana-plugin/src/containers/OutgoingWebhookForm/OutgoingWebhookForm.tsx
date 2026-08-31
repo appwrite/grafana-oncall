@@ -7,7 +7,7 @@ import { PLUGIN_ROOT } from 'helpers/consts';
 import { KeyValuePair } from 'helpers/helpers';
 import { observer } from 'mobx-react';
 import { FormProvider, useForm, useFormContext } from 'react-hook-form';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom-v5-compat';
 
 import { Text } from 'components/Text/Text';
 import { OutgoingWebhookStatus } from 'containers/OutgoingWebhookStatus/OutgoingWebhookStatus';
