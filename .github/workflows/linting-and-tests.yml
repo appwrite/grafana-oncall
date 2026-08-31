@@ -109,6 +109,7 @@ jobs:
           PR_BASE_REF: ${{ github.event.pull_request.base.ref }}
           MERGE_BASE_REF: ${{ github.base_ref || github.event.merge_group.base_ref }}
           RELEASE_TARGET: ${{ github.event.release.target_commitish }}
+          DEFAULT_BRANCH: ${{ github.event.repository.default_branch }}
         run: |
           # Determine base ref from safe, pre-evaluated env variables
           if [[ "$EVENT_NAME" == "pull_request" ]]; then
@@ -117,6 +118,8 @@ jobs:
             BASE_REF="$MERGE_BASE_REF"
           elif [[ "$EVENT_NAME" == "release" ]]; then
             BASE_REF="$RELEASE_TARGET"
+          elif [[ "$EVENT_NAME" == "schedule" || "$EVENT_NAME" == "workflow_dispatch" ]]; then
+            BASE_REF="$DEFAULT_BRANCH"
           else
             echo "Unsupported event: $EVENT_NAME"
             exit 1
@@ -144,7 +147,7 @@ jobs:
         run: |
           # Use validated ref
           SAFE_REF="${{ steps.extract_base_ref.outputs.base_ref }}"
-          HEAD_SHA="${{ github.event.pull_request.head.sha }}"
+          HEAD_SHA="${{ github.event.pull_request.head.sha || github.sha }}"
 
           # Get the list of files changed in the PR using validated refs
           git diff --name-only "refs/remotes/origin/${SAFE_REF}...${HEAD_SHA}" > changed_files.txt
@@ -355,7 +358,9 @@ jobs:
     strategy:
       matrix:
         grafana_version:
+          # renovate: datasource=docker depName=grafana/grafana
           - 12.4.8
+          # renovate: datasource=docker depName=grafana/grafana
           - 13.2.0
       fail-fast: false
     with:

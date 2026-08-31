@@ -8,7 +8,7 @@ x-oncall-build: &oncall-build-args
   target: ${ONCALL_IMAGE_TARGET:-dev}
   labels: *oncall-labels
   cache_from:
-    - ghcr.io/appwrite/grafana-oncall:latest
+    - ghcr.io/appwrite/grafana-oncall:v${ONCALL_VERSION:-1.24.7}
 
 x-oncall-volumes: &oncall-volumes
   - ./engine:/etc/app

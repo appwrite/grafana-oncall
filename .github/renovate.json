@@ -1,1 +1,88 @@
-{ "enabled": false }
+{
+  "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+  "extends": [
+    "config:recommended",
+    "group:monorepos",
+    "helpers:pinGitHubActionDigests"
+  ],
+  "dependencyDashboard": true,
+  "labels": ["dependencies"],
+  "timezone": "Europe/London",
+  "schedule": ["before 6am on Monday"],
+  "minimumReleaseAge": "7 days",
+  "prConcurrentLimit": 5,
+  "prHourlyLimit": 2,
+  "rangeStrategy": "pin",
+  "customManagers": [
+    {
+      "customType": "regex",
+      "description": "Track the two explicitly supported Grafana lines",
+      "managerFilePatterns": ["/^\\.github/workflows/linting-and-tests\\.yml$/"],
+      "matchStrings": [
+        "# renovate: datasource=(?<datasource>\\S+) depName=(?<depName>\\S+)\\s*\\n\\s*- (?<currentValue>\\S+)"
+      ],
+      "versioningTemplate": "docker"
+    }
+  ],
+  "packageRules": [
+    {
+      "description": "Require explicit approval for major upgrades",
+      "matchUpdateTypes": ["major"],
+      "dependencyDashboardApproval": true
+    },
+    {
+      "description": "Group GitHub Actions updates",
+      "matchManagers": ["github-actions"],
+      "groupName": "GitHub Actions"
+    },
+    {
+      "description": "Group non-major frontend development dependencies",
+      "matchManagers": ["npm"],
+      "matchDepTypes": ["devDependencies"],
+      "matchUpdateTypes": ["minor", "patch"],
+      "groupName": "frontend development dependencies"
+    },
+    {
+      "description": "Group non-major Python dependencies",
+      "matchManagers": ["pip_requirements"],
+      "matchUpdateTypes": ["minor", "patch"],
+      "groupName": "Python dependencies"
+    },
+    {
+      "description": "Group non-major Go dependencies",
+      "matchManagers": ["gomod"],
+      "matchUpdateTypes": ["minor", "patch"],
+      "groupName": "Go dependencies"
+    },
+    {
+      "description": "Group service and build container updates",
+      "matchManagers": ["dockerfile", "docker-compose"],
+      "matchUpdateTypes": ["minor", "patch", "digest"],
+      "groupName": "container dependencies"
+    },
+    {
+      "description": "Keep Grafana 12 updates within the tested minor line",
+      "matchDepNames": ["grafana/grafana"],
+      "matchCurrentVersion": "/^12\\.4\\./",
+      "allowedVersions": "<12.5"
+    },
+    {
+      "description": "Keep Grafana 13 updates within the tested minor line",
+      "matchDepNames": ["grafana/grafana"],
+      "matchCurrentVersion": "/^13\\.2\\./",
+      "allowedVersions": "<13.3"
+    },
+    {
+      "description": "Process vulnerability alerts immediately",
+      "matchCategories": ["security"],
+      "schedule": ["at any time"],
+      "minimumReleaseAge": null,
+      "dependencyDashboardApproval": false,
+      "prPriority": 10,
+      "labels": ["dependencies", "security"]
+    }
+  ],
+  "vulnerabilityAlerts": {
+    "enabled": true
+  }
+}
