@@ -1,17 +1,53 @@
-name: Publish engine Docker image
+name: Publish release
 
 on:
   push:
     tags:
       - v*
 
+concurrency:
+  group: release-${{ github.ref_name }}
+  cancel-in-progress: false
+
 env:
   IMAGE: ghcr.io/appwrite/grafana-oncall
 
 jobs:
+  verify:
+    name: Verify release tag
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - name: Check out project
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Verify tag and release commit
+        env:
+          RELEASE_SHA: ${{ github.sha }}
+          RELEASE_TAG: ${{ github.ref_name }}
+        run: |
+          set -euo pipefail
+
+          if [[ ! "$RELEASE_TAG" =~ ^v[0-9]+\.[0-9]+\.[0-9]+([.-][0-9A-Za-z.-]+)?$ ]]; then
+            echo "Release tag must be a semantic version prefixed with v: $RELEASE_TAG"
+            exit 1
+          fi
+
+          git fetch origin main
+          if ! git merge-base --is-ancestor "$RELEASE_SHA" origin/main; then
+            echo "Release commit $RELEASE_SHA is not part of origin/main"
+            exit 1
+          fi
+
   build:
-    name: Build ${{ matrix.arch }}
+    name: Build engine (${{ matrix.arch }})
+    needs: verify
     strategy:
+      fail-fast: false
       matrix:
         include:
           - arch: amd64
@@ -23,8 +59,10 @@ jobs:
       contents: read
       packages: write
     steps:
-      - name: Checkout project
+      - name: Check out project
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
 
       - name: Set engine version number in settings file
         uses: ./.github/actions/set-engine-version-in-settings
@@ -36,61 +74,49 @@ jobs:
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@bb05f3f5519dd87d3ba754cc423b652a5edd6d2c # v4.2.0
 
-      - name: Login to GHCR
+      - name: Log in to GHCR
         uses: docker/login-action@dbcb813823bdd20940b903addbd779551569679f # v4.6.0
         with:
           registry: ghcr.io
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Build and push ${{ matrix.arch }} image
+      - name: Build and push staged image
         uses: docker/build-push-action@53b7df96c91f9c12dcc8a07bcb9ccacbed38856a # v7.3.0
         with:
           context: engine/
           platforms: linux/${{ matrix.arch }}
           target: prod
           push: true
+          provenance: mode=max
+          sbom: true
           tags: ${{ env.IMAGE }}:${{ github.ref_name }}-${{ matrix.arch }}
-
-  publish:
-    name: Publish multi-arch manifest
-    needs: build
-    runs-on: ubuntu-latest
-    permissions:
-      packages: write
-    steps:
-      - name: Login to GHCR
-        uses: docker/login-action@dbcb813823bdd20940b903addbd779551569679f # v4.6.0
-        with:
-          registry: ghcr.io
-          username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Create and push manifest
-        run: |
-          docker buildx imagetools create \
-            --tag ${{ env.IMAGE }}:${{ github.ref_name }} \
-            --tag ${{ env.IMAGE }}:latest \
-            ${{ env.IMAGE }}:${{ github.ref_name }}-amd64 \
-            ${{ env.IMAGE }}:${{ github.ref_name }}-arm64
 
   plugin:
     name: Package Grafana plugin
+    needs: verify
     runs-on: ubuntu-latest
     permissions:
-      contents: write
+      attestations: write
+      contents: read
+      id-token: write
     steps:
-      - name: Checkout project
+      - name: Check out project
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
 
       - name: Install frontend dependencies
         uses: ./.github/actions/install-frontend-dependencies
+        with:
+          cache-dependencies: "false"
 
       - name: Install Go
         uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7.0.0
         with:
           go-version-file: grafana-plugin/go.mod
           cache-dependency-path: grafana-plugin/go.sum
+          cache: false
 
       - name: Install Mage
         run: go install github.com/magefile/mage@v1.15.0
@@ -102,36 +128,166 @@ jobs:
         run: |
           set -euo pipefail
 
-          # a version without the leading "v" is what tells the plugin it is an OSS build, and it
-          # has to be stamped before either build: Rsbuild substitutes it into plugin.json and the
-          # backend bakes it into the binary
           version="${TAG#v}"
-          jq --arg v "$version" '.version=$v' package.json > package.tmp && mv package.tmp package.json
+          jq --arg v "$version" '.version=$v' package.json > package.tmp
+          mv package.tmp package.json
 
           pnpm build
           mage -v build:linux build:linuxARM64
 
-          # the plugin declares a backend, so a frontend-only archive would not load
           test -f dist/gpx_grafana_oncall_app_linux_amd64
           test -f dist/gpx_grafana_oncall_app_linux_arm64
 
-          # grafana expects the archive's directory to be named after the plugin id. The build is
-          # unsigned — we have no grafana.com access policy to sign under — so installs need the
-          # plugin allow-listed via GF_PLUGINS_ALLOW_LOADING_UNSIGNED_PLUGINS.
+          # Grafana expects the archive directory to use the plugin ID. The plugin is unsigned,
+          # so deployments must allow-list it with GF_PLUGINS_ALLOW_LOADING_UNSIGNED_PLUGINS.
           mv dist grafana-oncall-app
           zip -qr "grafana-oncall-app-${version}.zip" ./grafana-oncall-app
           sha256sum "grafana-oncall-app-${version}.zip" > "grafana-oncall-app-${version}.zip.sha256"
 
-      - name: Attach plugin to release
-        working-directory: grafana-plugin
+      - name: Generate plugin SBOM
+        uses: anchore/sbom-action@3ad7283483fc7af8ff2b4ea19663c2d5ca935e26 # v0.24.2
+        with:
+          path: grafana-plugin/grafana-oncall-app
+          format: spdx-json
+          output-file: grafana-plugin/plugin-sbom.spdx.json
+          upload-artifact: false
+
+      - name: Attest plugin provenance
+        uses: actions/attest-build-provenance@4d101475d8b20a2381f78447822ac1eab6504dd8 # v4.2.2
+        with:
+          subject-path: grafana-plugin/grafana-oncall-app-*.zip
+
+      - name: Attest plugin SBOM
+        uses: actions/attest@1e69f48acb82d1966a394da916b4c1698aa569d6 # v4.2.2
+        with:
+          subject-path: grafana-plugin/grafana-oncall-app-*.zip
+          sbom-path: grafana-plugin/plugin-sbom.spdx.json
+
+      - name: Stage plugin release assets
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: plugin-release-assets
+          path: |
+            grafana-plugin/grafana-oncall-app-*.zip
+            grafana-plugin/grafana-oncall-app-*.zip.sha256
+            grafana-plugin/plugin-sbom.spdx.json
+          if-no-files-found: error
+          retention-days: 7
+
+  publish:
+    name: Publish atomic release
+    needs:
+      - build
+      - plugin
+    runs-on: ubuntu-latest
+    permissions:
+      attestations: write
+      contents: write
+      id-token: write
+      packages: write
+    steps:
+      - name: Download plugin release assets
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+        with:
+          name: plugin-release-assets
+          path: release-assets
+
+      - name: Log in to GHCR
+        uses: docker/login-action@dbcb813823bdd20940b903addbd779551569679f # v4.6.0
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Create versioned multi-architecture image
         env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          TAG: ${{ github.ref_name }}
+          RELEASE_TAG: ${{ github.ref_name }}
         run: |
           set -euo pipefail
-          version="${TAG#v}"
-          gh release view "$TAG" >/dev/null 2>&1 || gh release create "$TAG" --generate-notes --title "$TAG"
-          gh release upload "$TAG" \
-            "grafana-oncall-app-${version}.zip" \
-            "grafana-oncall-app-${version}.zip.sha256" \
-            --clobber
+          docker buildx imagetools create \
+            --tag "$IMAGE:$RELEASE_TAG" \
+            "$IMAGE:$RELEASE_TAG-amd64" \
+            "$IMAGE:$RELEASE_TAG-arm64"
+
+      - name: Resolve image digest
+        id: image
+        env:
+          RELEASE_TAG: ${{ github.ref_name }}
+        run: |
+          set -euo pipefail
+          digest=$(
+            docker buildx imagetools inspect "$IMAGE:$RELEASE_TAG" \
+              --format '{{json .Manifest.Digest}}' | tr -d '"'
+          )
+          if [[ ! "$digest" =~ ^sha256:[0-9a-f]{64}$ ]]; then
+            echo "Could not resolve the published image digest: $digest"
+            exit 1
+          fi
+          echo "digest=$digest" >> "$GITHUB_OUTPUT"
+
+      - name: Generate engine SBOM
+        uses: anchore/sbom-action@3ad7283483fc7af8ff2b4ea19663c2d5ca935e26 # v0.24.2
+        with:
+          image: ${{ env.IMAGE }}:${{ github.ref_name }}-amd64
+          format: spdx-json
+          output-file: release-assets/engine-amd64-sbom.spdx.json
+          upload-artifact: false
+
+      - name: Generate ARM64 engine SBOM
+        uses: anchore/sbom-action@3ad7283483fc7af8ff2b4ea19663c2d5ca935e26 # v0.24.2
+        with:
+          image: ${{ env.IMAGE }}:${{ github.ref_name }}-arm64
+          format: spdx-json
+          output-file: release-assets/engine-arm64-sbom.spdx.json
+          upload-artifact: false
+
+      - name: Attest engine provenance
+        uses: actions/attest-build-provenance@4d101475d8b20a2381f78447822ac1eab6504dd8 # v4.2.2
+        with:
+          subject-name: ${{ env.IMAGE }}
+          subject-digest: ${{ steps.image.outputs.digest }}
+          push-to-registry: true
+
+      - name: Install Cosign
+        uses: sigstore/cosign-installer@6f9f17788090df1f26f669e9d70d6ae9567deba6 # v4.1.2
+
+      - name: Sign engine image
+        env:
+          IMAGE_DIGEST: ${{ steps.image.outputs.digest }}
+        run: cosign sign --yes "$IMAGE@$IMAGE_DIGEST"
+
+      - name: Create release checksums
+        working-directory: release-assets
+        run: sha256sum grafana-oncall-app-*.zip plugin-sbom.spdx.json engine-*-sbom.spdx.json > SHA256SUMS
+
+      - name: Create draft release and upload assets
+        env:
+          GH_REPO: ${{ github.repository }}
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          RELEASE_TAG: ${{ github.ref_name }}
+        run: |
+          set -euo pipefail
+
+          if gh release view "$RELEASE_TAG" >/dev/null 2>&1; then
+            is_draft=$(gh release view "$RELEASE_TAG" --json isDraft --jq .isDraft)
+            if [[ "$is_draft" != "true" ]]; then
+              echo "Release $RELEASE_TAG already exists and is not a draft"
+              exit 1
+            fi
+          else
+            gh release create "$RELEASE_TAG" --draft --generate-notes --title "$RELEASE_TAG"
+          fi
+
+          gh release upload "$RELEASE_TAG" release-assets/* --clobber
+
+      - name: Promote image to latest
+        env:
+          IMAGE_DIGEST: ${{ steps.image.outputs.digest }}
+        run: docker buildx imagetools create --tag "$IMAGE:latest" "$IMAGE@$IMAGE_DIGEST"
+
+      - name: Publish GitHub release
+        env:
+          GH_REPO: ${{ github.repository }}
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          RELEASE_TAG: ${{ github.ref_name }}
+        run: gh release edit "$RELEASE_TAG" --draft=false --latest

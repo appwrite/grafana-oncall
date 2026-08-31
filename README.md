@@ -20,6 +20,8 @@ Kept working:
 - Runs on Django 5.2 LTS. Upstream is on 4.2, whose extended support has ended.
 - The Insights page renders again. Its alert group variable produced invalid PromQL on Grafana 13.
 - Dependencies are patched, and end-to-end tests run against Grafana 12.4 and 13.2.
+- The tested runtimes and release lifecycle are defined in the
+  [compatibility policy](COMPATIBILITY.md).
 
 Published:
 
@@ -28,6 +30,7 @@ Published:
 - A plugin archive and its checksum on every
   [release](https://github.com/appwrite/grafana-oncall/releases), so a deployment can pin the
   frontend by version.
+- New releases publish signed container images, software bills of materials, and build provenance.
 
 ## What it does not offer
 

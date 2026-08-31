@@ -355,7 +355,9 @@ jobs:
     strategy:
       matrix:
         grafana_version:
+          # renovate: datasource=docker depName=grafana/grafana
           - 12.4.8
+          # renovate: datasource=docker depName=grafana/grafana
           - 13.2.0
       fail-fast: false
     with:

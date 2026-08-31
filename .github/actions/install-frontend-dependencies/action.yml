@@ -5,19 +5,23 @@ inputs:
     description: "Relative path to oncall directory"
     required: false
     default: "."
+  cache-dependencies:
+    description: "Whether to restore and save the pnpm dependency cache"
+    required: false
+    default: "true"
 runs:
   using: composite
   steps:
-    - name: Install pnpm
-      uses: pnpm/action-setup@0977fd99725f1db4007ccb2928dbb4e90d06cc86 # v6.0.10
-      with:
-        version: 12.0.0
     - name: Determine grafana-plugin directory location
       id: grafana-plugin-directory
       shell: bash
       env:
         ONCALL_DIRECTORY: ${{ inputs.oncall-directory }}
       run: echo "grafana-plugin-directory=${{ env.ONCALL_DIRECTORY }}/grafana-plugin" >> $GITHUB_OUTPUT
+    - name: Install pnpm
+      uses: pnpm/action-setup@0977fd99725f1db4007ccb2928dbb4e90d06cc86 # v6.0.10
+      with:
+        package_json_file: ${{ steps.grafana-plugin-directory.outputs.grafana-plugin-directory }}/package.json
     - name: Determine pnpm-lock.yaml location
       id: pnpm-lock-location
       shell: bash
@@ -26,8 +30,8 @@ runs:
       # yamllint enable rule:line-length
     - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
       with:
-        node-version: 24.20.0
-        cache: pnpm
+        node-version-file: ${{ inputs.oncall-directory }}/.nvmrc
+        cache: ${{ inputs.cache-dependencies == 'true' && 'pnpm' || '' }}
         cache-dependency-path: ${{ steps.pnpm-lock-location.outputs.pnpm-lock-location }}
     - name: Install frontend dependencies
       shell: bash
