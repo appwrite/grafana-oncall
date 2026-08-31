@@ -108,10 +108,26 @@ jobs:
       packages: read
       security-events: write
     steps:
-      - name: Scan latest engine image
+      - name: Resolve newest published release
+        id: release
+        env:
+          GH_REPO: ${{ github.repository }}
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -euo pipefail
+          tag=$(gh api "repos/$GH_REPO/releases/latest" --jq .tag_name)
+          if gh release download "$tag" --pattern release-manifest.json; then
+            image=$(jq -r .engine.reference release-manifest.json)
+          else
+            # Releases made before the manifest was introduced use their immutable version tag.
+            image="ghcr.io/appwrite/grafana-oncall:$tag"
+          fi
+          echo "image=$image" >> "$GITHUB_OUTPUT"
+
+      - name: Scan newest released engine image
         uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # v0.36.0
         with:
-          image-ref: ghcr.io/appwrite/grafana-oncall:latest
+          image-ref: ${{ steps.release.outputs.image }}
           format: sarif
           output: trivy-image-results.sarif
           severity: HIGH,CRITICAL

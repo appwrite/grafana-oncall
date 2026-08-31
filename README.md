@@ -31,6 +31,7 @@ Published:
   [release](https://github.com/appwrite/grafana-oncall/releases), so a deployment can pin the
   frontend by version.
 - New releases publish signed container images, software bills of materials, and build provenance.
+- Each release includes an atomic manifest that matches the plugin archive to an immutable engine digest.
 - Container deployments must pin a release tag. The floating `latest` image is not updated.
 
 ## What it does not offer
