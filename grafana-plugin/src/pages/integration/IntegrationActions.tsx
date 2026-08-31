@@ -7,7 +7,7 @@ import { openErrorNotification, openNotification } from 'helpers/helpers';
 import { useDrawer } from 'helpers/hooks';
 import CopyToClipboard from 'react-copy-to-clipboard';
 import Emoji from 'react-emoji-render';
-import { useNavigate } from 'react-router-dom-v5-compat';
+import { useNavigate } from 'react-router-dom';
 
 import { HamburgerContextMenu } from 'components/HamburgerContextMenu/HamburgerContextMenu';
 import { IntegrationSendDemoAlertModal } from 'components/IntegrationSendDemoAlertModal/IntegrationSendDemoAlertModal';

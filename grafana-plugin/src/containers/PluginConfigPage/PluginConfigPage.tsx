@@ -18,7 +18,7 @@ import { useOnMount } from 'helpers/hooks';
 import { validateURL } from 'helpers/string';
 import { observer } from 'mobx-react';
 import { Controller, useForm } from 'react-hook-form';
-import { useNavigate } from 'react-router-dom-v5-compat';
+import { useNavigate } from 'react-router-dom';
 
 import { Button } from 'components/Button/Button';
 import { CollapsibleTreeView } from 'components/CollapsibleTreeView/CollapsibleTreeView';

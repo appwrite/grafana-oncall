@@ -1,6 +1,6 @@
 import React from 'react';
 
-import { NavigateFunction, useLocation, useNavigate, useParams } from 'react-router-dom-v5-compat';
+import { NavigateFunction, useLocation, useNavigate, useParams } from 'react-router-dom';
 
 import { useDrawer } from './hooks';
 
