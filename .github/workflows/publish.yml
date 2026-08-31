@@ -342,8 +342,35 @@ jobs:
           RELEASE_TAG: ${{ github.ref_name }}
         run: |
           set -euo pipefail
+          published="$ALREADY_PUBLISHED"
+          alias_created=false
+
+          remove_unpublished_alias() {
+            if [[ "$alias_created" != "true" || "$published" == "true" ]]; then
+              return
+            fi
+
+            removed=false
+            for attempt in 1 2 3 4 5; do
+              if crane delete "$IMAGE:$RELEASE_TAG" && \
+                ! crane digest "$IMAGE:$RELEASE_TAG" >/dev/null 2>&1; then
+                removed=true
+                break
+              fi
+              sleep $((attempt * 2))
+            done
+            if [[ "$removed" != "true" ]]; then
+              echo "Failed to remove incomplete alias $IMAGE:$RELEASE_TAG"
+              return 1
+            fi
+          }
+          trap 'exit 130' INT TERM
+          trap remove_unpublished_alias EXIT
 
           alias_verified=false
+          if [[ "$ALREADY_PUBLISHED" != "true" ]]; then
+            alias_created=true
+          fi
           for attempt in 1 2 3 4 5; do
             if docker buildx imagetools create \
               --tag "$IMAGE:$RELEASE_TAG" \
@@ -368,4 +395,5 @@ jobs:
           # A version alias created before this point is not a stable release.
           if [[ "$ALREADY_PUBLISHED" != "true" ]]; then
             gh release edit "$RELEASE_TAG" --draft=false --latest
+            published=true
           fi
