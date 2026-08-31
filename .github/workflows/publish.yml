@@ -295,26 +295,10 @@ jobs:
         run: |
           set -euo pipefail
           committed=false
-          previous_latest=$(crane digest "$IMAGE:latest" 2>/dev/null || true)
 
           rollback() {
             if [[ "$committed" == "true" ]]; then
               return
-            fi
-
-            if [[ -n "$previous_latest" ]]; then
-              restored=false
-              for attempt in 1 2 3 4 5; do
-                if docker buildx imagetools create --tag "$IMAGE:latest" "$IMAGE@$previous_latest"; then
-                  restored=true
-                  break
-                fi
-                sleep $((attempt * 2))
-              done
-              if [[ "$restored" != "true" ]]; then
-                echo "Failed to restore $IMAGE:latest to $previous_latest"
-                return 1
-              fi
             fi
 
             if ! crane digest "$IMAGE:$RELEASE_TAG" >/dev/null 2>&1; then
@@ -338,7 +322,6 @@ jobs:
 
           docker buildx imagetools create \
             --tag "$IMAGE:$RELEASE_TAG" \
-            --tag "$IMAGE:latest" \
             "$IMAGE@$IMAGE_DIGEST"
           gh release edit "$RELEASE_TAG" --draft=false --latest
           committed=true
