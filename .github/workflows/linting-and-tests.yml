@@ -59,7 +59,7 @@ jobs:
     runs-on: ubuntu-latest
     services:
       rabbit_test:
-        image: rabbitmq:3.12.0
+        image: rabbitmq:4.3.5
         env:
           RABBITMQ_DEFAULT_USER: rabbitmq
           RABBITMQ_DEFAULT_PASS: rabbitmq
@@ -220,7 +220,7 @@ jobs:
       ONCALL_TESTING_RBAC_ENABLED: ${{ matrix.rbac_enabled }}
     services:
       rabbit_test:
-        image: rabbitmq:3.12.0
+        image: rabbitmq:4.3.5
         env:
           RABBITMQ_DEFAULT_USER: rabbitmq
           RABBITMQ_DEFAULT_PASS: rabbitmq
@@ -259,7 +259,7 @@ jobs:
       ONCALL_TESTING_RBAC_ENABLED: ${{ matrix.rbac_enabled }}
     services:
       rabbit_test:
-        image: rabbitmq:3.12.0
+        image: rabbitmq:4.3.5
         env:
           RABBITMQ_DEFAULT_USER: rabbitmq
           RABBITMQ_DEFAULT_PASS: rabbitmq
@@ -303,7 +303,7 @@ jobs:
       ONCALL_TESTING_RBAC_ENABLED: ${{ matrix.rbac_enabled }}
     services:
       redis_test:
-        image: redis:7.0.15
+        image: redis:8.2.9
         ports:
           - 6379:6379
         options: >-
