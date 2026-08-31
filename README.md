@@ -30,8 +30,9 @@ Published:
 - A plugin archive and its checksum on every
   [release](https://github.com/appwrite/grafana-oncall/releases), so a deployment can pin the
   frontend by version.
+- A versioned Helm chart at `oci://ghcr.io/appwrite/helm-charts/oncall` and in each GitHub release.
 - New releases publish signed container images, software bills of materials, and build provenance.
-- Each release includes an atomic manifest that matches the plugin archive to an immutable engine digest.
+- Each release includes an atomic manifest that matches the engine, plugin archive, and Helm chart.
 - Container deployments must pin a version tag only after its matching GitHub release is published. A container tag
   without a published release is incomplete and unsupported. The floating `latest` image is not updated.
 
@@ -40,7 +41,6 @@ Published:
 - No support and no roadmap. We keep it working for our own use.
 - The plugin is unsigned, so Grafana needs
   `GF_PLUGINS_ALLOW_LOADING_UNSIGNED_PLUGINS=grafana-oncall-app`.
-- The Helm chart is not published to a chart repository. Install it from a checkout.
 - The mobile app does not work. It relied on Grafana Cloud's push relay.
 
 ## Grafana OnCall

@@ -23,26 +23,22 @@ Here are the instructions on how to set up your own [ingress](#set-up-external-a
 
 ## Install
 
-### Prepare the chart
-
-This chart is not published to a helm repository, so install it from a checkout:
-
-```bash
-git clone https://github.com/appwrite/grafana-oncall.git
-cd grafana-oncall
-```
-
 ### Installing the helm chart
 
 ```bash
-# Install the chart
+# Use a version from https://github.com/appwrite/grafana-oncall/releases.
+ONCALL_VERSION=VERSION
 helm install \
     --wait \
     --set base_url=example.com \
     --set grafana."grafana\.ini".server.domain=example.com \
+    --version "$ONCALL_VERSION" \
     release-oncall \
-    ./helm/oncall
+    oci://ghcr.io/appwrite/helm-charts/oncall
 ```
+
+The same chart archive is attached to the matching GitHub release. A checkout remains suitable for local chart
+development.
 
 Follow the `helm install` output to finish setting up Grafana OnCall backend and Grafana OnCall frontend plugin e.g.
 
