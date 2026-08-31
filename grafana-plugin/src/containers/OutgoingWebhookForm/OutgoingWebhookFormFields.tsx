@@ -213,6 +213,7 @@ export const OutgoingWebhookFormFields: React.FC<OutgoingWebhookFormFieldsProps>
                   />
                 </div>
                 <Button
+                  aria-label="Edit webhook URL template"
                   icon="edit"
                   variant="secondary"
                   onClick={() =>
@@ -243,6 +244,7 @@ export const OutgoingWebhookFormFields: React.FC<OutgoingWebhookFormFieldsProps>
                   />
                 </div>
                 <Button
+                  aria-label="Edit webhook headers template"
                   icon="edit"
                   variant="secondary"
                   onClick={() =>
@@ -307,6 +309,7 @@ export const OutgoingWebhookFormFields: React.FC<OutgoingWebhookFormFieldsProps>
                   />
                 </div>
                 <Button
+                  aria-label="Edit webhook trigger template"
                   icon="edit"
                   variant="secondary"
                   onClick={() =>
@@ -365,6 +368,7 @@ export const OutgoingWebhookFormFields: React.FC<OutgoingWebhookFormFieldsProps>
                         />
                       </div>
                       <Button
+                        aria-label="Edit webhook data template"
                         icon="edit"
                         variant="secondary"
                         onClick={() =>

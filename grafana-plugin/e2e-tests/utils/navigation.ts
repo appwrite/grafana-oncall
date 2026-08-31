@@ -1,9 +1,8 @@
 import { KeyValue } from '@grafana/data';
 import type { Page } from '@playwright/test';
-import { getPluginId } from 'helpers/consts';
 import qs from 'query-string';
 
-import { BASE_URL } from './constants';
+import { BASE_URL, PLUGIN_ID } from './constants';
 
 type OnCallPage =
   | 'alert-groups'
@@ -22,7 +21,7 @@ export const goToGrafanaPage = async (page: Page, url = '') => _goToPage(page, u
 
 export const goToOnCallPage = async (page: Page, onCallPage: OnCallPage, queryParams?: KeyValue) => {
   const queryParamsString = queryParams ? `?${qs.stringify(queryParams)}` : '';
-  await _goToPage(page, `/a/${getPluginId()}/${onCallPage}${queryParamsString}`);
+  await _goToPage(page, `/a/${PLUGIN_ID}/${onCallPage}${queryParamsString}`);
   // no networkidle wait: grafana 13 keeps connections open, so it never settles
   await page.waitForTimeout(1000);
 };

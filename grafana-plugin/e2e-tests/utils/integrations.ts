@@ -1,4 +1,5 @@
-import { Page, expect } from '@playwright/test';
+import { expect } from '@grafana/plugin-e2e';
+import type { Page } from '@playwright/test';
 
 import { clickButton, generateRandomValue, selectDropdownValue } from './forms';
 import { goToOnCallPage } from './navigation';

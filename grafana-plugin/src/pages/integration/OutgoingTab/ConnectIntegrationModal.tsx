@@ -70,6 +70,7 @@ export const ConnectIntegrationModal = observer(({ onDismiss }: { onDismiss: () 
 
   return (
     <Modal
+      ariaLabel="Connect integration"
       isOpen
       title={<Text.Title level={4}>Connect integration</Text.Title>}
       closeOnBackdropClick={false}

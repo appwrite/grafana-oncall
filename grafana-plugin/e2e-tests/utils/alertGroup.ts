@@ -1,4 +1,5 @@
-import { Locator, Page, expect } from '@playwright/test';
+import { expect } from '@grafana/plugin-e2e';
+import type { Locator, Page } from '@playwright/test';
 
 import { selectDropdownValue, selectValuePickerValue } from './forms';
 import { goToOnCallPage } from './navigation';

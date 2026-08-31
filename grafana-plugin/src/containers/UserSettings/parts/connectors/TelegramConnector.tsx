@@ -47,6 +47,7 @@ export const TelegramConnector = observer((props: TelegramConnectorProps) => {
             />
             <WithConfirm title="Are you sure to disconnect your Telegram account?" confirmText="Disconnect">
               <Button
+                aria-label="Disconnect Telegram account"
                 onClick={handleUnlinkTelegramAccount}
                 variant="destructive"
                 icon="times"

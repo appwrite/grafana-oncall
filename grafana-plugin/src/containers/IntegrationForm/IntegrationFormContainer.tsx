@@ -1,6 +1,7 @@
 import React, { useState, ChangeEvent } from 'react';
 
 import { cx } from '@emotion/css';
+import { config } from '@grafana/runtime';
 import { Drawer, Stack, Input, Tag, EmptySearchResult, useStyles2 } from '@grafana/ui';
 import { StackSize } from 'helpers/consts';
 import { observer } from 'mobx-react';
@@ -39,7 +40,7 @@ export const IntegrationFormContainer = observer((props: IntegrationFormContaine
 
   const options = alertReceiveChannelOptions
     ? alertReceiveChannelOptions.filter((option: ApiSchemas['AlertReceiveChannelIntegrationOptions']) => {
-        if (option.value === 'grafana_alerting' && !window.grafanaBootData.settings.unifiedAlertingEnabled) {
+        if (option.value === 'grafana_alerting' && !config.unifiedAlertingEnabled) {
           return false;
         }
 

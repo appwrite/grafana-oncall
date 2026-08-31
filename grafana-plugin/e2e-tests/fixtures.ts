@@ -1,4 +1,5 @@
-import { test as base, Browser, Fixtures, Page } from '@playwright/test';
+import { expect, test as base } from '@grafana/plugin-e2e';
+import type { Browser, Fixtures, Page } from '@playwright/test';
 
 import { VIEWER_USER_STORAGE_STATE, EDITOR_USER_STORAGE_STATE, ADMIN_USER_STORAGE_STATE } from '../playwright.config';
 
@@ -49,7 +50,8 @@ const setContextForPage = async (
   await use(page);
 };
 
-export * from '@playwright/test';
+export { expect };
+export type { Locator, Page } from '@playwright/test';
 export const test = base.extend<TestFixtures, WorkerFixtures>({
   /**
    * add back this fixture once this bug is fixed

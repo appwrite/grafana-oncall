@@ -1,4 +1,4 @@
-import { GrafanaBootConfig } from '@grafana/runtime';
+import { config } from '@grafana/runtime';
 import { OnCallAppPluginMeta } from 'app-types';
 
 //@ts-ignore
@@ -10,7 +10,7 @@ export const PluginId = {
 } as const;
 export type PluginId = (typeof PluginId)[keyof typeof PluginId];
 
-export const getIsIrmPluginPresent = () => PluginId.Irm in (window.grafanaBootData?.settings as GrafanaBootConfig).apps;
+export const getIsIrmPluginPresent = () => PluginId.Irm in config.apps;
 
 // Determine current environment: cloud, oss or local
 const CLOUD_VERSION_REGEX = /^(v\d+\.\d+\.\d+|github-actions-[a-zA-Z0-9-]+)$/;
@@ -74,7 +74,7 @@ export const getProcessEnvVarSafely = (name: string) => {
 
 const getGrafanaSubUrl = () => {
   try {
-    return window.grafanaBootData.settings.appSubUrl || '';
+    return config.appSubUrl || '';
   } catch (_err) {
     return '';
   }

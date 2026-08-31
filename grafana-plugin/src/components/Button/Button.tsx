@@ -4,9 +4,9 @@ import { css } from '@emotion/css';
 import { Button as GrafanaButton, ButtonProps as GrafanaButtonProps, useStyles2 } from '@grafana/ui';
 import cn from 'classnames';
 
-interface ButtonProps extends GrafanaButtonProps {
+type ButtonProps = GrafanaButtonProps & {
   showAsLink?: boolean;
-}
+};
 
 export const Button: FC<ButtonProps> = ({ showAsLink, ...props }) => {
   const styles = useStyles2(getStyles);

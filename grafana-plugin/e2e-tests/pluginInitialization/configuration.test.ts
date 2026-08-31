@@ -1,11 +1,10 @@
-import { PLUGIN_CONFIG } from 'helpers/consts';
-
 import { test, expect } from '../fixtures';
+import { PLUGIN_CONFIG_PATH } from '../utils/constants';
 import { goToGrafanaPage } from '../utils/navigation';
 
 test.describe('Plugin configuration', () => {
   test('Admin user can see currently applied URL', async ({ adminRolePage: { page } }) => {
-    await goToGrafanaPage(page, PLUGIN_CONFIG);
+    await goToGrafanaPage(page, PLUGIN_CONFIG_PATH);
 
     // the plugin config page takes a while to hydrate on grafana 13
     await expect(page.getByTestId('oncall-api-url-input')).toHaveValue('http://oncall-dev-engine:8080', {
@@ -16,7 +15,7 @@ test.describe('Plugin configuration', () => {
   test('Admin user can see error when invalid OnCall API URL is entered and plugin is reconnected', async ({
     adminRolePage: { page },
   }) => {
-    await goToGrafanaPage(page, PLUGIN_CONFIG);
+    await goToGrafanaPage(page, PLUGIN_CONFIG_PATH);
 
     // the input is populated once the plugin settings load
     const urlInput = page.getByTestId('oncall-api-url-input');

@@ -231,6 +231,7 @@ export const ExpandedIntegrationRouteDisplay: React.FC<ExpandedIntegrationRouteD
                           />
                         </div>
                         <Button
+                          aria-label="Edit routing template"
                           variant={'secondary'}
                           icon="edit"
                           size={'md'}
@@ -321,7 +322,13 @@ export const ExpandedIntegrationRouteDisplay: React.FC<ExpandedIntegrationRouteD
                     </WithPermissionControlTooltip>
 
                     <Tooltip placement={'top'} content={'Reload list'}>
-                      <Button variant={'secondary'} icon={'sync'} size={'md'} onClick={onEscalationChainsRefresh} />
+                      <Button
+                        aria-label="Reload escalation chains"
+                        variant={'secondary'}
+                        icon={'sync'}
+                        size={'md'}
+                        onClick={onEscalationChainsRefresh}
+                      />
                     </Tooltip>
 
                     <PluginLink target="_blank" query={escalationChainRedirectObj}>
@@ -329,7 +336,12 @@ export const ExpandedIntegrationRouteDisplay: React.FC<ExpandedIntegrationRouteD
                         placement={'top'}
                         content={channelFilter.escalation_chain ? 'Edit escalation chain' : 'Add an escalation chain'}
                       >
-                        <Button variant={'secondary'} icon={'external-link-alt'} size={'md'} />
+                        <Button
+                          aria-label={channelFilter.escalation_chain ? 'Edit escalation chain' : 'Add escalation chain'}
+                          variant={'secondary'}
+                          icon={'external-link-alt'}
+                          size={'md'}
+                        />
                       </Tooltip>
                     </PluginLink>
 
@@ -514,7 +526,13 @@ export const RouteButtonsDisplay: React.FC<RouteButtonsDisplayProps> = ({
       {routeIndex > 0 && !channelFilter.is_default && (
         <WithPermissionControlTooltip userAction={UserActions.IntegrationsWrite}>
           <Tooltip placement="top" content={'Move Up'}>
-            <Button variant={'secondary'} onClick={onRouteMoveUp} icon={'arrow-up'} size={'sm'} />
+            <Button
+              aria-label="Move route up"
+              variant={'secondary'}
+              onClick={onRouteMoveUp}
+              icon={'arrow-up'}
+              size={'sm'}
+            />
           </Tooltip>
         </WithPermissionControlTooltip>
       )}
@@ -522,7 +540,13 @@ export const RouteButtonsDisplay: React.FC<RouteButtonsDisplayProps> = ({
       {routeIndex < channelFilterIds.length - 2 && !channelFilter.is_default && (
         <WithPermissionControlTooltip userAction={UserActions.IntegrationsWrite}>
           <Tooltip placement="top" content={'Move Down'}>
-            <Button variant={'secondary'} onClick={onRouteMoveDown} icon={'arrow-down'} size={'sm'} />
+            <Button
+              aria-label="Move route down"
+              variant={'secondary'}
+              onClick={onRouteMoveDown}
+              icon={'arrow-down'}
+              size={'sm'}
+            />
           </Tooltip>
         </WithPermissionControlTooltip>
       )}

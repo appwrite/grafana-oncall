@@ -32,6 +32,12 @@ module.exports = {
 
   testTimeout: 10000,
   testPathIgnorePatterns: ['/node_modules/', '/e2e-tests/'],
+  // Grafana 12's CommonJS bundles load a small set of ESM-only dependencies.
+  // Let SWC compile those packages for Jest while keeping the rest of
+  // node_modules excluded from transforms.
+  transformIgnorePatterns: [
+    '/node_modules/(?!.*(?:marked|d3-[^/]+|internmap|robust-predicates|react-calendar|get-user-locale|memoize|mimic-function|@wojtekmaj/date-utils|ol(?:/|@)))',
+  ],
   transform: {
     '^.+\\.(t|j)sx?$': [
       '@swc/jest',

@@ -23,4 +23,4 @@ jest_html_reporters.html
 jest-html-reporters*
 
 .turbo
-tsconfig.tsbuildinfo
+*.tsbuildinfo

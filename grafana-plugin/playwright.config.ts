@@ -1,3 +1,4 @@
+import type { PluginOptions } from '@grafana/plugin-e2e';
 import { PlaywrightTestProject, defineConfig, devices } from '@playwright/test';
 
 import path from 'path';
@@ -19,7 +20,7 @@ const getEnabledBrowsers = (browsers: PlaywrightTestProject[]) =>
 /**
  * See https://playwright.dev/docs/test-configuration.
  */
-export default defineConfig({
+export default defineConfig<PluginOptions>({
   testDir: './e2e-tests',
 
   /* Maximum time all the tests can run for. */
@@ -59,6 +60,7 @@ export default defineConfig({
   workers: IS_CI ? 4 : undefined,
   /* Shared settings for all the projects below. See https://playwright.dev/docs/api/class-testoptions. */
   use: {
+    baseURL: process.env.GRAFANA_URL || 'http://localhost:3000',
     /**
      * Maximum time each action such as `click()` can take. Without a limit, an element that
      * never becomes actionable burns the whole test timeout instead of failing where it broke.
