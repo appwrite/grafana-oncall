@@ -7,6 +7,8 @@ does not create a general support commitment for external deployments.
 
 - The latest stable release is the maintained release line.
 - Engine and plugin versions must match.
+- A version becomes stable only when its GitHub release is published. A Git tag or container tag without a published
+  GitHub release is an incomplete release and must not be deployed.
 - Security and correctness fixes target the latest stable release. Backports are exceptional and are not guaranteed.
 - A superseded release stops receiving regular fixes when a new stable release is published.
 - Breaking configuration or migration changes require a major version. Deprecations should remain available for one
