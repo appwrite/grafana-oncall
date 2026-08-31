@@ -313,19 +313,26 @@ jobs:
 
           gh release upload "$RELEASE_TAG" release-assets/* --clobber
 
-      - name: Publish matched release
+      - name: Commit matched release
         id: release
         env:
           GH_REPO: ${{ github.repository }}
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          RELEASE_TAG: ${{ github.ref_name }}
-        run: gh release edit "$RELEASE_TAG" --draft=false --latest
-
-      - name: Create versioned image alias
-        env:
           IMAGE_DIGEST: ${{ steps.image.outputs.digest }}
           RELEASE_TAG: ${{ github.ref_name }}
         run: |
+          set -euo pipefail
           docker buildx imagetools create \
             --tag "$IMAGE:$RELEASE_TAG" \
             "$IMAGE@$IMAGE_DIGEST"
+
+          alias_digest=$(
+            docker buildx imagetools inspect "$IMAGE:$RELEASE_TAG" \
+              --format '{{json .Manifest.Digest}}' | tr -d '"'
+          )
+          if [[ "$alias_digest" != "$IMAGE_DIGEST" ]]; then
+            echo "Version alias points to $alias_digest instead of $IMAGE_DIGEST"
+            exit 1
+          fi
+
+          gh release edit "$RELEASE_TAG" --draft=false --latest
