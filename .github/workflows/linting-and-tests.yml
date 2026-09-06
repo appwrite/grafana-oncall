@@ -201,6 +201,10 @@ jobs:
           exit 1
       - name: Run tests
         run: helm unittest ./helm/oncall
+      - name: Lint and package chart
+        run: |
+          helm lint ./helm/oncall
+          helm package ./helm/oncall --destination "$RUNNER_TEMP"
 
   unit-test-backend-plugin:
     name: "Backend Tests: Plugin"

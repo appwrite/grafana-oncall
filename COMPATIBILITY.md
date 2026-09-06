@@ -6,11 +6,11 @@ does not create a general support commitment for external deployments.
 ## Release support
 
 - The latest stable release is the maintained release line.
-- Engine and plugin versions must match.
+- Engine, plugin, and Helm chart versions must match.
 - A version becomes stable only when its GitHub release is published. A Git tag or container tag without a published
   GitHub release is an incomplete release and must not be deployed.
-- Each release contains `release-manifest.json`. Its engine digest and plugin checksum are the authoritative matched
-  artifacts. The versioned image tag is a convenience alias for that engine digest.
+- Each release contains `release-manifest.json`. Its engine digest, plugin checksum, and chart checksum are the
+  authoritative matched artifacts. Versioned registry tags are convenience aliases for those artifacts.
 - The release workflow publishes immutable version tags. It does not update the floating `latest` container tag.
 - Security and correctness fixes target the latest stable release. Backports are exceptional and are not guaranteed.
 - A superseded release stops receiving regular fixes when a new stable release is published.
