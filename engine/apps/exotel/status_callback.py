@@ -1,3 +1,4 @@
+import json
 import logging
 from typing import Optional
 
@@ -19,15 +20,17 @@ def update_exotel_call_status(call_id: str, call_status: str, user_choice: Optio
 
     status_code = ExotelCallStatuses.DETERMINANT.get(call_status)
     if status_code is None:
-        logger.warning(f"exotel.update_exotel_call_status: unexpected status call_id={call_id} status={call_status}")
+        logger.warning(
+            f"exotel.update_exotel_call_status: unexpected status call_id={json.dumps(call_id)} status={json.dumps(call_status)}"
+        )
         return
 
     exotel_phone_call = ExotelPhoneCall.objects.filter(call_id=call_id).first()
     if exotel_phone_call is None:
-        logger.warning(f"exotel.update_exotel_call_status: exotel_phone_call not found call_id={call_id}")
+        logger.warning(f"exotel.update_exotel_call_status: exotel_phone_call not found call_id={json.dumps(call_id)}")
         return
 
-    logger.info(f"exotel.update_exotel_call_status: found exotel_phone_call call_id={call_id}")
+    logger.info(f"exotel.update_exotel_call_status: found exotel_phone_call call_id={json.dumps(call_id)}")
 
     exotel_phone_call.status = status_code
     exotel_phone_call.save(update_fields=["status"])
@@ -35,14 +38,14 @@ def update_exotel_call_status(call_id: str, call_status: str, user_choice: Optio
 
     if phone_call_record is None:
         logger.warning(
-            f"exotel.update_exotel_call_status: exotel_phone_call has no phone_call record call_id={call_id} "
-            f"status={call_status}"
+            f"exotel.update_exotel_call_status: exotel_phone_call has no phone_call record call_id={json.dumps(call_id)} "
+            f"status={json.dumps(call_status)}"
         )
         return
 
     logger.info(
         f"exotel.update_exotel_call_status: found phone_call_record id={phone_call_record.id} "
-        f"call_id={call_id} status={call_status}"
+        f"call_id={json.dumps(call_id)} status={json.dumps(call_status)}"
     )
     log_record_type = None
     log_record_error_code = None

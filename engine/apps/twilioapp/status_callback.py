@@ -1,3 +1,4 @@
+import json
 import logging
 
 from django.urls import reverse
@@ -24,36 +25,40 @@ def update_twilio_call_status(call_sid, call_status):
     from apps.base.models import UserNotificationPolicy, UserNotificationPolicyLogRecord
 
     if call_sid and call_status:
-        logger.info(f"twilioapp.update_twilio_call_status: processing sid={call_sid} status={call_status}")
+        logger.info(
+            f"twilioapp.update_twilio_call_status: processing sid={json.dumps(call_sid)} status={json.dumps(call_status)}"
+        )
         status_code = TwilioCallStatuses.DETERMINANT.get(call_status)
 
         if status_code is None:
             logger.warning(
-                f"twilioapp.update_twilio_call_status: unexpected status sid={call_sid} status={call_status}"
+                f"twilioapp.update_twilio_call_status: unexpected status sid={json.dumps(call_sid)} status={json.dumps(call_status)}"
             )
             return
 
         twilio_phone_call = TwilioPhoneCall.objects.filter(sid=call_sid).first()
 
         if twilio_phone_call is None:
-            logger.warning(f"twilioapp.update_twilio_call_status: twilio_phone_call not found sid={call_sid}")
+            logger.warning(
+                f"twilioapp.update_twilio_call_status: twilio_phone_call not found sid={json.dumps(call_sid)}"
+            )
             return
 
-        logger.info(f"twilioapp.update_twilio_call_status: found twilio_phone_call sid={call_sid}")
+        logger.info(f"twilioapp.update_twilio_call_status: found twilio_phone_call sid={json.dumps(call_sid)}")
         twilio_phone_call.status = status_code
         twilio_phone_call.save(update_fields=["status"])
         phone_call_record = twilio_phone_call.phone_call_record
 
         if phone_call_record is None:
             logger.warning(
-                f"twilioapp.update_twilio_call_status: twilio_phone_call has no phone_call record sid={call_sid} "
-                f"status={call_status}"
+                f"twilioapp.update_twilio_call_status: twilio_phone_call has no phone_call record sid={json.dumps(call_sid)} "
+                f"status={json.dumps(call_status)}"
             )
             return
 
         logger.info(
             f"twilioapp.update_twilio_call_status: found phone_call_record id={phone_call_record.id} "
-            f"sid={call_sid} status={call_status}"
+            f"sid={json.dumps(call_sid)} status={json.dumps(call_status)}"
         )
         log_record_type = None
         log_record_error_code = None
@@ -105,31 +110,37 @@ def update_twilio_sms_status(message_sid, message_status):
     from apps.base.models import UserNotificationPolicy, UserNotificationPolicyLogRecord
 
     if message_sid and message_status:
-        logger.info(f"twilioapp.update_twilio_message_status: processing sid={message_sid} status={message_status}")
+        logger.info(
+            f"twilioapp.update_twilio_message_status: processing sid={json.dumps(message_sid)} status={json.dumps(message_status)}"
+        )
         status_code = TwilioSMSstatuses.DETERMINANT.get(message_status)
         if status_code is None:
             logger.warning(
-                f"twilioapp.update_twilio_message_status: unexpected status sid={message_sid} status={message_status}"
+                f"twilioapp.update_twilio_message_status: unexpected status sid={json.dumps(message_sid)} status={json.dumps(message_status)}"
             )
             return
 
         twilio_sms = TwilioSMS.objects.filter(sid=message_sid).first()
         if twilio_sms is None:
-            logger.warning(f"twilioapp.update_twilio_message_status: twilio_sms not found sid={message_sid}")
+            logger.warning(
+                f"twilioapp.update_twilio_message_status: twilio_sms not found sid={json.dumps(message_sid)}"
+            )
             return
 
-        logger.info(f"twilioapp.update_twilio_sms_status: found twilio_sms sid={message_sid}")
+        logger.info(f"twilioapp.update_twilio_sms_status: found twilio_sms sid={json.dumps(message_sid)}")
         twilio_sms.status = status_code
         twilio_sms.save(update_fields=["status"])
         sms_record = twilio_sms.sms_record
 
         if sms_record is None:
-            logger.warning(f"twilioapp.update_twilio_sms_status: twilio_sms has no sms_record sid={message_sid}")
+            logger.warning(
+                f"twilioapp.update_twilio_sms_status: twilio_sms has no sms_record sid={json.dumps(message_sid)}"
+            )
             return
 
         logger.info(
             f"twilioapp.update_twilio_sms_status: found sms_record id={sms_record.id} "
-            f"sid={message_sid} status={message_status}"
+            f"sid={json.dumps(message_sid)} status={json.dumps(message_status)}"
         )
         log_record_type = None
         log_record_error_code = None

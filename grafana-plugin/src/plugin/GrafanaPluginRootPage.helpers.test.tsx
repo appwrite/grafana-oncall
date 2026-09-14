@@ -1,6 +1,8 @@
 import * as runtime from '@grafana/runtime';
 import { getGrafanaVersion } from 'helpers/helpers';
 
+import { getQueryParams } from './GrafanaPluginRootPage.helpers';
+
 jest.mock('@grafana/runtime', () => ({
   config: jest.fn(),
 }));
@@ -40,5 +42,24 @@ describe('GrafanaPluginRootPage.helpers', () => {
     expect(major).toBe(1);
     expect(minor).toBe(0);
     expect(patch).toBe(0);
+  });
+});
+
+describe('getQueryParams', () => {
+  afterEach(() => window.history.replaceState({}, '', '/'));
+
+  test('represents reserved names as own properties without changing the prototype', () => {
+    window.history.replaceState({}, '', '/?__proto__=first&__proto__=second&constructor=value&toString=text');
+    const result = getQueryParams();
+    expect(Object.getPrototypeOf(result)).toBeNull();
+    expect(result.__proto__).toEqual(['first', 'second']);
+    expect(result.constructor).toBe('value');
+    expect(result.toString).toBe('text');
+    expect(Object.prototype).not.toHaveProperty('0');
+  });
+
+  test('preserves empty and repeated values', () => {
+    window.history.replaceState({}, '', '/?empty=&repeat=&repeat=two&repeat=three&single=one');
+    expect(getQueryParams()).toEqual({ empty: '', repeat: ['', 'two', 'three'], single: 'one' });
   });
 });

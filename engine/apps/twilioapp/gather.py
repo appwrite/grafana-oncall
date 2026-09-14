@@ -1,3 +1,4 @@
+import json
 import logging
 
 from django.urls import reverse
@@ -59,25 +60,31 @@ def process_digit(call_sid, digit):
 
     """
     if call_sid and digit:
-        logger.info(f"twilioapp.process_digit: processing sid={call_sid} digit={digit}")
+        logger.info(f"twilioapp.process_digit: processing sid={json.dumps(call_sid)} digit={json.dumps(digit)}")
         twilio_phone_call = TwilioPhoneCall.objects.filter(sid=call_sid).first()
         if twilio_phone_call is None:
-            logger.info(f"twilioapp.process_digit: twilio_phone_call not found sid={call_sid}")
+            logger.info(f"twilioapp.process_digit: twilio_phone_call not found sid={json.dumps(call_sid)}")
             return
 
-        logger.info(f"twilioapp.process_digit: found twilio_phone_call sid={call_sid} digit={digit}")
+        logger.info(
+            f"twilioapp.process_digit: found twilio_phone_call sid={json.dumps(call_sid)} digit={json.dumps(digit)}"
+        )
         phone_call_record = twilio_phone_call.phone_call_record
 
         if phone_call_record is None:
-            logger.info(f"twilioapp.process_digit: twilio_phone_call has no phone_call_record sid={call_sid}")
+            logger.info(
+                f"twilioapp.process_digit: twilio_phone_call has no phone_call_record sid={json.dumps(call_sid)}"
+            )
             return
 
-        logger.info(f"twilioapp.process_digit: found phone_call_record id={phone_call_record.id} sid={call_sid}")
+        logger.info(
+            f"twilioapp.process_digit: found phone_call_record id={phone_call_record.id} sid={json.dumps(call_sid)}"
+        )
         alert_group = phone_call_record.represents_alert_group
         user = phone_call_record.receiver
         logger.info(
             f"twilioapp.process_digit: processing digit phone_call_record id={phone_call_record.id} "
-            f"twilio_phone_call_sid={call_sid} digit={digit} alert_group_id={alert_group.id} user_id={user.id}"
+            f"twilio_phone_call_sid={json.dumps(call_sid)} digit={json.dumps(digit)} alert_group_id={alert_group.id} user_id={user.id}"
         )
         if digit == "1":
             alert_group.acknowledge_by_user_or_backsync(user, action_source=ActionSource.PHONE)

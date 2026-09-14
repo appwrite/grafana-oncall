@@ -1,6 +1,8 @@
 import json
 import re
+import time
 
+import regex as bounded_regex
 from django.db.models import Prefetch
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
@@ -10,6 +12,10 @@ from apps.alerts.incident_appearance.renderers.web_renderer import AlertWebRende
 from apps.alerts.models import Alert, AlertGroup
 from apps.auth_token.auth import PluginAuthentication
 from common.api_helpers.exceptions import BadRequest
+
+MAX_REGEX_LENGTH = 4096
+MAX_PAYLOAD_LENGTH = 1_000_000
+REGEX_TIME_BUDGET = 0.2
 
 
 class RouteRegexDebuggerView(APIView):
@@ -26,11 +32,15 @@ class RouteRegexDebuggerView(APIView):
             raise BadRequest(detail={"regex": ["This field is required."]})
         if regex == "":
             return Response([])
+        if len(regex) > MAX_REGEX_LENGTH:
+            raise BadRequest(detail={"regex": ["Regex exceeds length limit."]})
         try:
             re.compile(regex)
-        except re.error as e:
+            pattern = bounded_regex.compile(regex, bounded_regex.VERSION0)
+        except (re.error, bounded_regex.error, OverflowError, RecursionError) as e:
             raise BadRequest(detail={"regex": ["Invalid regex."]}) from e
 
+        remaining_time = REGEX_TIME_BUDGET
         incidents_matching_regex = []
         MAX_INCIDENTS_TO_SHOW = 5
         INCIDENTS_TO_LOOKUP = 100
@@ -41,7 +51,18 @@ class RouteRegexDebuggerView(APIView):
         ):
             if len(incidents_matching_regex) < MAX_INCIDENTS_TO_SHOW:
                 first_alert = ag.alerts.all()[0]
-                if re.search(regex, json.dumps(first_alert.raw_request_data)):
+                payload = json.dumps(first_alert.raw_request_data)
+                if len(payload) > MAX_PAYLOAD_LENGTH:
+                    raise BadRequest(detail={"regex": ["Alert payload exceeds regex debugger length limit."]})
+                started = time.monotonic()
+                try:
+                    if remaining_time <= 0:
+                        raise TimeoutError
+                    match = pattern.search(payload, timeout=remaining_time)
+                except TimeoutError as e:
+                    raise BadRequest(detail={"regex": ["Regex evaluation exceeded time limit."]}) from e
+                remaining_time -= time.monotonic() - started
+                if match:
                     title = AlertWebRenderer(first_alert).render()["title"]
                     incidents_matching_regex.append(
                         {

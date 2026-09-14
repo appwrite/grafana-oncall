@@ -96,7 +96,7 @@ class SlackEventApiEndpointView(APIView):
         return Response("hello")
 
     def post(self, request):
-        logger.info("Request id: {}".format(request.META.get("HTTP_X_REQUEST_ID")))
+        logger.info("Request id: %s", json.dumps(request.META.get("HTTP_X_REQUEST_ID")))
         body = request.body
 
         try:
