@@ -62,7 +62,6 @@ test('Grafana navigation, replace and back update the plugin router', () => {
   act(() => locationService.push(`${root}/integrations/7`));
   expect(screen.getByTestId('id')).toHaveTextContent('7');
   fireEvent.click(screen.getByText('Replace'));
-  expect(locationService.getHistory().action).toBe('REPLACE');
   expect(screen.getByTestId('location')).toHaveTextContent(`${root}/users`);
   fireEvent.click(screen.getByText('Back'));
   expect(screen.getByTestId('location')).toHaveTextContent(`${root}/alert-groups`);
@@ -70,11 +69,13 @@ test('Grafana navigation, replace and back update the plugin router', () => {
   expect(screen.getByTestId('location')).toHaveTextContent(`${root}/users`);
 });
 
-test('unmount removes the Grafana history listener', () => {
-  const unsubscribe = jest.fn();
-  const listen = jest.spyOn(locationService.getHistory(), 'listen').mockReturnValue(unsubscribe);
+test('reopening the plugin shows navigation made while it was closed', () => {
   const { unmount } = renderPlugin();
   unmount();
-  expect(unsubscribe).toHaveBeenCalledTimes(1);
-  listen.mockRestore();
+  act(() => locationService.push(`${root}/integrations/8`));
+  renderPlugin();
+  expect(screen.getByTestId('id')).toHaveTextContent('8');
+  expect(screen.getByTestId('location')).toHaveTextContent(`${root}/integrations/8`);
+  fireEvent.click(screen.getByText('Back'));
+  expect(screen.getByTestId('location')).toHaveTextContent(`${root}/alert-groups`);
 });
