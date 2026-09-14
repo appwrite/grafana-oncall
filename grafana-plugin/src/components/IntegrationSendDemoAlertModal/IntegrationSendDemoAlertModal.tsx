@@ -14,6 +14,7 @@ import { Text } from 'components/Text/Text';
 import { AlertReceiveChannelHelper } from 'models/alert_receive_channel/alert_receive_channel.helpers';
 import { ApiSchemas } from 'network/oncall-api/api.types';
 import { getIntegrationStyles } from 'pages/integration/Integration.styles';
+import { PluginRouter } from 'plugin/PluginRouter';
 import { useStore } from 'state/useStore';
 
 interface IntegrationSendDemoPayloadModalProps {
@@ -120,12 +121,14 @@ export const IntegrationSendDemoAlertModal: React.FC<IntegrationSendDemoPayloadM
   }
 };
 
-const DemoNotification: React.FC = () => {
+export const DemoNotification: React.FC = () => {
   return (
-    <div data-testid="demo-alert-sent-notification">
-      Demo alert was generated. Find it on the
-      <PluginLink query={{ page: 'alert-groups' }}> "Alert Groups" </PluginLink>
-      page and make sure it didn't freak out your colleagues 😉
-    </div>
+    <PluginRouter>
+      <div data-testid="demo-alert-sent-notification">
+        Demo alert was generated. Find it on the
+        <PluginLink query={{ page: 'alert-groups' }}> "Alert Groups" </PluginLink>
+        page and make sure it didn't freak out your colleagues 😉
+      </div>
+    </PluginRouter>
   );
 };
