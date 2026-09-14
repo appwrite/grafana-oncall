@@ -1,3 +1,5 @@
+const { grafanaESModules, nodeModulesToTransform } = require('./.config/jest/utils');
+
 module.exports = {
   ...require('./.config/jest.config'),
   testEnvironment: 'jsdom',
@@ -32,6 +34,15 @@ module.exports = {
 
   testTimeout: 10000,
   testPathIgnorePatterns: ['/node_modules/', '/e2e-tests/'],
+  transformIgnorePatterns: [
+    nodeModulesToTransform([
+      ...grafanaESModules,
+      'query-string',
+      'decode-uri-component',
+      'filter-obj',
+      'split-on-first',
+    ]),
+  ],
   transform: {
     '^.+\\.(t|j)sx?$': [
       '@swc/jest',
