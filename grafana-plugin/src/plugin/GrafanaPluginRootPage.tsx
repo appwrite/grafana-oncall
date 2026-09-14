@@ -4,11 +4,11 @@ import { css, cx } from '@emotion/css';
 import { ErrorBoundary, LoadingPlaceholder } from '@grafana/ui';
 import { AppRootProps } from 'app-types';
 import { isUserActionAllowed } from 'helpers/authorization/authorization';
-import { DEFAULT_PAGE, getOnCallApiUrl } from 'helpers/consts';
+import { DEFAULT_PAGE, getOnCallApiUrl, PLUGIN_ROOT } from 'helpers/consts';
 import { FaroHelper } from 'helpers/faro';
 import { useOnMount } from 'helpers/hooks';
 import { observer, Provider } from 'mobx-react';
-import { Navigate, Route, Routes, useLocation } from 'react-router-dom-v5-compat';
+import { Navigate, Route, Routes, useLocation } from 'react-router-v7';
 
 import { RenderConditionally } from 'components/RenderConditionally/RenderConditionally';
 import { Unauthorized } from 'components/Unauthorized/Unauthorized';
@@ -34,6 +34,7 @@ import { rootStore } from 'state/rootStore';
 import { useStore } from 'state/useStore';
 
 import { getQueryParams } from './GrafanaPluginRootPage.helpers';
+import { PluginRouter } from './PluginRouter';
 
 import globalStyles from 'assets/style/global.css?raw';
 import grafanaGlobalStyle from 'assets/style/grafanaGlobalStyles.css?raw';
@@ -44,15 +45,24 @@ export const GrafanaPluginRootPage = observer((props: AppRootProps) => {
   });
 
   return (
-    <ErrorBoundary onError={FaroHelper.pushReactError}>
-      {() => (
-        <PluginInitializer>
-          <Provider store={rootStore}>
-            <Root {...props} />
-          </Provider>
-        </PluginInitializer>
-      )}
-    </ErrorBoundary>
+    <PluginRouter>
+      <Routes>
+        <Route
+          path={`${PLUGIN_ROOT}/*`}
+          element={
+            <ErrorBoundary onError={FaroHelper.pushReactError}>
+              {() => (
+                <PluginInitializer>
+                  <Provider store={rootStore}>
+                    <Root {...props} />
+                  </Provider>
+                </PluginInitializer>
+              )}
+            </ErrorBoundary>
+          }
+        />
+      </Routes>
+    </PluginRouter>
   );
 });
 

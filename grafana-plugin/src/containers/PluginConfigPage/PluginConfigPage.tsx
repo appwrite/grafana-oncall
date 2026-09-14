@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 
 import { css } from '@emotion/css';
 import { GrafanaTheme2, PluginConfigPageProps, PluginMeta } from '@grafana/data';
+import { locationService } from '@grafana/runtime';
 import { Alert, Field, Input, LoadingPlaceholder, useStyles2, Stack } from '@grafana/ui';
 import { OnCallPluginMetaJSONData } from 'app-types';
 import {
@@ -18,7 +19,6 @@ import { useOnMount } from 'helpers/hooks';
 import { validateURL } from 'helpers/string';
 import { observer } from 'mobx-react';
 import { Controller, useForm } from 'react-hook-form';
-import { useNavigate } from 'react-router-dom-v5-compat';
 
 import { Button } from 'components/Button/Button';
 import { CollapsibleTreeView } from 'components/CollapsibleTreeView/CollapsibleTreeView';
@@ -92,7 +92,6 @@ const OSSPluginConfigPage = observer(
       loaderStore,
     } = rootStore;
     const [hasBeenReconnected, setHasBeenReconnected] = useState(false);
-    const navigate = useNavigate();
     const styles = useStyles2(getStyles);
     const { handleSubmit, control, formState } = useForm<PluginConfigFormValues>({
       mode: 'onChange',
@@ -186,7 +185,9 @@ const OSSPluginConfigPage = observer(
           />
           <Stack>
             {isPluginConnected && (
-              <Button onClick={() => navigate(`${PLUGIN_ROOT}/${DEFAULT_PAGE}`)}>Open Grafana OnCall</Button>
+              <Button onClick={() => locationService.push(`${PLUGIN_ROOT}/${DEFAULT_PAGE}`)}>
+                Open Grafana OnCall
+              </Button>
             )}
             <Button
               type="submit"

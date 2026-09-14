@@ -17,6 +17,7 @@ import { PluginInitializer } from 'containers/PluginInitializer/PluginInitialize
 import { WithPermissionControlDisplay } from 'containers/WithPermissionControl/WithPermissionControlDisplay';
 import { UserHelper } from 'models/user/user.helpers';
 import { ApiSchemas } from 'network/oncall-api/api.types';
+import { PluginRouter } from 'plugin/PluginRouter';
 import { AppFeature } from 'state/features';
 import { RootStore, rootStore as store } from 'state/rootStore';
 
@@ -397,16 +398,18 @@ export const MobileAppConnectionWrapper: React.FC<{}> = observer(() => {
   };
 
   return (
-    <PluginInitializer>
-      <RenderConditionally
-        shouldRender={Boolean(store.isBasicDataLoaded && userStore.currentUserPk)}
-        render={() => (
-          <div data-testid="mobile-app-connection">
-            <MobileAppConnection userPk={userStore.currentUserPk} />
-          </div>
-        )}
-        backupChildren={<LoadingPlaceholder text="Loading..." />}
-      />
-    </PluginInitializer>
+    <PluginRouter>
+      <PluginInitializer>
+        <RenderConditionally
+          shouldRender={Boolean(store.isBasicDataLoaded && userStore.currentUserPk)}
+          render={() => (
+            <div data-testid="mobile-app-connection">
+              <MobileAppConnection userPk={userStore.currentUserPk} />
+            </div>
+          )}
+          backupChildren={<LoadingPlaceholder text="Loading..." />}
+        />
+      </PluginInitializer>
+    </PluginRouter>
   );
 });
