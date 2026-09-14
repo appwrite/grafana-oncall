@@ -4,7 +4,7 @@ from apps.phone_notifications.models.banned_phone_number import BannedPhoneNumbe
 
 
 @pytest.mark.django_db
-def test_ban_phone_number(make_organization, make_user_for_organization):
+def test_ban_phone_number(make_organization, make_user_for_organization, caplog):
     organization = make_organization()
     banned_phone_number = "+1234567890"
     unbanned_phone_number = "+0987654321"
@@ -24,7 +24,11 @@ def test_ban_phone_number(make_organization, make_user_for_organization):
         unverified_phone_number=unbanned_phone_number,
     )
     reason = "usage too high"
-    ban_phone_number(banned_phone_number, reason)
+    with caplog.at_level("INFO", logger="apps.phone_notifications.models.banned_phone_number"):
+        ban_phone_number(banned_phone_number, reason)
+    assert "affected_users=2" in caplog.text
+    assert banned_phone_number not in caplog.text
+    assert reason not in caplog.text
     banned_user_1.refresh_from_db()
     assert banned_user_1._verified_phone_number is None
     assert banned_user_1.unverified_phone_number == banned_phone_number

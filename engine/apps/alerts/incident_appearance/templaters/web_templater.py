@@ -1,7 +1,5 @@
-import re
-
 from apps.alerts.incident_appearance.templaters.alert_templater import AlertTemplater
-from common.utils import convert_md_to_html, escape_html, url_re, urlize_with_respect_to_a, validate_url
+from common.utils import convert_md_to_html, escape_html, find_urls, urlize_with_respect_to_a, validate_url
 
 
 class AlertWebTemplater(AlertTemplater):
@@ -16,7 +14,7 @@ class AlertWebTemplater(AlertTemplater):
             templated_alert.title = escape_html(self._slack_format_for_web(templated_alert.title))
         if templated_alert.message:
             message = escape_html(self._slack_format_for_web(templated_alert.message))
-            link_matches = re.findall(url_re, message)
+            link_matches = find_urls(message)
             for idx, link in enumerate(link_matches):
                 substitution = f"oncallsubstitutedlink{idx}marker"
                 link_substitution[substitution] = link

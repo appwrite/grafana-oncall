@@ -1,3 +1,4 @@
+import json
 import logging
 from typing import Optional
 
@@ -14,15 +15,17 @@ def update_zvonok_call_status(call_id: str, call_status: str, user_choice: Optio
 
     status_code = ZvonokCallStatuses.DETERMINANT.get(call_status)
     if status_code is None:
-        logger.warning(f"zvonok.update_zvonok_call_status: unexpected status call_id={call_id} status={call_status}")
+        logger.warning(
+            f"zvonok.update_zvonok_call_status: unexpected status call_id={json.dumps(call_id)} status={json.dumps(call_status)}"
+        )
         return
 
     zvonok_phone_call = ZvonokPhoneCall.objects.filter(call_id=call_id).first()
     if zvonok_phone_call is None:
-        logger.warning(f"zvonok.update_zvonok_call_status: zvonok_phone_call not found call_id={call_id}")
+        logger.warning(f"zvonok.update_zvonok_call_status: zvonok_phone_call not found call_id={json.dumps(call_id)}")
         return
 
-    logger.info(f"zvonok.update_zvonok_call_status: found zvonok_phone_call call_id={call_id}")
+    logger.info(f"zvonok.update_zvonok_call_status: found zvonok_phone_call call_id={json.dumps(call_id)}")
 
     zvonok_phone_call.status = status_code
     zvonok_phone_call.save(update_fields=["status"])
@@ -30,14 +33,14 @@ def update_zvonok_call_status(call_id: str, call_status: str, user_choice: Optio
 
     if phone_call_record is None:
         logger.warning(
-            f"zvonok.update_zvonok_call_status: zvonok_phone_call has no phone_call record call_id={call_id} "
-            f"status={call_status}"
+            f"zvonok.update_zvonok_call_status: zvonok_phone_call has no phone_call record call_id={json.dumps(call_id)} "
+            f"status={json.dumps(call_status)}"
         )
         return
 
     logger.info(
         f"zvonok.update_zvonok_call_status: found phone_call_record id={phone_call_record.id} "
-        f"call_id={call_id} status={call_status}"
+        f"call_id={json.dumps(call_id)} status={json.dumps(call_status)}"
     )
     log_record_type = None
     log_record_error_code = None
@@ -72,7 +75,7 @@ def update_zvonok_call_status(call_id: str, call_status: str, user_choice: Optio
             user = phone_call_record.receiver
             logger.info(
                 f"zvonok.update_zvonok_call_status: processing user choice"
-                f" phone_call_record id={phone_call_record.id} zvonok_phone_call_id={call_id} "
+                f" phone_call_record id={phone_call_record.id} zvonok_phone_call_id={json.dumps(call_id)} "
                 f"alert_group_id={alert_group.id} user_id={user.id}"
             )
 

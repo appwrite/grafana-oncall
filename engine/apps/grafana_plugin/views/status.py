@@ -24,8 +24,10 @@ class StatusView(GrafanaHeadersMixin, APIView):
 
     def post(self, request: Request) -> Response:
         logger.info(
-            f"authenticated via {type(request.successful_authenticator)}, user=[{request.user}] "
-            f"org=[{request.auth.organization.stack_slug if request.auth.organization else None}]"
+            "authenticated via %s user_id=%s organization_id=%s",
+            type(request.successful_authenticator).__name__,
+            request.user.pk if request.user else None,
+            request.auth.organization.pk if request.auth.organization else None,
         )
 
         """

@@ -52,7 +52,7 @@ def ban_phone_number(phone_number: str, reason: str):
     banned_phone_number.reason = reason
     banned_phone_number.save()
 
-    logger.info(f"ban_phone_number={phone_number}, in use by users={len(user_entries)}, reason={reason}")
+    logger.info("Phone number banned; affected_users=%d", len(user_entries))
 
 
 def check_banned_phone_number(phone_number: str):

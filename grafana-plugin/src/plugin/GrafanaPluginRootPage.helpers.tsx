@@ -1,18 +1,17 @@
 export function getQueryParams(): any {
   const searchParams = new URLSearchParams(window.location.search);
-  const result = {};
+  const result: Record<string, string | string[]> = Object.create(null);
   for (const [key, value] of searchParams) {
-    if (result[key]) {
-      // key already existing, we're handling an array
-      if (!Array.isArray(result[key])) {
-        result[key] = new Array(result[key]);
+    if (Object.prototype.hasOwnProperty.call(result, key)) {
+      const previous = result[key];
+      if (Array.isArray(previous)) {
+        previous.push(value);
+      } else {
+        result[key] = [previous, value];
       }
-
-      result[key].push(value);
     } else {
       result[key] = value;
     }
   }
-
   return result;
 }

@@ -39,14 +39,14 @@ def apply_jinja_template(
         compiled_template = jinja_template_env.from_string(template)
         result = compiled_template.render(payload=payload, **kwargs)
     except SecurityError as e:
-        logger.warning(f"SecurityError process template={template} payload={payload}")
+        logger.warning("Template rejected by sandbox")
         raise JinjaTemplateError(str(e)) from e
     except (TemplateAssertionError, TemplateSyntaxError) as e:
         raise JinjaTemplateError(str(e)) from e
     except (TypeError, KeyError, ValueError, UndefinedError) as e:
         raise JinjaTemplateWarning(str(e)) from e
     except Exception as e:
-        logger.error(f"Unexpected template error: {str(e)} template={template} payload={payload}")
+        logger.error("Unexpected template error; exception_type=%s", type(e).__name__)
         raise JinjaTemplateError(str(e)) from e
 
     return (result[:result_length_limit] + "..") if len(result) > result_length_limit else result
