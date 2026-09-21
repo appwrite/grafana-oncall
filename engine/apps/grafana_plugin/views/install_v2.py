@@ -46,7 +46,7 @@ class InstallV2View(SyncV2View):
         return (
             call_status["connected"]
             and isinstance(permissions, dict)
-            and required_scope in permissions.get("plugins:write", [])
+            and any(scope in permissions.get("plugins:write", []) for scope in (required_scope, "plugins:*"))
         )
 
     def post(self, request: Request) -> Response:
