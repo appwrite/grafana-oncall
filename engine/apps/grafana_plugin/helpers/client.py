@@ -96,6 +96,15 @@ class HttpMethod(typing.Protocol):
 
 class APIClient:
     def __init__(self, api_url: str, api_token: str) -> None:
+        public_url = settings.SELF_HOSTED_SETTINGS.get("GRAFANA_PUBLIC_URL")
+        internal_url = settings.SELF_HOSTED_SETTINGS.get("GRAFANA_API_URL")
+        if (
+            settings.LICENSE == settings.OPEN_SOURCE_LICENSE_NAME
+            and public_url
+            and internal_url
+            and api_url.rstrip("/") == public_url.rstrip("/")
+        ):
+            api_url = internal_url
         self.api_url = api_url
         self.api_token = api_token
 

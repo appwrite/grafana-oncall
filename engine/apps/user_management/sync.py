@@ -303,6 +303,8 @@ def _sync_organization_data(organization: Organization, sync_settings: SyncSetti
     organization.is_grafana_incident_enabled = sync_settings.incident_enabled
     organization.grafana_incident_backend_url = sync_settings.incident_backend_url
     organization.grafana_url = sync_settings.grafana_url
+    if settings.LICENSE == settings.OPEN_SOURCE_LICENSE_NAME:
+        organization.grafana_url = settings.SELF_HOSTED_SETTINGS.get("GRAFANA_PUBLIC_URL") or organization.grafana_url
     organization.api_token = sync_settings.grafana_token
     organization.last_time_synced = timezone.now()
 

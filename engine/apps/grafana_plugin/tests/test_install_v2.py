@@ -1,6 +1,8 @@
+import json
 from unittest.mock import patch
 
 import pytest
+import responses
 from django.conf import settings
 from django.test import override_settings
 from django.urls import reverse
@@ -8,6 +10,7 @@ from rest_framework import status
 from rest_framework.test import APIClient
 
 from apps.grafana_plugin.views.sync_v2 import SyncException
+from apps.user_management.models import Organization
 from common.api_helpers.errors import INVALID_SELF_HOSTED_ID
 
 GRAFANA_URL = "http://trusted-grafana:3000"
@@ -62,7 +65,8 @@ def test_install_v2_rejects_untrusted_public_grafana_url():
 
 
 @override_settings(SELF_HOSTED_SETTINGS=SELF_HOSTED_SETTINGS)
-def test_install_v2_validates_token_against_configured_grafana_url():
+@pytest.mark.parametrize("grafana_url", [PUBLIC_GRAFANA_URL, GRAFANA_URL, GRAFANA_URL + "/"])
+def test_install_v2_validates_token_against_configured_grafana_url(grafana_url):
     client = APIClient()
     permissions = {"plugins:write": ["plugins:id:grafana-oncall-app"]}
     exc = SyncException(INVALID_SELF_HOSTED_ID)
@@ -77,7 +81,7 @@ def test_install_v2_validates_token_against_configured_grafana_url():
             {"connected": True},
         )
         response = client.post(
-            reverse("grafana-plugin:install-v2"), install_data(grafana_url=PUBLIC_GRAFANA_URL), format="json"
+            reverse("grafana-plugin:install-v2"), install_data(grafana_url=grafana_url), format="json"
         )
 
     grafana_api_client.assert_called_once_with(api_url=GRAFANA_URL, api_token=GRAFANA_TOKEN)
@@ -126,3 +130,52 @@ def test_install_v2_error_encoding_for_authorized_grafana_token():
     assert response.data["code"] == INVALID_SELF_HOSTED_ID.code
     assert response.data["message"] == INVALID_SELF_HOSTED_ID.message
     assert response.status_code == status.HTTP_400_BAD_REQUEST
+
+
+@pytest.mark.django_db
+@override_settings(SELF_HOSTED_SETTINGS=SELF_HOSTED_SETTINGS)
+@pytest.mark.parametrize("grafana_url", [GRAFANA_URL, PUBLIC_GRAFANA_URL])
+def test_install_and_sync_keep_public_links_and_internal_callbacks(grafana_url):
+    token = "glsa_abcdefghijklmnopqrstuvwxyz"
+    data = {
+        "settings": {
+            "grafana_url": grafana_url,
+            "grafana_token": token,
+            "stack_id": SELF_HOSTED_SETTINGS["STACK_ID"],
+            "org_id": SELF_HOSTED_SETTINGS["ORG_ID"],
+            "license": settings.OPEN_SOURCE_LICENSE_NAME,
+            "oncall_api_url": "http://oncall:8080",
+            "oncall_token": "",
+            "rbac_enabled": False,
+            "incident_enabled": False,
+            "incident_backend_url": "",
+            "labels_enabled": False,
+        },
+        "users": [],
+        "teams": [],
+        "team_members": {},
+    }
+    client = APIClient()
+    with responses.RequestsMock() as http:
+        http.get(
+            GRAFANA_URL + "/api/access-control/user/permissions",
+            json={"plugins:write": ["plugins:id:grafana-oncall-app"]},
+        )
+        http.head(GRAFANA_URL + "/api/org", status=200)
+        response = client.post(reverse("grafana-plugin:install-v2"), data, format="json")
+        assert response.status_code == status.HTTP_200_OK
+        organization = Organization.objects.get()
+        assert organization.grafana_url == PUBLIC_GRAFANA_URL
+        assert organization.api_token_status == Organization.API_TOKEN_STATUS_OK
+
+        response = client.post(
+            reverse("grafana-plugin:sync-v2"),
+            data,
+            format="json",
+            HTTP_AUTHORIZATION=response.data["onCallToken"],
+            HTTP_X_INSTANCE_CONTEXT=json.dumps({"stack_id": organization.stack_id, "org_id": organization.org_id}),
+        )
+        assert response.status_code == status.HTTP_200_OK
+        organization.refresh_from_db()
+        assert organization.grafana_url == PUBLIC_GRAFANA_URL
+        assert all(call.request.headers["Authorization"] == f"Bearer {token}" for call in http.calls)

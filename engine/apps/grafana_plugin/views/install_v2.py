@@ -33,13 +33,13 @@ class InstallV2View(SyncV2View):
             not configured_api_url
             or not configured_public_url
             or not isinstance(supplied_grafana_url, str)
-            or supplied_grafana_url.rstrip("/") != configured_public_url.rstrip("/")
+            or supplied_grafana_url.rstrip("/")
+            not in {configured_api_url.rstrip("/"), configured_public_url.rstrip("/")}
             or not GrafanaAPIClient.validate_grafana_token_format(grafana_token)
         ):
             return False
 
-        # Authenticate through the operator-configured internal endpoint. The separately configured
-        # public URL is safe to persist for links and subsequent API calls because it is also operator-controlled.
+        # Both accepted URLs belong to the operator. Validate credentials only through the internal endpoint.
         grafana_api_client = GrafanaAPIClient(api_url=configured_api_url, api_token=grafana_token)
         permissions, call_status = grafana_api_client.get_service_account_token_permissions()
         required_scope = f"plugins:id:{PluginID.ONCALL}"

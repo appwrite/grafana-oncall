@@ -1,6 +1,7 @@
 from unittest.mock import patch
 
 import pytest
+import responses
 from rest_framework import status
 
 from apps.grafana_plugin.helpers.client import GrafanaAPIClient
@@ -135,3 +136,20 @@ class TestIsRbacEnabledForOrganization:
 
         api_client = GrafanaAPIClient(API_URL, API_TOKEN)
         assert api_client.is_rbac_enabled_for_organization() == expected
+
+
+@pytest.mark.parametrize("cloud", [False, True])
+@pytest.mark.parametrize("url", ["https://public.example/", "https://other.example/"])
+def test_only_self_hosted_public_grafana_requests_use_internal_url(settings, cloud, url):
+    settings.LICENSE = settings.CLOUD_LICENSE_NAME if cloud else settings.OPEN_SOURCE_LICENSE_NAME
+    settings.SELF_HOSTED_SETTINGS = {
+        **settings.SELF_HOSTED_SETTINGS,
+        "GRAFANA_PUBLIC_URL": "https://public.example",
+        "GRAFANA_API_URL": "http://grafana:3000",
+    }
+    expected = "http://grafana:3000/" if not cloud and url == "https://public.example/" else url
+    with responses.RequestsMock() as http:
+        http.head(expected + "api/org", status=200)
+        _, result = GrafanaAPIClient(url, API_TOKEN).check_token()
+        assert result["connected"]
+        assert http.calls[0].request.headers["Authorization"] == f"Bearer {API_TOKEN}"
