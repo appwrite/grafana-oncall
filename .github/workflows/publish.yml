@@ -1,20 +1,29 @@
 name: Publish release
 
 on:
+  workflow_dispatch:
+    inputs:
+      release_tag:
+        description: Existing release tag to publish or repair
+        required: true
+        type: string
   push:
     tags:
       - v*
 
 concurrency:
-  group: release-${{ github.ref_name }}
+  group: release-${{ inputs.release_tag || github.ref_name }}
   cancel-in-progress: false
 
 env:
+  RELEASE_TAG: ${{ inputs.release_tag || github.ref_name }}
   IMAGE: ghcr.io/appwrite/grafana-oncall
 
 jobs:
   verify:
     name: Verify release tag
+    outputs:
+      commit: ${{ steps.release.outputs.commit }}
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -22,13 +31,12 @@ jobs:
       - name: Check out project
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
+          ref: refs/tags/${{ env.RELEASE_TAG }}
           fetch-depth: 0
           persist-credentials: false
 
       - name: Verify tag and release commit
-        env:
-          RELEASE_SHA: ${{ github.sha }}
-          RELEASE_TAG: ${{ github.ref_name }}
+        id: release
         run: |
           set -euo pipefail
 
@@ -37,11 +45,13 @@ jobs:
             exit 1
           fi
 
+          RELEASE_SHA=$(git rev-parse HEAD)
           git fetch origin main
           if ! git merge-base --is-ancestor "$RELEASE_SHA" origin/main; then
             echo "Release commit $RELEASE_SHA is not part of origin/main"
             exit 1
           fi
+          echo "commit=$RELEASE_SHA" >> "$GITHUB_OUTPUT"
 
   build:
     name: Build engine (${{ matrix.arch }})
@@ -62,13 +72,14 @@ jobs:
       - name: Check out project
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
+          ref: ${{ needs.verify.outputs.commit }}
           persist-credentials: false
 
       - name: Set engine version number in settings file
         uses: ./.github/actions/set-engine-version-in-settings
         with:
           working_directory: .
-          engine_version_number: ${{ github.ref_name }}
+          engine_version_number: ${{ env.RELEASE_TAG }}
           settings_file_path: engine/settings/base.py
 
       - name: Set up Docker Buildx
@@ -104,6 +115,7 @@ jobs:
       - name: Check out project
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
+          ref: ${{ needs.verify.outputs.commit }}
           persist-credentials: false
 
       - name: Install frontend dependencies
@@ -124,7 +136,7 @@ jobs:
       - name: Build and package plugin
         working-directory: grafana-plugin
         env:
-          TAG: ${{ github.ref_name }}
+          TAG: ${{ env.RELEASE_TAG }}
         run: |
           set -euo pipefail
 
@@ -226,6 +238,8 @@ jobs:
           echo "digest=$digest" >> "$GITHUB_OUTPUT"
 
       - name: Generate engine SBOM
+        env:
+          SYFT_PLATFORM: linux/amd64
         uses: anchore/sbom-action@3ad7283483fc7af8ff2b4ea19663c2d5ca935e26 # v0.24.2
         with:
           image: ${{ env.IMAGE }}:staging-${{ github.run_id }}-amd64
@@ -234,6 +248,8 @@ jobs:
           upload-artifact: false
 
       - name: Generate ARM64 engine SBOM
+        env:
+          SYFT_PLATFORM: linux/arm64
         uses: anchore/sbom-action@3ad7283483fc7af8ff2b4ea19663c2d5ca935e26 # v0.24.2
         with:
           image: ${{ env.IMAGE }}:staging-${{ github.run_id }}-arm64
@@ -265,7 +281,6 @@ jobs:
         working-directory: release-assets
         env:
           IMAGE_DIGEST: ${{ steps.image.outputs.digest }}
-          RELEASE_TAG: ${{ github.ref_name }}
         run: |
           set -euo pipefail
           plugin_archive=$(find . -maxdepth 1 -name 'grafana-oncall-app-*.zip' -print -quit)
@@ -304,7 +319,6 @@ jobs:
           GH_REPO: ${{ github.repository }}
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           IMAGE_DIGEST: ${{ steps.image.outputs.digest }}
-          RELEASE_TAG: ${{ github.ref_name }}
         run: |
           set -euo pipefail
 
@@ -339,7 +353,6 @@ jobs:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           ALREADY_PUBLISHED: ${{ steps.draft.outputs.already_published }}
           IMAGE_DIGEST: ${{ steps.draft.outputs.image_digest }}
-          RELEASE_TAG: ${{ github.ref_name }}
         run: |
           set -euo pipefail
           published="$ALREADY_PUBLISHED"
