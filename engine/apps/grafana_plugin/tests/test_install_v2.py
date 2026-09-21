@@ -93,6 +93,9 @@ def test_install_v2_validates_token_against_configured_grafana_url(grafana_url):
     ("permissions", "connected"),
     [
         ({"plugins:write": ["plugins:id:another-plugin"]}, True),
+        ({"plugins:read": ["plugins:*"]}, True),
+        ({"plugins:write": ["teams:*"]}, True),
+        ({"plugins:write": ["plugins:*"]}, False),
         ({"plugins:write": ["plugins:id:grafana-oncall-app"]}, False),
     ],
 )
@@ -135,7 +138,8 @@ def test_install_v2_error_encoding_for_authorized_grafana_token():
 @pytest.mark.django_db
 @override_settings(SELF_HOSTED_SETTINGS=SELF_HOSTED_SETTINGS)
 @pytest.mark.parametrize("grafana_url", [GRAFANA_URL, PUBLIC_GRAFANA_URL])
-def test_install_and_sync_keep_public_links_and_internal_callbacks(grafana_url):
+@pytest.mark.parametrize("write_scope", ["plugins:id:grafana-oncall-app", "plugins:*"])
+def test_install_and_sync_keep_public_links_and_internal_callbacks(grafana_url, write_scope):
     token = "glsa_abcdefghijklmnopqrstuvwxyz"
     data = {
         "settings": {
@@ -159,7 +163,7 @@ def test_install_and_sync_keep_public_links_and_internal_callbacks(grafana_url):
     with responses.RequestsMock() as http:
         http.get(
             GRAFANA_URL + "/api/access-control/user/permissions",
-            json={"plugins:write": ["plugins:id:grafana-oncall-app"]},
+            json={"plugins:write": [write_scope]},
         )
         http.head(GRAFANA_URL + "/api/org", status=200)
         response = client.post(reverse("grafana-plugin:install-v2"), data, format="json")
