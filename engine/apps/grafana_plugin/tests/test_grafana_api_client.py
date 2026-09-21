@@ -5,6 +5,7 @@ import responses
 from rest_framework import status
 
 from apps.grafana_plugin.helpers.client import GrafanaAPIClient
+from settings.base import CLOUD_LICENSE_NAME, OPEN_SOURCE_LICENSE_NAME
 
 API_URL = "/foo/bar"
 API_TOKEN = "dfjkfdjkfd"
@@ -138,18 +139,24 @@ class TestIsRbacEnabledForOrganization:
         assert api_client.is_rbac_enabled_for_organization() == expected
 
 
-@pytest.mark.parametrize("cloud", [False, True])
-@pytest.mark.parametrize("url", ["https://public.example/", "https://other.example/"])
-def test_only_self_hosted_public_grafana_requests_use_internal_url(settings, cloud, url):
-    settings.LICENSE = settings.CLOUD_LICENSE_NAME if cloud else settings.OPEN_SOURCE_LICENSE_NAME
+@pytest.mark.parametrize(
+    "license,url,endpoint",
+    [
+        (OPEN_SOURCE_LICENSE_NAME, "https://public.example/", "http://grafana:3000/api/org"),
+        (OPEN_SOURCE_LICENSE_NAME, "https://other.example/", "https://other.example/api/org"),
+        (CLOUD_LICENSE_NAME, "https://public.example/", "https://public.example/api/org"),
+        (CLOUD_LICENSE_NAME, "https://other.example/", "https://other.example/api/org"),
+    ],
+)
+def test_only_self_hosted_public_grafana_requests_use_internal_url(settings, license, url, endpoint):
+    settings.LICENSE = license
     settings.SELF_HOSTED_SETTINGS = {
         **settings.SELF_HOSTED_SETTINGS,
         "GRAFANA_PUBLIC_URL": "https://public.example",
         "GRAFANA_API_URL": "http://grafana:3000",
     }
-    expected = "http://grafana:3000/" if not cloud and url == "https://public.example/" else url
     with responses.RequestsMock() as http:
-        http.head(expected + "api/org", status=200)
+        http.head(endpoint, status=200)
         _, result = GrafanaAPIClient(url, API_TOKEN).check_token()
         assert result["connected"]
         assert http.calls[0].request.headers["Authorization"] == f"Bearer {API_TOKEN}"

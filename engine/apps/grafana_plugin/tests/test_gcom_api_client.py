@@ -2,6 +2,7 @@ import uuid
 from unittest.mock import call, patch
 
 import pytest
+import responses
 
 from apps.grafana_plugin.helpers.client import GcomAPIClient
 from apps.grafana_plugin.helpers.gcom import get_instance_ids
@@ -178,3 +179,17 @@ def test_cleanup_organization_deleted(status, is_deleted):
     client = GcomAPIClient("someToken")
     with patch.object(GcomAPIClient, "api_get", return_value=({"items": [{"status": status}]}, None)):
         assert client.is_stack_deleted("someStack") == is_deleted
+
+
+def test_gcom_keeps_its_endpoint_when_it_matches_public_grafana(settings):
+    settings.LICENSE = settings.OPEN_SOURCE_LICENSE_NAME
+    settings.GRAFANA_COM_API_URL = "https://public.example/"
+    settings.SELF_HOSTED_SETTINGS = {
+        **settings.SELF_HOSTED_SETTINGS,
+        "GRAFANA_PUBLIC_URL": "https://public.example",
+        "GRAFANA_API_URL": "http://grafana:3000",
+    }
+    with responses.RequestsMock() as http:
+        http.get("https://public.example/instances/42", json={"id": "42", "orgId": "7"})
+        assert GcomAPIClient("gcom-token").get_instance_info("42") == {"id": "42", "orgId": "7"}
+        assert http.calls[0].request.headers["Authorization"] == "Bearer gcom-token"
