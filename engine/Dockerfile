@@ -1,4 +1,4 @@
-FROM python:3.13.11-alpine3.22 AS base
+FROM python:3.14.5-alpine3.22 AS base
 ARG TARGETPLATFORM
 
 # Create a group and user to run an app
