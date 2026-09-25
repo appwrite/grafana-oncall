@@ -4,7 +4,7 @@ asgiref==3.12.1
     # via
     #   -c requirements.txt
     #   django
-celery-types==0.18.0
+celery-types==0.26.0
     # via -r requirements-dev.in
 certifi==2026.7.22
     # via
@@ -23,13 +23,13 @@ django==5.2.17
     #   -c requirements.txt
     #   django-stubs
     #   django-stubs-ext
-django-stubs==6.1.0
+django-stubs==6.1.1
     # via
     #   -r requirements-dev.in
     #   djangorestframework-stubs
 django-stubs-ext==6.1.0
     # via django-stubs
-djangorestframework-stubs==3.18.0
+djangorestframework-stubs==3.18.1
     # via -r requirements-dev.in
 execnet==2.1.2
     # via pytest-xdist
@@ -47,7 +47,7 @@ filelock==3.32.2
     #   virtualenv
 identify==2.6.19
     # via pre-commit
-idna==3.18
+idna==3.20
     # via
     #   -c requirements.txt
     #   requests
@@ -68,15 +68,15 @@ platformdirs==4.11.2
     # via virtualenv
 pluggy==1.6.0
     # via pytest
-pre-commit==2.15.0
+pre-commit==2.21.0
     # via -r requirements-dev.in
-psutil==5.9.4
+psutil==5.9.8
     # via
     #   -c requirements.txt
     #   pytest-xdist
 pygments==2.20.0
     # via pytest
-pytest==9.0.3
+pytest==9.1.1
     # via
     #   -r requirements-dev.in
     #   pytest-django
@@ -87,9 +87,9 @@ pytest-django==4.14.0
     # via -r requirements-dev.in
 pytest-factoryboy==2.8.1
     # via -r requirements-dev.in
-pytest-socket==0.7.0
+pytest-socket==0.8.1
     # via -r requirements-dev.in
-pytest-xdist==3.6.1
+pytest-xdist[psutil]==3.8.0
     # via -r requirements-dev.in
 python-discovery==1.5.2
     # via virtualenv
@@ -102,25 +102,21 @@ requests==2.34.2
     # via
     #   -c requirements.txt
     #   responses
-responses==0.25.8
+responses==0.26.3
     # via -r requirements-dev.in
 sqlparse==0.6.0
     # via
     #   -c requirements.txt
     #   django
-toml==0.10.2
-    # via
-    #   -c requirements.txt
-    #   pre-commit
-ty==0.0.74
+ty==0.0.82
     # via -r requirements-dev.in
-types-beautifulsoup4==4.12.0.5
+types-beautifulsoup4==4.12.0.20250516
     # via -r requirements-dev.in
 types-html5lib==1.1.11.20260518
     # via types-beautifulsoup4
-types-pymysql==1.0.19.7
+types-pymysql==1.2.0.20260807
     # via -r requirements-dev.in
-types-python-dateutil==2.8.19.13
+types-python-dateutil==2.9.0.20260807
     # via -r requirements-dev.in
 types-pytz==2026.3.1.20260727
     # via -r requirements-dev.in
@@ -128,10 +124,8 @@ types-pyyaml==6.0.12.20260815
     # via
     #   django-stubs
     #   djangorestframework-stubs
-types-requests==2.31.0.1
+types-requests==2.33.0.20260906
     # via -r requirements-dev.in
-types-urllib3==1.26.25.14
-    # via types-requests
 types-webencodings==0.5.0.20260408
     # via types-html5lib
 typing-extensions==4.16.0
@@ -142,10 +136,11 @@ typing-extensions==4.16.0
     #   django-stubs-ext
     #   djangorestframework-stubs
     #   pytest-factoryboy
-urllib3==2.7.0
+urllib3==2.8.0
     # via
     #   -c requirements.txt
     #   requests
     #   responses
+    #   types-requests
 virtualenv==21.7.4
     # via pre-commit
