@@ -6,19 +6,19 @@ version: 1.19.1
 appVersion: v1.19.1
 dependencies:
   - name: cert-manager
-    version: v1.8.0
+    version: v1.21.2
     repository: https://charts.jetstack.io
     condition: cert-manager.enabled
   - name: mariadb
-    version: 23.2.1
+    version: 23.2.4
     repository: https://charts.bitnami.com/bitnami
     condition: mariadb.enabled
   - name: postgresql
-    version: 11.9.10
+    version: 11.9.13
     repository: https://charts.bitnami.com/bitnami
     condition: postgresql.enabled
   - name: rabbitmq
-    version: 12.0.0
+    version: 12.15.0
     repository: https://charts.bitnami.com/bitnami
     condition: rabbitmq.enabled
   - name: redis
@@ -26,14 +26,14 @@ dependencies:
     repository: https://charts.bitnami.com/bitnami
     condition: redis.enabled
   - name: grafana
-    version: 8.4.6
+    version: 8.15.0
     repository: https://grafana.github.io/helm-charts
     condition: grafana.enabled
   - name: ingress-nginx
-    version: 4.1.4
+    version: 4.15.1
     repository: https://kubernetes.github.io/ingress-nginx
     condition: ingress-nginx.enabled
   - name: prometheus
-    version: 25.8.2
+    version: 25.30.2
     repository: https://prometheus-community.github.io/helm-charts
     condition: prometheus.enabled
