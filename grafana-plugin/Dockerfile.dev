@@ -1,4 +1,4 @@
-FROM node:24.20.0-alpine
+FROM node:24.21.0-alpine
 
 RUN corepack enable && corepack install --global pnpm@12.0.0 && pnpm --version
 
