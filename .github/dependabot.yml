@@ -1,0 +1,67 @@
+version: 2
+
+# One grouped PR per ecosystem and directory. Majors are skipped for routine
+# updates; security fixes always come through, grouped the same way.
+updates:
+  - package-ecosystem: github-actions
+    directories: ["/", "/.github/actions/*"]
+    schedule: {interval: weekly}
+    cooldown: {default-days: 7}
+    ignore: [{dependency-name: "*", update-types: ["version-update:semver-major"]}]
+    groups:
+      updates: {patterns: ["*"]}
+      security: {applies-to: security-updates, patterns: ["*"]}
+
+  - package-ecosystem: gomod
+    directories: ["/grafana-plugin"]
+    schedule: {interval: weekly}
+    cooldown: {default-days: 7}
+    ignore: [{dependency-name: "*", update-types: ["version-update:semver-major"]}]
+    groups:
+      updates: {patterns: ["*"]}
+      security: {applies-to: security-updates, patterns: ["*"]}
+
+  - package-ecosystem: npm
+    directories: ["/grafana-plugin", "/grafana-plugin/src/network/oncall-api/types-generator"]
+    schedule: {interval: weekly}
+    cooldown: {default-days: 7}
+    ignore: [{dependency-name: "*", update-types: ["version-update:semver-major"]}]
+    groups:
+      updates: {patterns: ["*"]}
+      security: {applies-to: security-updates, patterns: ["*"]}
+
+  - package-ecosystem: pip
+    directories: ["/engine", "/tools/migrators", "/dev/scripts/generate-fake-data"]
+    schedule: {interval: weekly}
+    cooldown: {default-days: 7}
+    ignore: [{dependency-name: "*", update-types: ["version-update:semver-major"]}]
+    groups:
+      updates: {patterns: ["*"]}
+      security: {applies-to: security-updates, patterns: ["*"]}
+
+  - package-ecosystem: docker
+    directories: ["/engine", "/grafana-plugin", "/tools/migrators"]
+    schedule: {interval: weekly}
+    cooldown: {default-days: 7}
+    ignore: [{dependency-name: "*", update-types: ["version-update:semver-major"]}]
+    groups:
+      updates: {patterns: ["*"]}
+      security: {applies-to: security-updates, patterns: ["*"]}
+
+  - package-ecosystem: docker-compose
+    directories: ["/"]
+    schedule: {interval: weekly}
+    cooldown: {default-days: 7}
+    ignore: [{dependency-name: "*", update-types: ["version-update:semver-major"]}]
+    groups:
+      updates: {patterns: ["*"]}
+      security: {applies-to: security-updates, patterns: ["*"]}
+
+  - package-ecosystem: helm
+    directories: ["/helm/oncall"]
+    schedule: {interval: weekly}
+    cooldown: {default-days: 7}
+    ignore: [{dependency-name: "*", update-types: ["version-update:semver-major"]}]
+    groups:
+      updates: {patterns: ["*"]}
+      security: {applies-to: security-updates, patterns: ["*"]}
