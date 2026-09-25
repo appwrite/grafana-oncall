@@ -8,11 +8,11 @@ cffi==2.1.1
     # via cryptography
 charset-normalizer==3.5.0
     # via requests
-cryptography==50.0.0
+cryptography==50.0.1
     # via google-auth
 google-auth==2.56.3
     # via kubernetes
-idna==3.18
+idna==3.20
     # via requests
 iniconfig==2.3.0
     # via pytest
@@ -24,7 +24,7 @@ oauthlib==3.3.1
     #   requests-oauthlib
 packaging==26.3
     # via pytest
-pdpyras==4.5.0
+pdpyras==4.5.2
     # via -r requirements.in
 pluggy==1.6.0
     # via pytest
@@ -36,11 +36,11 @@ pycparser==3.0
     # via cffi
 pygments==2.20.0
     # via pytest
-pytest==9.0.3
+pytest==9.1.1
     # via
     #   -r requirements.in
     #   pytest-env
-pytest-env==0.6.2
+pytest-env==0.8.2
     # via -r requirements.in
 python-dateutil==2.9.0.post0
     # via kubernetes
@@ -58,7 +58,7 @@ six==1.17.0
     # via
     #   kubernetes
     #   python-dateutil
-urllib3==2.7.0
+urllib3==2.8.0
     # via
     #   kubernetes
     #   pdpyras
