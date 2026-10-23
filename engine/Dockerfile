@@ -1,4 +1,4 @@
-FROM python:3.13.11-alpine3.22 AS base
+FROM python:3.13.17-alpine3.23 AS base
 ARG TARGETPLATFORM
 
 # Create a group and user to run an app
@@ -24,7 +24,7 @@ COPY ./requirements.txt ./
 RUN pip install -U uv setuptools pip
 
 # make sure we are using the correct Python version
-RUN uv python pin 3.13.11
+RUN uv python pin 3.13.17
 
 # TODO: figure out how to get this to work.. see comment in .github/workflows/e2e-tests.yml
 # https://stackoverflow.com/a/71846527
@@ -71,6 +71,10 @@ FROM dev AS dev-enterprise
 RUN uv pip install --system -r requirements-enterprise-docker.txt
 
 FROM base AS prod
+
+# Remove build installers and their bundled dependencies from the runtime.
+RUN pip uninstall -y pip setuptools && \
+    rm -rf /root/.cache /usr/local/lib/python3.13/ensurepip
 
 # Change to a non-root user (number is required by Kubernetes runAsNonRoot check)
 USER 1000

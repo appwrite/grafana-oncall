@@ -1,11 +1,13 @@
-FROM python:3.13.11-alpine3.22
+FROM python:3.13.17-alpine3.23
 
 ENV PYTHONUNBUFFERED=1
 WORKDIR /app
 
 COPY requirements.txt requirements.txt
 RUN pip install -U pip
-RUN python3 -m pip install -r requirements.txt
+RUN python3 -m pip install --no-cache-dir -r requirements.txt && \
+    python3 -m pip uninstall -y pip && \
+    rm -rf /usr/local/lib/python3.13/ensurepip
 
 COPY . .
 

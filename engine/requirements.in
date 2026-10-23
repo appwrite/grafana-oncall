@@ -21,7 +21,7 @@ django-redis==7.0.0
 django-rest-polymorphic==0.1.10
 django-silk==5.5.2
 django-sns-view==0.1.2
-djangorestframework==3.18.0
+djangorestframework==3.18.2
 factory-boy<3.0
 drf-spectacular==0.30.0
 emoji==2.4.0
@@ -34,13 +34,13 @@ jinja2==3.1.6
 lxml==6.1.1
 markdown2==2.4.10
 nest-asyncio==1.6.0
-opentelemetry-sdk==1.44.0
-opentelemetry-api==1.44.0
-opentelemetry-exporter-otlp-proto-grpc==1.44.0
-opentelemetry-instrumentation-logging==0.65b0
-opentelemetry-instrumentation-wsgi==0.65b0
-opentelemetry-instrumentation-requests==0.65b0
-opentelemetry-instrumentation-django==0.65b0
+opentelemetry-sdk==1.45.1
+opentelemetry-api==1.45.1
+opentelemetry-exporter-otlp-proto-grpc==1.45.1
+opentelemetry-instrumentation-logging==0.66b1
+opentelemetry-instrumentation-wsgi==0.66b1
+opentelemetry-instrumentation-requests==0.66b1
+opentelemetry-instrumentation-django==0.66b1
 phonenumbers==8.10.0
 prometheus_client==0.16.0
 psutil==5.9.4
@@ -56,13 +56,10 @@ slack-export-viewer==1.1.4
 slack_sdk==3.21.3
 social-auth-app-django==6.0.1
 twilio~=6.37.0
-urllib3==2.7.0
+urllib3==2.8.0
 uwsgi==2.0.31
 whitenoise==5.3.0
 google-api-python-client==2.122.0
 google-auth-httplib2==0.2.0
 google-auth-oauthlib==1.2.0
-# we are manually pinning idna to 3.7 to fix CVE-2024-3651
-# requests==2.32.3 is installing idna==3.6 but supports idna>=2.5,<4
-# https://github.com/psf/requests/blob/v2.32.3/setup.py#L63
 idna==3.18
