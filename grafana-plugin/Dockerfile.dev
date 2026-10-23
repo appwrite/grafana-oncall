@@ -1,6 +1,9 @@
-FROM node:24.20.0-alpine
+FROM node:24.22.1-alpine3.23
 
-RUN corepack enable && corepack install --global pnpm@12.0.0 && pnpm --version
+RUN npm uninstall --global corepack && \
+    npm install --global pnpm@12.15.0 && \
+    npm uninstall --global npm && \
+    pnpm --version
 
 WORKDIR /etc/app
 ENV PATH=/etc/app/node_modules/.bin:$PATH

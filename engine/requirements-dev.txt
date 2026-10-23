@@ -6,7 +6,7 @@ asgiref==3.12.1
     #   django
 celery-types==0.18.0
     # via -r requirements-dev.in
-certifi==2026.7.22
+certifi==2026.10.19
     # via
     #   -c requirements.txt
     #   requests
@@ -64,6 +64,7 @@ packaging==26.3
     #   -c requirements.txt
     #   pytest
     #   pytest-factoryboy
+    #   virtualenv
 platformdirs==4.11.2
     # via virtualenv
 pluggy==1.6.0
@@ -91,7 +92,7 @@ pytest-socket==0.7.0
     # via -r requirements-dev.in
 pytest-xdist==3.6.1
     # via -r requirements-dev.in
-python-discovery==1.5.2
+python-discovery==1.6.4
     # via virtualenv
 pyyaml==6.0.3
     # via
@@ -142,10 +143,10 @@ typing-extensions==4.16.0
     #   django-stubs-ext
     #   djangorestframework-stubs
     #   pytest-factoryboy
-urllib3==2.7.0
+urllib3==2.8.0
     # via
     #   -c requirements.txt
     #   requests
     #   responses
-virtualenv==21.7.4
+virtualenv==21.14.13
     # via pre-commit
