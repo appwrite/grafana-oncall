@@ -83,7 +83,7 @@ jobs:
           settings_file_path: engine/settings/base.py
 
       - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@bb05f3f5519dd87d3ba754cc423b652a5edd6d2c # v4.2.0
+        uses: docker/setup-buildx-action@f87e5991a6d7451dcb8d9637bfbc97413f497069 # v4.4.1
 
       - name: Log in to GHCR
         uses: docker/login-action@dbcb813823bdd20940b903addbd779551569679f # v4.6.0
@@ -93,7 +93,7 @@ jobs:
           password: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Build and push staged image
-        uses: docker/build-push-action@53b7df96c91f9c12dcc8a07bcb9ccacbed38856a # v7.3.0
+        uses: docker/build-push-action@c3c9e263c25d99ce0380d002d59b67737d91b0dc # v7.4.0
         with:
           context: engine/
           platforms: linux/${{ matrix.arch }}
@@ -157,7 +157,7 @@ jobs:
           sha256sum "grafana-oncall-app-${version}.zip" > "grafana-oncall-app-${version}.zip.sha256"
 
       - name: Generate plugin SBOM
-        uses: anchore/sbom-action@3ad7283483fc7af8ff2b4ea19663c2d5ca935e26 # v0.24.2
+        uses: anchore/sbom-action@66cbf4bc1f1c0d2edc94016e65bc221b6bb0ad6c # v0.24.3
         with:
           path: grafana-plugin/grafana-oncall-app
           format: spdx-json
@@ -176,7 +176,7 @@ jobs:
           sbom-path: grafana-plugin/plugin-sbom.spdx.json
 
       - name: Stage plugin release assets
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: plugin-release-assets
           path: |
@@ -199,7 +199,7 @@ jobs:
       packages: write
     steps:
       - name: Download plugin release assets
-        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
         with:
           name: plugin-release-assets
           path: release-assets
@@ -240,7 +240,7 @@ jobs:
       - name: Generate engine SBOM
         env:
           SYFT_PLATFORM: linux/amd64
-        uses: anchore/sbom-action@3ad7283483fc7af8ff2b4ea19663c2d5ca935e26 # v0.24.2
+        uses: anchore/sbom-action@66cbf4bc1f1c0d2edc94016e65bc221b6bb0ad6c # v0.24.3
         with:
           image: ${{ env.IMAGE }}:staging-${{ github.run_id }}-amd64
           format: spdx-json
@@ -250,7 +250,7 @@ jobs:
       - name: Generate ARM64 engine SBOM
         env:
           SYFT_PLATFORM: linux/arm64
-        uses: anchore/sbom-action@3ad7283483fc7af8ff2b4ea19663c2d5ca935e26 # v0.24.2
+        uses: anchore/sbom-action@66cbf4bc1f1c0d2edc94016e65bc221b6bb0ad6c # v0.24.3
         with:
           image: ${{ env.IMAGE }}:staging-${{ github.run_id }}-arm64
           format: spdx-json
