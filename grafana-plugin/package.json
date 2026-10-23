@@ -1,7 +1,7 @@
 {
   "name": "grafana-oncall-app",
   "version": "1.9.28",
-  "packageManager": "pnpm@12.0.0",
+  "packageManager": "pnpm@12.15.0",
   "description": "Grafana OnCall Plugin",
   "scripts": {
     "lint": "oxlint --max-warnings=20 ./src ./e2e-tests",
