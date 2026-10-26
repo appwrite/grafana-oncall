@@ -21,7 +21,7 @@ export class LabelStore extends BaseStore {
   @WithGlobalNotification({ failure: PROCESSING_REQUEST_ERROR })
   @action.bound
   public async loadKeys(search = ''): Promise<Array<components['schemas']['LabelKey']>> {
-    const { data } = await onCallApi().GET('/labels/keys/', undefined);
+    const { data } = await onCallApi().GET('/labels/keys/');
 
     const filtered = data.filter((k) => k.name.toLowerCase().includes(search.toLowerCase()));
 

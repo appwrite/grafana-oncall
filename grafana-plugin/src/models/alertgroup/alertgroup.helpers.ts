@@ -95,7 +95,7 @@ export class AlertGroupHelper {
   }
 
   static async loadLabelsKeys() {
-    return (await onCallApi().GET('/alertgroups/labels/keys/', undefined)).data;
+    return (await onCallApi().GET('/alertgroups/labels/keys/')).data;
   }
 
   static async loadValuesForLabelKey(

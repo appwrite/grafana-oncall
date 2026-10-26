@@ -93,6 +93,7 @@
     "lodash-es": "^4.17.21",
     "mailslurp-client": "^17.6.0",
     "moment-timezone": "0.6.5",
+    "node-fetch": "2.7.0",
     "openapi-typescript": "^7.13.0",
     "oxfmt": "0.73.0",
     "oxlint": "1.88.0",

@@ -3,6 +3,13 @@ import { config } from '@grafana/runtime';
 import { contextSrv } from 'grafana/app/core/core';
 import { PluginId } from 'helpers/consts';
 
+// Grafana 11.6 removes this legacy flag from its types, but older hosts still send it.
+declare module '@grafana/data' {
+  interface FeatureToggles {
+    accessControlOnCall?: boolean;
+  }
+}
+
 export type UserAction = {
   permission: string;
   fallbackMinimumRoleRequired: OrgRole;

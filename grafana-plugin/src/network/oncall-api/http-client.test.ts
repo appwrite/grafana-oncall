@@ -1,3 +1,5 @@
+import { Request, Response } from 'node-fetch';
+
 import { FaroHelper } from 'helpers/faro';
 
 import { getCustomFetchFn } from './http-client';
@@ -30,10 +32,10 @@ const HEADERS = new Headers();
 HEADERS.set('Content-Type', 'application/json');
 const REQUEST_CONFIG = {
   headers: HEADERS,
-  body: { a: 'a' } as unknown as BodyInit,
-  method: 'GET',
+  body: JSON.stringify({ a: 'a' }),
+  method: 'POST',
 };
-const URL = 'https://someurl.com';
+const URL = 'https://someurl.com/';
 const SUCCESSFUL_RESPONSE_MOCK = { ok: true };
 const FAILING_RESPONSE_MOCK = {
   ok: false,
@@ -54,14 +56,29 @@ describe('customFetch', () => {
       value: fetchMock,
     });
   });
-  afterEach(jest.clearAllMocks);
+  afterEach(jest.resetAllMocks);
+
+  it('passes a Request from openapi-fetch without consuming its body', async () => {
+    const createClient = jest.requireActual('../../../node_modules/openapi-fetch/dist/index.cjs').default;
+    const client = createClient({ baseUrl: URL, Request, fetch: customFetch });
+    fetchMock.mockImplementationOnce(async (request) => {
+      expect(request.headers.get('X-Idempotency-Key')).toBeTruthy();
+      expect(request.headers.get('Content-Type')).toBe('application/json');
+      expect(await request.text()).toBe(REQUEST_CONFIG.body);
+      return new Response(JSON.stringify({ id: 'integration' }), {
+        headers: { 'Content-Type': 'application/json' },
+      });
+    });
+    const { data } = await client.POST('/alert_receive_channels/', { body: { a: 'a' } });
+    expect(data).toEqual({ id: 'integration' });
+  });
 
   describe('if response is successful', () => {
     it('should push event to faro and return response', async () => {
       fetchMock.mockResolvedValue(SUCCESSFUL_RESPONSE_MOCK);
-      const response = await customFetch(URL, REQUEST_CONFIG);
+      const response = await customFetch(new Request(URL, REQUEST_CONFIG) as unknown as globalThis.Request);
       expect(FaroHelper.pushNetworkRequestEvent).toHaveBeenCalledWith({
-        body: JSON.stringify(REQUEST_CONFIG.body),
+        body: REQUEST_CONFIG.body,
         method: REQUEST_CONFIG.method,
         url: URL,
       });
@@ -72,9 +89,11 @@ describe('customFetch', () => {
   describe('if response is not successful', () => {
     it('should push event and error to faro', async () => {
       fetchMock.mockResolvedValueOnce(FAILING_RESPONSE_MOCK);
-      await expect(customFetch(URL, REQUEST_CONFIG)).rejects.toEqual(FAILING_RESPONSE_MOCK);
+      await expect(customFetch(new Request(URL, REQUEST_CONFIG) as unknown as globalThis.Request)).rejects.toEqual(
+        FAILING_RESPONSE_MOCK
+      );
       expect(FaroHelper.pushNetworkRequestEvent).toHaveBeenCalledWith({
-        body: JSON.stringify(REQUEST_CONFIG.body),
+        body: REQUEST_CONFIG.body,
         method: REQUEST_CONFIG.method,
         url: URL,
       });
