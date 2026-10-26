@@ -199,7 +199,7 @@ grpcio==1.76.0
     #   google-cloud-firestore
     #   grpcio-status
     #   opentelemetry-exporter-otlp-proto-grpc
-grpcio-status==1.62.3
+grpcio-status==1.76.0
     # via google-api-core
 h11==0.16.0
     # via httpcore
@@ -345,7 +345,7 @@ proto-plus==1.28.3
     # via
     #   google-api-core
     #   google-cloud-firestore
-protobuf==7.35.1
+protobuf==6.33.6
     # via
     #   google-api-core
     #   google-cloud-firestore
