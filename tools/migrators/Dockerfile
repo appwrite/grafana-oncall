@@ -7,7 +7,7 @@ COPY requirements.txt requirements.txt
 RUN pip install -U pip
 RUN python3 -m pip install --no-cache-dir -r requirements.txt && \
     python3 -m pip uninstall -y pip && \
-    rm -rf /usr/local/lib/python3.13/ensurepip
+    rm -rf /usr/local/lib/python3.14/ensurepip
 
 COPY . .
 
