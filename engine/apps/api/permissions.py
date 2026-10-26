@@ -33,7 +33,7 @@ class AuthenticatedRequest(Request):
 
     # see comment above, this is safe. without the type-ignore comment, mypy complains
     # expression has type "User", base class "Request" defined the type as "Union[AbstractBaseUser, AnonymousUser]"
-    user: "User"  # type: ignore[assignment]
+    user: "User"  # ty: ignore[invalid-property-type-override]
 
 
 class AuthenticatedDjangoAdminRequest(Request):
@@ -44,7 +44,7 @@ class AuthenticatedDjangoAdminRequest(Request):
     https://github.com/typeddjango/django-stubs#how-can-i-create-a-httprequest-thats-guaranteed-to-have-an-authenticated-user
     """
 
-    user: AbstractUser
+    user: AbstractUser  # ty: ignore[invalid-property-type-override]
 
 
 class GrafanaAPIPermission(typing.TypedDict):

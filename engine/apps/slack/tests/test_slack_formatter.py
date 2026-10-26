@@ -14,3 +14,15 @@ Test emoji :male-construction-worker:https://another-example.com/test:=%22-dash
     expected_result = test_message.replace("-construction-worker", "_construction_worker")
     result = sf.slack_to_accepted_emoji(test_message)
     assert result == expected_result
+
+
+@pytest.mark.parametrize(
+    "message,process_markdown,expected",
+    [
+        ("<@U123|alice> *on call* #incident", True, "<p>@alice <strong>on call</strong> <b>#incident</b></p>"),
+        ("plain #incident text", False, "plain <b>#incident</b> text"),
+        ("<https://example.com|docs>", False, '<a href="https://example.com">docs</a>'),
+    ],
+)
+def test_render_text(message, process_markdown, expected):
+    assert SlackFormatter(MagicMock()).render_text(message, process_markdown) == expected

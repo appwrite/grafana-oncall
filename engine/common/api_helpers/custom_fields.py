@@ -36,7 +36,7 @@ class OrganizationFilteredPrimaryKeyRelatedField(RelatedField):
 
     def get_queryset(self):
         request = self.context.get("request", None)
-        queryset = self.queryset
+        queryset = self.queryset  # ty: ignore[invalid-attribute-access]
         if not request or not queryset:
             return None
         filter_kwargs = {self.filter_field: request.auth.organization}

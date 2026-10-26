@@ -134,7 +134,7 @@ class SlackClient(WebClient):
                     self.slack_team_identity.pk,
                     args,
                     kwargs,
-                    e.response["status"] if isinstance(e.response, dict) else e.response.status_code,
+                    e.response.status_code,
                     e.response.get("error"),
                     e.response,
                 )

@@ -51,7 +51,7 @@ def test_render_web_alert_links(
     templater = AlertWebTemplater(alert)
     templated_alert = templater.render()
     assert templated_alert.message == "<p>{}</p>".format(
-        "<br/>\n".join([f'<a href="{link}">{link}</a> ' for link in links])
+        "<br/>\n".join([f'<a href="{link}">{link}</a>' for link in links]) + " "
     )
 
 

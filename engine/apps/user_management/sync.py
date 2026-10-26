@@ -217,7 +217,7 @@ def cleanup_organization(organization_pk: int) -> None:
 
 
 def _create_cloud_organization(
-    org_id: int, stack_id: int, sync_data: SyncData, instance_info: GCOMInstanceInfo
+    org_id: int, stack_id: int, sync_data: SyncData, instance_info: GCOMInstanceInfo | None
 ) -> Organization:
     client = GcomAPIClient(sync_data.settings.oncall_token)
     if not instance_info:
@@ -257,7 +257,7 @@ def _create_oss_organization(sync_data: SyncData) -> Organization:
 
 
 def _create_organization(
-    org_id: int, stack_id: int, sync_data: SyncData, instance_info: GCOMInstanceInfo
+    org_id: int, stack_id: int, sync_data: SyncData, instance_info: GCOMInstanceInfo | None
 ) -> typing.Optional[Organization]:
     if settings.LICENSE == CLOUD_LICENSE_NAME:
         return _create_cloud_organization(org_id, stack_id, sync_data, instance_info)

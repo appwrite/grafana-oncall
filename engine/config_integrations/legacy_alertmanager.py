@@ -245,7 +245,7 @@ tests = {
     },
     "web": {
         "title": "KubeJobCompletion",
-        "message": '<p>Job default/email-tracking-perform-initialization-1.0.50 is taking more than one hour to complete.  </p>\n<p>Severity: warning ⚠️ <br/>\nStatus: firing 🔥 (on the source)  </p>\n<p><a href="https://github.com/kubernetes-monitoring/kubernetes-mixin/tree/master/runbook.md#alert-name-kubejobcompletion" rel="nofollow noopener" target="_blank">📖 Runbook🔗</a> </p>\n<p>🏷️ Labels:  </p>\n<ul>\n<li>job: kube-state-metrics  </li>\n<li>instance: 10.143.139.7:8443  </li>\n<li>job_name: email-tracking-perform-initialization-1.0.50  </li>\n<li>severity: warning  </li>\n<li>alertname: KubeJobCompletion  </li>\n<li>namespace: default  </li>\n<li>prometheus: monitoring/k8s  </li>\n</ul>',  # noqa
+        "message": '<p>Job default/email-tracking-perform-initialization-1.0.50 is taking more than one hour to complete.  </p>\n<p>Severity: warning ⚠️<br/>\nStatus: firing 🔥 (on the source)  </p>\n<p><a href="https://github.com/kubernetes-monitoring/kubernetes-mixin/tree/master/runbook.md#alert-name-kubejobcompletion" rel="nofollow noopener" target="_blank">📖 Runbook🔗</a> </p>\n<p>🏷️ Labels:  </p>\n<ul>\n<li>job: kube-state-metrics  </li>\n<li>instance: 10.143.139.7:8443  </li>\n<li>job_name: email-tracking-perform-initialization-1.0.50  </li>\n<li>severity: warning  </li>\n<li>alertname: KubeJobCompletion  </li>\n<li>namespace: default  </li>\n<li>prometheus: monitoring/k8s  </li>\n</ul>',  # noqa
         "image_url": None,
     },
     "sms": {

@@ -1,10 +1,12 @@
 import re
 
 import emoji
-from slackviewer.formatter import SlackFormatter as SlackFormatterBase
+import markdown2
 
 
-class SlackFormatter(SlackFormatterBase):
+class SlackFormatter:
+    _MENTION_PAT = re.compile(r"<((?:#C|@[UB])\w+)(?:\|([A-Za-z0-9.-_]+))?>")
+    _HASHTAG_PAT = re.compile(r"(^| )#[A-Za-z][\w.\-_]+( |$)")
     _LINK_PAT = re.compile(r"<(https|http|mailto):[A-Za-z0-9_\.\-\/\?\,\=\#\:\@\& ]+\|[^>]+>")
 
     def __init__(self, organization):
@@ -36,6 +38,22 @@ class SlackFormatter(SlackFormatterBase):
         message = emoji.emojize(message, language="alias")
 
         return message
+
+    def render_text(self, message, process_markdown=True):
+        message = self.format(message)
+        message = self._HASHTAG_PAT.sub(self._sub_hashtag, message)
+        if process_markdown:
+            message = markdown2.markdown(
+                message.replace("*", "**"),
+                extras=["cuddled-lists", "fenced-code-blocks", "pyshell"],
+            ).strip()
+        return message.replace("\n\n<ul>", "<ul>").replace("\n<li>", "<li>")
+
+    def _sub_hashtag(self, matchobj):
+        text = matchobj.group(0)
+        return "{}<b>{}</b>{}".format(
+            " " if text.startswith(" ") else "", text.strip(), " " if text.endswith(" ") else ""
+        )
 
     def slack_to_accepted_emoji(self, message):
         """Overridden original method to fix regex that replaces dashes in links"""

@@ -52,7 +52,6 @@ recurring-ical-events==2.2.3
 redis==6.4.0
 regex==2024.11.6
 requests==2.34.2
-slack-export-viewer==1.9.1
 slack_sdk==3.45.0
 social-auth-app-django==6.1.0
 twilio~=6.50.1

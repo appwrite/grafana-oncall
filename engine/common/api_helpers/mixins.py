@@ -398,7 +398,7 @@ class GrafanaHeadersMixin:
     request: Request
 
     @cached_property
-    def grafana_context(self) -> GrafanaContext:
+    def grafana_context(self) -> GrafanaContext | None:
         if X_GRAFANA_CONTEXT in self.request.headers:
             grafana_context: GrafanaContext = json.loads(self.request.headers[X_GRAFANA_CONTEXT])
         else:
