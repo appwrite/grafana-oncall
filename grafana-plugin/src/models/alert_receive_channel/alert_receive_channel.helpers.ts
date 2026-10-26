@@ -114,7 +114,7 @@ export class AlertReceiveChannelHelper {
   }
 
   static async getGrafanaAlertingContactPoints() {
-    return (await onCallApi().GET('/alert_receive_channels/contact_points/', undefined)).data;
+    return (await onCallApi().GET('/alert_receive_channels/contact_points/')).data;
   }
 
   static async connectContactPoint(

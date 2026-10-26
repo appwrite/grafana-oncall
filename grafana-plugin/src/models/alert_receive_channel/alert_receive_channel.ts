@@ -333,7 +333,7 @@ export class AlertReceiveChannelStore {
   }
 
   async fetchAlertReceiveChannelOptions() {
-    const { data } = await onCallApi().GET(`/alert_receive_channels/integration_options/`, undefined);
+    const { data } = await onCallApi().GET(`/alert_receive_channels/integration_options/`);
 
     runInAction(() => {
       this.alertReceiveChannelOptions = data;
@@ -426,7 +426,7 @@ export class AlertReceiveChannelStore {
   }
 
   async fetchCounters() {
-    const { data } = await onCallApi().GET('/alert_receive_channels/counters/', undefined);
+    const { data } = await onCallApi().GET('/alert_receive_channels/counters/');
     runInAction(() => {
       this.counters = data;
     });

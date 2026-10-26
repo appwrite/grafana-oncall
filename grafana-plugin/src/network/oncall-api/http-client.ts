@@ -1,7 +1,6 @@
 import { getOnCallApiPath } from 'helpers/consts';
 import { FaroHelper } from 'helpers/faro';
 import { formatBackendError, openErrorNotification } from 'helpers/helpers';
-import { safeJSONStringify } from 'helpers/string';
 import createClient from 'openapi-fetch';
 import qs from 'query-string';
 
@@ -18,7 +17,7 @@ const showApiError = (status: number, errorData: string | Record<string, unknown
 
 export const getCustomFetchFn =
   ({ withGlobalErrorHandler }: { withGlobalErrorHandler: boolean }) =>
-  async (url: string, requestConfig: Parameters<typeof fetch>[1] & { headers?: Headers } = {}): Promise<Response> => {
+  async (request: Request): Promise<Response> => {
     /**
      * In short, this header will tell the Grafana plugin proxy, a Go service which use Go's HTTP Transport,
      * to retry POST requests (and other non-idempotent requests). This doesn't necessarily make these requests
@@ -27,23 +26,23 @@ export const getCustomFetchFn =
      * https://stackoverflow.com/questions/42847294/how-to-catch-http-server-closed-idle-connection-error/62292758#62292758
      * https://raintank-corp.slack.com/archives/C01C4K8DETW/p1692280544382739?thread_ts=1692279329.797149&cid=C01C4K8DETW
      */
-    requestConfig.headers.set('X-Idempotency-Key', `${Date.now()}-${Math.random()}`);
-    requestConfig.headers.set('Content-Type', 'application/json');
+    request.headers.set('X-Idempotency-Key', `${Date.now()}-${Math.random()}`);
+    request.headers.set('Content-Type', 'application/json');
 
     FaroHelper.pushNetworkRequestEvent({
-      method: requestConfig.method,
-      url,
-      body: `${safeJSONStringify(requestConfig.body)}`,
+      method: request.method,
+      url: request.url,
+      body: request.body ? await request.clone().text() : undefined,
     });
 
-    const res = await fetch(url, requestConfig);
+    const res = await fetch(request);
     if (res.ok) {
-      FaroHelper.pushFetchNetworkResponseEvent({ name: 'Request succeeded', res, method: requestConfig.method });
+      FaroHelper.pushFetchNetworkResponseEvent({ name: 'Request succeeded', res, method: request.method });
       return res;
     } else {
       const responseData = await res.clone().json();
-      FaroHelper.pushFetchNetworkResponseEvent({ name: 'Request failed', res, method: requestConfig.method });
-      FaroHelper.pushFetchNetworkError({ res, responseData, method: requestConfig.method });
+      FaroHelper.pushFetchNetworkResponseEvent({ name: 'Request failed', res, method: request.method });
+      FaroHelper.pushFetchNetworkError({ res, responseData, method: request.method });
       if (withGlobalErrorHandler) {
         showApiError(res.status, responseData);
       }
