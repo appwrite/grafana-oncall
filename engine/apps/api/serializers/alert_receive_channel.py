@@ -131,13 +131,11 @@ class IntegrationAlertGroupLabelsSerializer(serializers.Serializer):
             return validated_data
 
         organization = self.context["request"].auth.organization
-        self._create_custom_labels(organization, alert_group_labels["custom"] if alert_group_labels else [])
+        self._create_custom_labels(organization, alert_group_labels["custom"])
 
-        custom_labels = (
-            self._custom_labels_to_internal_value(alert_group_labels["custom"]) if alert_group_labels else []
-        )
+        custom_labels = self._custom_labels_to_internal_value(alert_group_labels["custom"])
         validated_data["alert_group_labels_custom"] = custom_labels or None
-        validated_data["alert_group_labels_template"] = alert_group_labels["template"] if alert_group_labels else None
+        validated_data["alert_group_labels_template"] = alert_group_labels["template"]
 
         return validated_data
 

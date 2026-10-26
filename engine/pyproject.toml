@@ -25,19 +25,15 @@ extra-paths = ["type_stubs"]
 [tool.ty.src]
 exclude = ["**/tests/", "**/test_*.py", "**/migrations/"]
 
-# Django builds managers, related descriptors, and settings at runtime; without a plugin for that, these
-# rules read as noise here the same way their mypy counterparts did (its disable_error_code list). Lift
-# them one at a time as annotations catch up.
-# Django builds managers, related descriptors, and settings at runtime; without a plugin for that,
-# these rules read as noise here (hundreds to thousands of sites each). Everything else ty checks is
-# enforced, with per-site `ty: ignore` comments where a library's types fall short. Lift these one at
-# a time as annotations catch up.
+# Django builds managers, descriptors, and serializer Meta classes at runtime. These
+# rules need Django plugin support; per-site ignores cover other library limitations.
 [tool.ty.rules]
 call-non-callable = "ignore"
 invalid-argument-type = "ignore"
 invalid-assignment = "ignore"
 invalid-key = "ignore"
 invalid-method-override = "ignore"
+invalid-attribute-override = "ignore"
 invalid-return-type = "ignore"
 missing-typed-dict-key = "ignore"
 not-subscriptable = "ignore"

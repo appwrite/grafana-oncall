@@ -65,7 +65,7 @@ def test_slack_client_unexpected_response(_, monkeypatch, status, make_organizat
     ) as mock_request:
         with pytest.raises(SlackAPIServerError) as exc_info:
             client.api_call("auth.test")
-            assert type(exc_info.value.response) is dict
+        assert isinstance(exc_info.value.response, SlackResponse)
 
     assert mock_request.call_count == server_error_retry_handler.max_retry_count + 1
 
@@ -89,7 +89,7 @@ def test_slack_client_slack_server_error(_, monkeypatch, error, make_organizatio
     ) as mock_request:
         with pytest.raises(SlackAPIServerError) as exc_info:
             client.api_call("auth.test")
-            assert type(exc_info.value.response) is dict
+        assert isinstance(exc_info.value.response, SlackResponse)
 
     assert mock_request.call_count == server_error_retry_handler.max_retry_count + 1
 

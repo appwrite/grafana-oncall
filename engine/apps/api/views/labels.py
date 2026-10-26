@@ -147,7 +147,7 @@ class LabelsViewSet(LabelsFeatureFlagViewSet):
         self._update_labels_cache(label_option)
         return Response(label_option, status=status)
 
-    def _update_labels_cache(self, label_option: LabelOption):
+    def _update_labels_cache(self, label_option: LabelOption | None):
         if not label_option:
             return
         serializer = LabelOptionSerializer(data=label_option)

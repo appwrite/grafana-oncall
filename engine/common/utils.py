@@ -281,7 +281,7 @@ def urlize_with_respect_to_a(html):
         if textNode.parent and getattr(textNode.parent, "name", None) == "a":
             continue
         urlizedText = urlize(textNode)
-        textNode.replaceWith(BeautifulSoup(urlizedText, features="html.parser"))
+        textNode.replace_with(BeautifulSoup(urlizedText, features="html.parser"))
 
     return str(soup)
 

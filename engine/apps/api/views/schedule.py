@@ -469,14 +469,6 @@ class ScheduleView(
         result = {"schedules": schedules_events, "is_oncall": is_oncall}
         return Response(result, status=status.HTTP_200_OK)
 
-    @action(detail=False, methods=["get"])
-    def type_options(self, request):
-        # TODO: check if it needed
-        choices = []
-        for item in OnCallSchedule.SCHEDULE_CHOICES:
-            choices.append({"value": str(item[0]), "display_name": item[1]})
-        return Response(choices)
-
     @action(detail=True, methods=["post"])
     def reload_ical(self, request, pk):
         schedule = self.get_object(annotate=False)

@@ -5,12 +5,6 @@ from slack_sdk.web import SlackResponse
 from apps.slack.constants import SLACK_RATE_LIMIT_DELAY
 
 
-class UnexpectedResponse(typing.TypedDict):
-    status: int
-    headers: dict[str, typing.Any]
-    body: str
-
-
 class SlackAPIError(Exception):
     """
     Base class for Slack API errors. To add a new error class, add a new subclass of SlackAPIError in this file.
@@ -19,7 +13,7 @@ class SlackAPIError(Exception):
 
     errors: tuple[str, ...]
 
-    def __init__(self, response: UnexpectedResponse | SlackResponse):
+    def __init__(self, response: SlackResponse):
         super().__init__(f"Slack API error! Response: {response}")
         self.response = response
 
@@ -118,10 +112,10 @@ _error_to_error_class = {
 }
 
 
-def get_error_class(response: UnexpectedResponse | SlackResponse) -> typing.Type[SlackAPIError]:
+def get_error_class(response: SlackResponse) -> typing.Type[SlackAPIError]:
     """Get an appropriate error class for the response"""
 
-    if isinstance(response, dict):  # UnexpectedResponse
+    if response.status_code >= 500:
         return SlackAPIServerError
 
     return _error_to_error_class.get(response["error"], SlackAPIError)

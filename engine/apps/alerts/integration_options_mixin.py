@@ -1,4 +1,5 @@
 import importlib
+from typing import TYPE_CHECKING, ClassVar
 
 from django.conf import settings
 
@@ -6,6 +7,17 @@ from common.utils import getattrd
 
 
 class IntegrationOptionsMixin:
+    if TYPE_CHECKING:
+        INTEGRATION_ALERTMANAGER: ClassVar[str]
+        INTEGRATION_DIRECT_PAGING: ClassVar[str]
+        INTEGRATION_GRAFANA: ClassVar[str]
+        INTEGRATION_GRAFANA_ALERTING: ClassVar[str]
+        INTEGRATION_INBOUND_EMAIL: ClassVar[str]
+        INTEGRATION_LEGACY_ALERTMANAGER: ClassVar[str]
+        INTEGRATION_LEGACY_GRAFANA_ALERTING: ClassVar[str]
+        INTEGRATION_MAINTENANCE: ClassVar[str]
+        INTEGRATION_MANUAL: ClassVar[str]
+
     DEFAULT_INTEGRATION = "grafana"
     # Import every integration config file listed in settings.INSTALLED_ONCALL_INTEGRATIONS
     # as a submodule into a tuple, e.g. AlertReceiveChannel._config[0].id, slug, description, etc..
