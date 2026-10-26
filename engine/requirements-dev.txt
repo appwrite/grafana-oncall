@@ -41,7 +41,7 @@ faker==40.36.0
     # via
     #   -c requirements.txt
     #   factory-boy
-filelock==4.2.1
+filelock==4.2.4
     # via
     #   python-discovery
     #   virtualenv
