@@ -9,7 +9,7 @@ module.exports = {
 
   moduleNameMapper: {
     'grafana/app/(.*)': '<rootDir>/src/jest/grafanaMock.ts',
-    'openapi-fetch': '<rootDir>/src/jest/openapiFetchMock.ts',
+    '^openapi-fetch$': '<rootDir>/src/jest/openapiFetchMock.ts',
     'jest/matchMedia': '<rootDir>/src/jest/matchMedia.ts',
     '^jest$': '<rootDir>/src/jest',
     '^.+\\.(css|scss)$': '<rootDir>/src/jest/styleMock.ts',

@@ -2527,7 +2527,7 @@ export interface components {
       http_method?: string | null;
       trigger_type: string | null;
       readonly trigger_type_name: string;
-      readonly last_response_log: string;
+      readonly last_response_log: CustomApiSchemas['Webhook']['last_response_log'];
       integration_filter?: string[];
       preset?: string | null;
       labels?: components['schemas']['LabelPair'][];

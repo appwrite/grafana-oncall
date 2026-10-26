@@ -120,12 +120,10 @@ export const Root = observer((props: AppRootProps) => {
   return (
     <DefaultPageLayout {...props} page={page} pageNav={getPageNav()}>
       <div
-        className={cx(
-          css`
-            position: relative;
-            flex-grow: 1;
-          `
-        )}
+        className={cx(css`
+          position: relative;
+          flex-grow: 1;
+        `)}
       >
         <RenderConditionally
           shouldRender={userHasAccess}

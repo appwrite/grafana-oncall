@@ -111,7 +111,9 @@ export class AlertGroupStore {
     runInAction(() => {
       this.alerts.set(pk, alertGroup);
     });
-    this.rootStore.setPageTitle(`#${alertGroup.inside_organization_number} ${alertGroup.render_for_web.title}`);
+    this.rootStore.setPageTitle(
+      `#${alertGroup.inside_organization_number} ${'title' in alertGroup.render_for_web ? alertGroup.render_for_web.title : ''}`
+    );
   }
 
   @AutoLoadingState(ActionKey.FETCH_INCIDENTS_AND_STATS)
@@ -155,7 +157,7 @@ export class AlertGroupStore {
   }
 
   async fetchBulkActions() {
-    const { data } = await onCallApi().GET('/alertgroups/bulk_action_options/', undefined);
+    const { data } = await onCallApi().GET('/alertgroups/bulk_action_options/');
 
     runInAction(() => {
       this.bulkActions = data.reduce(
