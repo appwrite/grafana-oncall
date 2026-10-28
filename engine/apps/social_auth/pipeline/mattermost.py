@@ -3,10 +3,13 @@ from common.insight_log import ChatOpsEvent, ChatOpsTypePlug, write_chatops_insi
 
 
 def connect_user_to_mattermost(response, backend, strategy, user, organization, *args, **kwargs):
-    from apps.mattermost.models import MattermostUser
-
     if backend.name != MATTERMOST_LOGIN_BACKEND:
         return
+
+    # Import only after the backend check: apps.mattermost is in INSTALLED_APPS only when
+    # FEATURE_MATTERMOST_INTEGRATION_ENABLED, and importing its models otherwise raises RuntimeError,
+    # breaking every other social auth backend that shares this pipeline (Slack install, Slack login).
+    from apps.mattermost.models import MattermostUser
 
     # at this point everything is correct and we can create the MattermostUser
     # be sure to clear any pre-existing sessions, in case the user previously enecountered errors we want
