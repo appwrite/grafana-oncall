@@ -28,7 +28,7 @@ pdpyras==4.5.2
     # via -r requirements.in
 pluggy==1.6.0
     # via pytest
-pyasn1==0.6.4
+pyasn1==0.6.5
     # via pyasn1-modules
 pyasn1-modules==0.4.2
     # via google-auth
