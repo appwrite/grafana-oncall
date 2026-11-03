@@ -9,7 +9,9 @@ from apps.social_auth.middlewares import SocialAuthAuthCanceledExceptionMiddlewa
 
 
 @pytest.mark.parametrize("backend_type,page", [(InstallSlackOAuth2V2, "chat-ops"), (LoginSlackOAuth2V2, "users/me")])
-@pytest.mark.parametrize("exception_type,query", [(AuthCanceled, ""), (AuthCredentialError, "?slack_error=auth_failed")])
+@pytest.mark.parametrize(
+    "exception_type,query", [(AuthCanceled, ""), (AuthCredentialError, "?slack_error=auth_failed")]
+)
 def test_authentication_errors_redirect_to_the_originating_page(backend_type, page, exception_type, query):
     organization = SimpleNamespace(grafana_url="https://grafana.example/", is_grafana_irm_enabled=False)
     request = SimpleNamespace(user=SimpleNamespace(organization=organization), social_strategy=mock.Mock())
