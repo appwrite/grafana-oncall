@@ -39,7 +39,7 @@ class SocialAuthAuthCanceledExceptionMiddleware(SocialAuthExceptionMiddleware):
                 # if user canceled authentication, redirect them to the previous page using the same link
                 # as we used to redirect after auth/install
                 return redirect(url_builder_function())
-            elif isinstance(exception, exceptions.AuthFailed):
+            elif isinstance(exception, exceptions.AuthException):
                 # if authentication was failed, redirect user to the plugin page using the same link
                 # as we used to redirect after auth/install with error flag
                 return redirect(url_builder_function(f"?slack_error={SLACK_AUTH_FAILED}"))
