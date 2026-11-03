@@ -90,7 +90,7 @@ pytest-factoryboy==2.8.1
     # via -r requirements-dev.in
 pytest-socket==0.8.1
     # via -r requirements-dev.in
-pytest-xdist==3.8.0
+pytest-xdist[psutil]==3.8.0
     # via -r requirements-dev.in
 python-discovery==1.6.4
     # via virtualenv
@@ -109,7 +109,7 @@ sqlparse==0.6.0
     # via
     #   -c requirements.txt
     #   django
-ty==0.0.89
+ty==0.0.92
     # via -r requirements-dev.in
 types-beautifulsoup4==4.12.0.20250516
     # via -r requirements-dev.in
@@ -117,7 +117,7 @@ types-html5lib==1.1.11.20260518
     # via types-beautifulsoup4
 types-pymysql==1.2.0.20260923
     # via -r requirements-dev.in
-types-python-dateutil==2.9.0.20260807
+types-python-dateutil==2.9.0.20261021
     # via -r requirements-dev.in
 types-pytz==2026.5.0.20261006
     # via -r requirements-dev.in
