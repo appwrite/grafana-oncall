@@ -423,7 +423,7 @@ slack-sdk==3.45.0
     # via -r requirements.in
 social-auth-app-django==6.1.0
     # via -r requirements.in
-social-auth-core==5.2.0
+social-auth-core==6.2.0
     # via social-auth-app-django
 soupsieve==2.9.2
     # via beautifulsoup4
