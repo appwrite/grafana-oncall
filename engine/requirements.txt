@@ -255,7 +255,7 @@ msgpack==1.2.3
     # via cachecontrol
 nest-asyncio==1.6.0
     # via -r requirements.in
-oauthlib==4.0.0
+oauthlib==4.0.1
     # via
     #   requests-oauthlib
     #   social-auth-core
