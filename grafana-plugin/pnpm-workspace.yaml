@@ -17,7 +17,7 @@ overrides:
   "@babel/runtime@<7.26.10": ">=7.26.10"
   "@babel/helpers@<7.26.10": ">=7.26.10"
   cookie@<0.7.0: ">=0.7.0"
-  "@babel/core@<7.29.6": ">=7.29.6 <8"
+  "@babel/core@<7.29.6": ">=7.29.6 <9"
   "@opentelemetry/core@<2.8.0": ">=2.8.0 <3"
   "@protobufjs/utf8@<1.1.1": ">=1.1.1 <2"
   "@remix-run/router@<1.23.4": ">=1.23.4 <2"
