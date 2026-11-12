@@ -21,8 +21,10 @@ Test emoji :male-construction-worker:https://another-example.com/test:=%22-dash
     [
         ("<@U123|alice> *on call* #incident", True, "<p>@alice <strong>on call</strong> <b>#incident</b></p>"),
         ("plain #incident text", False, "plain <b>#incident</b> text"),
+        ("<@U123|alice><@U456>", False, "@alice@U456"),
         ("<https://example.com|docs>", False, '<a href="https://example.com">docs</a>'),
     ],
 )
+@pytest.mark.django_db
 def test_render_text(message, process_markdown, expected):
-    assert SlackFormatter(MagicMock()).render_text(message, process_markdown) == expected
+    assert SlackFormatter(MagicMock(slack_team_identity=None)).render_text(message, process_markdown) == expected

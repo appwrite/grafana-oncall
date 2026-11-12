@@ -5,7 +5,7 @@ import markdown2
 
 
 class SlackFormatter:
-    _MENTION_PAT = re.compile(r"<((?:#C|@[UB])\w+)(?:\|([A-Za-z0-9.-_]+))?>")
+    _MENTION_PAT = re.compile(r"<((?:#C|@[UB])\w+)(?:\|([A-Za-z0-9._-]+))?>")
     _HASHTAG_PAT = re.compile(r"(^| )#[A-Za-z][\w.\-_]+( |$)")
     _LINK_PAT = re.compile(r"<(https|http|mailto):[A-Za-z0-9_\.\-\/\?\,\=\#\:\@\& ]+\|[^>]+>")
 
