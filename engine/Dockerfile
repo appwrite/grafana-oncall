@@ -6,7 +6,7 @@ ENV APP_USER=appuser
 RUN addgroup --system --gid 2000 ${APP_USER} && \
     adduser --system --uid 1000 --ingroup ${APP_USER} ${APP_USER}
 
-RUN apk add bash \
+RUN apk upgrade --no-cache && apk add bash \
     python3-dev \
     build-base \
     linux-headers \
