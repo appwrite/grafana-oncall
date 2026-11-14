@@ -1,4 +1,4 @@
-FROM python:3.14.8-alpine3.23 AS base
+FROM python:3.15.2-alpine3.23@sha256:32f06114a111c2467804d06194c5584f16804a78cfaf427fb1fcbb0b3391d0f1 AS base
 ARG TARGETPLATFORM
 
 # Create a group and user to run an app
