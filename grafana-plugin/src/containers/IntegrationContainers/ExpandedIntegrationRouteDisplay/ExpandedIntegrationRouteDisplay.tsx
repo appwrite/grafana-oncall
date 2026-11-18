@@ -18,7 +18,7 @@ import { UserActions } from 'helpers/authorization/authorization';
 import { StackSize } from 'helpers/consts';
 import { openNotification } from 'helpers/helpers';
 import { observer } from 'mobx-react';
-import CopyToClipboard from 'react-copy-to-clipboard';
+import { CopyToClipboard } from 'components/CopyToClipboard/CopyToClipboard';
 import { getUtilStyles } from 'styles/utils.styles';
 
 import { CollapsibleTreeView, CollapsibleItem } from 'components/CollapsibleTreeView/CollapsibleTreeView';

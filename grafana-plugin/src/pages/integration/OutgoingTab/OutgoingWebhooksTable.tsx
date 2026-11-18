@@ -7,7 +7,7 @@ import { StackSize } from 'helpers/consts';
 import { openNotification } from 'helpers/helpers';
 import { useConfirmModal } from 'helpers/hooks';
 import { observer } from 'mobx-react';
-import CopyToClipboard from 'react-copy-to-clipboard';
+import { CopyToClipboard } from 'components/CopyToClipboard/CopyToClipboard';
 
 import { GTable } from 'components/GTable/GTable';
 import { HamburgerContextMenu } from 'components/HamburgerContextMenu/HamburgerContextMenu';

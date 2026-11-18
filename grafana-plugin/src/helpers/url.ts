@@ -1,4 +1,4 @@
-import qs, { ParsedQuery } from 'query-string';
+import { stringifyQuery, ParsedQuery } from 'helpers/query';
 
 import { PLUGIN_ROOT } from './consts';
 
@@ -22,7 +22,7 @@ export function getPathFromQueryParams(query: ParsedQuery<string>) {
   }
 
   if (Object.keys(normalizedQuery).length) {
-    const query = qs.stringify(normalizedQuery);
+    const query = stringifyQuery(normalizedQuery);
     path += `?` + query;
   }
 

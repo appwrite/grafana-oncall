@@ -3,7 +3,7 @@ import React, { useState } from 'react';
 import { Button, Icon, Modal, Tooltip, Stack, useStyles2 } from '@grafana/ui';
 import { StackSize } from 'helpers/consts';
 import { openNotification } from 'helpers/helpers';
-import CopyToClipboard from 'react-copy-to-clipboard';
+import { CopyToClipboard } from 'components/CopyToClipboard/CopyToClipboard';
 import Emoji from 'react-emoji-render';
 import { debounce } from 'throttle-debounce';
 

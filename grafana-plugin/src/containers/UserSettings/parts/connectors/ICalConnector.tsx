@@ -4,7 +4,7 @@ import { Alert, Button, InlineField, Input, LoadingPlaceholder, Stack, Tooltip }
 import { UserActions } from 'helpers/authorization/authorization';
 import { StackSize } from 'helpers/consts';
 import { openNotification } from 'helpers/helpers';
-import CopyToClipboard from 'react-copy-to-clipboard';
+import { CopyToClipboard } from 'components/CopyToClipboard/CopyToClipboard';
 
 import { WithConfirm } from 'components/WithConfirm/WithConfirm';
 import { WithPermissionControlTooltip } from 'containers/WithPermissionControl/WithPermissionControlTooltip';

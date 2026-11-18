@@ -6,7 +6,7 @@ import { UserActions } from 'helpers/authorization/authorization';
 import { DOCS_DISCORD_SETUP, StackSize } from 'helpers/consts';
 import { openNotification } from 'helpers/helpers';
 import { observer } from 'mobx-react';
-import CopyToClipboard from 'react-copy-to-clipboard';
+import { CopyToClipboard } from 'components/CopyToClipboard/CopyToClipboard';
 
 import { Text } from 'components/Text/Text';
 import { WithPermissionControlDisplay } from 'containers/WithPermissionControl/WithPermissionControlDisplay';

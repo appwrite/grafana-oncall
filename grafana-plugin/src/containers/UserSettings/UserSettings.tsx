@@ -6,7 +6,7 @@ import { LocationHelper } from 'helpers/LocationHelper';
 import { BREAKPOINT_TABS } from 'helpers/consts';
 import { useQueryParams } from 'helpers/hooks';
 import { observer } from 'mobx-react';
-import { useMediaQuery } from 'react-responsive';
+import { useMediaQuery } from 'helpers/useMediaQuery';
 
 import { Avatar } from 'components/Avatar/Avatar';
 import { Tabs, TabsContent } from 'containers/UserSettings/parts/UserSettingsParts';

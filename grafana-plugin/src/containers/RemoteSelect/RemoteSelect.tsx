@@ -78,7 +78,7 @@ export const RemoteSelect = inject('store')(
 
         cb(options);
       } catch (e) {
-        if (isNetworkError(e) && e.response.status === 403 && requiredUserAction) {
+        if (isNetworkError(e) && e.response?.status === 403 && requiredUserAction) {
           setNoOptionsMessage(generateMissingPermissionMessage(requiredUserAction));
         }
         cb([]);

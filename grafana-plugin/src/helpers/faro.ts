@@ -1,5 +1,4 @@
 import { Faro, initializeFaro, LogLevel, getWebInstrumentations, BrowserConfig } from '@grafana/faro-web-sdk';
-import { AxiosResponse } from 'axios';
 
 import plugin from '../../package.json'; // oxlint-disable-line import/no-relative-parent-imports
 import {
@@ -103,25 +102,10 @@ class BaseFaroHelper {
     });
   };
 
-  pushAxiosNetworkResponseEvent = ({ name, res }: { name: string; res?: AxiosResponse }) => {
-    this.faro?.api.pushEvent(name, {
-      url: res?.config?.url,
-      status: `${res?.status}`,
-      statusText: `${res?.statusText}`,
-      method: res?.config?.method.toUpperCase(),
-    });
-  };
-
-  pushAxiosNetworkError = (res?: AxiosResponse) => {
-    this.faro?.api.pushError(new Error(`Network error: ${res?.status}`), {
-      context: {
-        url: res?.config?.url,
-        type: 'network',
-        data: `${safeJSONStringify(res?.data)}`,
-        status: `${res?.status}`,
-        statusText: `${res?.statusText}`,
-        timestamp: new Date().toUTCString(),
-      },
+  pushNetworkTransportError = ({ method, url }: { method: string; url: string }) => {
+    this.faro?.api.pushEvent('Request failed', { method, url });
+    this.faro?.api.pushError(new Error('Network request failed'), {
+      context: { method, url, type: 'network', timestamp: new Date().toUTCString() },
     });
   };
 }

@@ -9,7 +9,7 @@ import { openErrorNotification, openNotification } from 'helpers/helpers';
 import { PropsWithRouter, withRouter } from 'helpers/hoc';
 import { observer } from 'mobx-react';
 import { LegacyNavHeading } from 'navbar/LegacyNavHeading';
-import CopyToClipboard from 'react-copy-to-clipboard';
+import { CopyToClipboard } from 'components/CopyToClipboard/CopyToClipboard';
 import { bem, getUtilStyles } from 'styles/utils.styles';
 
 import { GTable } from 'components/GTable/GTable';

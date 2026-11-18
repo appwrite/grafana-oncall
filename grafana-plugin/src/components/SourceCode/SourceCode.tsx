@@ -5,7 +5,7 @@ import { GrafanaTheme2 } from '@grafana/data';
 import { Button, IconButton, useStyles2 } from '@grafana/ui';
 import { openNotification } from 'helpers/helpers';
 import { formatSourceCodeJsonString } from 'helpers/string';
-import CopyToClipboard from 'react-copy-to-clipboard';
+import { CopyToClipboard } from 'components/CopyToClipboard/CopyToClipboard';
 import { bem } from 'styles/utils.styles';
 
 interface SourceCodeProps {

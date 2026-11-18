@@ -5,7 +5,7 @@ import { UserActions } from 'helpers/authorization/authorization';
 import { INTEGRATION_SERVICENOW, StackSize, GENERIC_ERROR, PLUGIN_ROOT } from 'helpers/consts';
 import { openErrorNotification, openNotification } from 'helpers/helpers';
 import { useDrawer } from 'helpers/hooks';
-import CopyToClipboard from 'react-copy-to-clipboard';
+import { CopyToClipboard } from 'components/CopyToClipboard/CopyToClipboard';
 import Emoji from 'react-emoji-render';
 import { useNavigate } from 'react-router-v7';
 

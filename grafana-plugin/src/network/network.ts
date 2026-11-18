@@ -1,72 +1,102 @@
-import axios, { AxiosError } from 'axios';
 import { getOnCallApiPath } from 'helpers/consts';
 import { FaroHelper } from 'helpers/faro';
+import { stringifyQuery } from 'helpers/query';
 import { safeJSONStringify } from 'helpers/string';
-import qs from 'query-string';
-
-const instance = axios.create();
-
-instance.interceptors.request.use(function (config) {
-  // Do something before request is sent
-  config.paramsSerializer = {
-    serialize: (params) => {
-      return qs.stringify(params, { arrayFormat: 'none' });
-    },
-  };
-
-  config.validateStatus = (status) => {
-    return status >= 200 && status < 300; // default
-  };
-
-  return {
-    ...config,
-  };
-});
 
 interface RequestConfig {
   method?: 'GET' | 'POST' | 'PUT' | 'DELETE' | 'OPTIONS';
-  params?: any;
-  data?: any;
+  params?: unknown;
+  data?: unknown;
   withCredentials?: boolean;
   validateStatus?: (status: number) => boolean;
-  headers?: {
-    [key: string]: string | number;
-  };
+  headers?: Record<string, string | number>;
 }
 
-export const isNetworkError = axios.isAxiosError;
+export interface NetworkResponse {
+  data: any;
+  status: number;
+  statusText: string;
+  headers: Record<string, string>;
+}
 
-export const makeRequestRaw = async (path: string, config: RequestConfig = {}) => {
-  const { method = 'GET', params, data, validateStatus, headers } = config;
+export class NetworkError extends Error {
+  constructor(
+    message: string,
+    public response?: NetworkResponse,
+    options?: ErrorOptions
+  ) {
+    super(message, options);
+    this.name = 'NetworkError';
+  }
+}
 
-  const url = getOnCallApiPath(path);
+export const isNetworkError = (error: unknown): error is NetworkError => error instanceof NetworkError;
 
+export async function makeRequestRaw(path: string, config: RequestConfig = {}): Promise<NetworkResponse> {
+  const {
+    method = 'GET',
+    params,
+    data,
+    headers,
+    withCredentials,
+    validateStatus = (status) => status >= 200 && status < 300,
+  } = config;
+  const url = new URL(getOnCallApiPath(path), window.location.href);
+  const query = stringifyQuery(params);
+  if (query) {
+    url.search += `${url.search ? '&' : ''}${query}`;
+  }
+  const requestHeaders = new Headers({ Accept: 'application/json, text/plain, */*' });
+  for (const [key, value] of Object.entries(headers ?? {})) {
+    requestHeaders.set(key, String(value));
+  }
+  // Preserve Axios's same-origin XSRF cookie behavior for Grafana proxy requests.
+  const xsrfToken = document.cookie.split('; ').find((cookie) => cookie.startsWith('XSRF-TOKEN='));
+  if (url.origin === window.location.origin && xsrfToken) {
+    requestHeaders.set('X-XSRF-TOKEN', decodeURIComponent(xsrfToken.slice('XSRF-TOKEN='.length)));
+  }
+  const body = data === undefined || data === null ? undefined : typeof data === 'string' ? data : JSON.stringify(data);
+  if (body !== undefined && !requestHeaders.has('Content-Type')) {
+    requestHeaders.set('Content-Type', 'application/json');
+  }
+
+  FaroHelper.pushNetworkRequestEvent({ method, url: url.href, body: `${safeJSONStringify(data)}` });
   try {
-    FaroHelper.pushNetworkRequestEvent({ method, url, body: `${safeJSONStringify(data)}` });
-    const response = await instance({
+    const res = await fetch(url.href, {
       method,
-      url,
-      params,
-      data,
-      validateStatus,
-      headers,
+      headers: requestHeaders,
+      body,
+      credentials: withCredentials ? 'include' : 'same-origin',
     });
-
-    FaroHelper.pushAxiosNetworkResponseEvent({ name: 'Request succeeded', res: response });
+    const text = await res.text();
+    let responseData: unknown = text;
+    try {
+      responseData = JSON.parse(text);
+    } catch {
+      /* Empty and non-JSON responses are valid. */
+    }
+    const response = {
+      data: responseData,
+      status: res.status,
+      statusText: res.statusText,
+      headers: Object.fromEntries(res.headers),
+    };
+    const accepted = validateStatus(res.status);
+    FaroHelper.pushFetchNetworkResponseEvent({ name: accepted ? 'Request succeeded' : 'Request failed', res, method });
+    if (!accepted) {
+      FaroHelper.pushFetchNetworkError({ res, responseData, method });
+      throw new NetworkError(`Request failed with status code ${res.status}`, response);
+    }
     return response;
-  } catch (ex) {
-    const error = ex as AxiosError;
-    FaroHelper.pushAxiosNetworkResponseEvent({ name: 'Request failed', res: error.response });
-    FaroHelper.pushAxiosNetworkError(error.response);
-    throw ex;
+  } catch (error) {
+    if (isNetworkError(error)) {
+      throw error;
+    }
+    FaroHelper.pushNetworkTransportError({ method, url: url.href });
+    throw new NetworkError('Network request failed', undefined, { cause: error });
   }
-};
+}
 
-export const makeRequest = async <RT = any>(path: string, config: RequestConfig = {}) => {
-  try {
-    const result = await makeRequestRaw(path, config);
-    return result.data as RT;
-  } catch (ex) {
-    throw ex;
-  }
-};
+export async function makeRequest<RT = any>(path: string, config: RequestConfig = {}): Promise<RT> {
+  return (await makeRequestRaw(path, config)).data;
+}

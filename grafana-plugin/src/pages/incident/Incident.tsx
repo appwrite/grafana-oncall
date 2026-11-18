@@ -29,7 +29,7 @@ import { parseURL } from 'helpers/url';
 import Linkify from 'linkify-react';
 import { observer } from 'mobx-react';
 import moment from 'moment-timezone';
-import CopyToClipboard from 'react-copy-to-clipboard';
+import { CopyToClipboard } from 'components/CopyToClipboard/CopyToClipboard';
 import Emoji from 'react-emoji-render';
 import reactStringReplace from 'react-string-replace';
 

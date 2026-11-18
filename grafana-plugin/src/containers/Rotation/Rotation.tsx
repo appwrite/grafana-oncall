@@ -4,7 +4,6 @@ import { cx } from '@emotion/css';
 import { LoadingPlaceholder, Stack, useStyles2 } from '@grafana/ui';
 import dayjs from 'dayjs';
 import { observer } from 'mobx-react';
-import hash from 'object-hash';
 
 import { ScheduleFiltersType } from 'components/ScheduleFilters/ScheduleFilters.types';
 import { Text } from 'components/Text/Text';
@@ -159,7 +158,18 @@ export const Rotation: FC<RotationProps> = observer((props) => {
                 return (
                   <ScheduleSlot
                     scheduleView={scheduleView}
-                    key={hash(event)}
+                    key={JSON.stringify([
+                      event.schedule?.id,
+                      event.shift?.pk,
+                      event.source,
+                      event.calendar_type,
+                      event.priority_level,
+                      event.start,
+                      event.end,
+                      event.shiftSwapId,
+                      event.users.map(({ pk }) => pk),
+                      event.missing_users,
+                    ])}
                     event={event}
                     color={propsColor || getColor(event)}
                     handleAddOverride={getAddOverrideClickHandler(event)}

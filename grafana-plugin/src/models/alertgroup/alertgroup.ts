@@ -2,7 +2,7 @@ import { LocationHelper } from 'helpers/LocationHelper';
 import { GENERIC_ERROR, PAGE, PROCESSING_REQUEST_ERROR } from 'helpers/consts';
 import { AutoLoadingState, WithGlobalNotification } from 'helpers/decorators';
 import { runInAction, makeAutoObservable } from 'mobx';
-import qs from 'query-string';
+import { parseQuery } from 'helpers/query';
 
 import { convertFiltersToBackendFormat } from 'models/filters/filters.helpers';
 import { ActionKey } from 'models/loader/action-keys';
@@ -26,7 +26,7 @@ export class AlertGroupStore {
   bulkActions: any = [];
   searchResult: { [key: string]: Array<ApiSchemas['AlertGroup']['pk']> } = {};
   incidentFilters: any;
-  initialQuery = qs.parse(window.location.search);
+  initialQuery = parseQuery(window.location.search);
   incidentsCursor?: string;
   alertsSearchResult: {
     prev?: string;
@@ -73,8 +73,8 @@ export class AlertGroupStore {
       },
     });
 
-    const prevCursor = previousRaw ? qs.parse(qs.extract(previousRaw)).cursor : previousRaw;
-    const nextCursor = nextRaw ? qs.parse(qs.extract(nextRaw)).cursor : nextRaw;
+    const prevCursor = previousRaw ? parseQuery(new URL(previousRaw, window.location.href).search).cursor : previousRaw;
+    const nextCursor = nextRaw ? parseQuery(new URL(nextRaw, window.location.href).search).cursor : nextRaw;
 
     const newAlerts = new Map(
       results.map((alert: ApiSchemas['AlertGroup']) => {

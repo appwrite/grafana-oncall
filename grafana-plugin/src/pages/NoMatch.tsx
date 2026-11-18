@@ -2,13 +2,13 @@ import React, { useEffect, useMemo } from 'react';
 
 import { DEFAULT_PAGE, PLUGIN_ROOT } from 'helpers/consts';
 import { getPathFromQueryParams } from 'helpers/url';
-import qs from 'query-string';
+import { parseQuery } from 'helpers/query';
 import { useNavigate } from 'react-router-v7';
 
 export const NoMatch = () => {
   const navigate = useNavigate();
 
-  const query = useMemo(() => qs.parse(window.location.search), [window.location.search]);
+  const query = useMemo(() => parseQuery(window.location.search), [window.location.search]);
 
   useEffect(() => {
     if (query.page) {
