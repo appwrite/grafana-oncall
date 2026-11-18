@@ -19,7 +19,8 @@ export async function copyText(text: string) {
   const input = document.createElement('textarea');
   input.value = text;
   input.style.cssText = 'position:fixed;opacity:0;pointer-events:none';
-  document.body.appendChild(input);
+  // Keep selection inside a modal's focus trap when copying from a dialog.
+  (focused?.closest('dialog, [role="dialog"], [role="alertdialog"]') ?? document.body).appendChild(input);
   try {
     input.select();
     if (!document.execCommand('copy')) {

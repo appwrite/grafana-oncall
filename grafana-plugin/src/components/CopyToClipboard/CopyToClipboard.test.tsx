@@ -48,12 +48,19 @@ it('reports permission errors without a false success notification', async () =>
   expect(onCopy).not.toHaveBeenCalled();
 });
 
-it('copies on HTTP deployments and restores focus without leaving the secret in the DOM', async () => {
+it('copies inside a modal on HTTP and restores focus without leaving the secret in the DOM', async () => {
   setClipboard(undefined);
-  render(<button>Original</button>);
+  render(
+    <div role="dialog">
+      <button>Original</button>
+    </div>
+  );
   const button = screen.getByText('Original');
   button.focus();
-  document.execCommand = jest.fn(() => true);
+  document.execCommand = jest.fn(() => {
+    expect(screen.getByRole('dialog').contains(document.querySelector('textarea'))).toBe(true);
+    return true;
+  });
   await copyText('secret');
   expect(document.execCommand).toHaveBeenCalledWith('copy');
   expect(document.activeElement).toBe(button);
