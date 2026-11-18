@@ -36,6 +36,7 @@ it('reports success only after the clipboard write and preserves the child click
 
 it('reports permission errors without a false success notification', async () => {
   setClipboard({ writeText: jest.fn().mockRejectedValue(new Error('Denied')) });
+  document.execCommand = jest.fn(() => false);
   const onCopy = jest.fn();
   render(
     <CopyToClipboard text="token" onCopy={onCopy}>
@@ -59,5 +60,13 @@ it('copies on HTTP deployments and restores focus without leaving the secret in 
   expect(document.querySelector('textarea')).toBeNull();
   document.execCommand = jest.fn(() => false);
   await expect(copyText('secret')).rejects.toThrow();
+  expect(document.querySelector('textarea')).toBeNull();
+});
+
+it('uses the browser fallback when the Clipboard API is exposed but rejects writes', async () => {
+  setClipboard({ writeText: jest.fn().mockRejectedValue(new Error('Document is not focused')) });
+  document.execCommand = jest.fn(() => true);
+  await expect(copyText('secret')).resolves.toBeUndefined();
+  expect(document.execCommand).toHaveBeenCalledWith('copy');
   expect(document.querySelector('textarea')).toBeNull();
 });

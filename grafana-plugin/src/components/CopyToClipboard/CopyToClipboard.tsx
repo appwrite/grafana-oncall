@@ -4,8 +4,12 @@ import { openErrorNotification } from 'helpers/helpers';
 
 export async function copyText(text: string) {
   if (navigator.clipboard?.writeText) {
-    await navigator.clipboard.writeText(text);
-    return;
+    try {
+      await navigator.clipboard.writeText(text);
+      return;
+    } catch {
+      // Embedded/managed browsers can expose the API while disallowing writes.
+    }
   }
 
   // Older browsers and remote HTTP installations do not expose the Clipboard API.
