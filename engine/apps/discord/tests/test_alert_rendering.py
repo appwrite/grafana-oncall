@@ -1235,3 +1235,179 @@ def test_a_value_cannot_break_the_bullet_it_sits_in(integration):
     # Every bullet is still a bullet.
     for line in lines:
         assert not line.startswith("second line"), rendered
+
+
+ASK_AI_URL = "https://monitoring.example/ask-ai.html#q="
+
+
+def all_buttons(payload):
+    return {
+        component["label"]: component.get("url")
+        for row in payload["components"]
+        for component in row["components"]
+        if component.get("label")
+    }
+
+
+def ask_ai_prompt(url):
+    from urllib.parse import unquote
+
+    assert url.startswith(ASK_AI_URL)
+    return unquote(url[len(ASK_AI_URL) :])
+
+
+@pytest.fixture()
+def make_alertmanager_message(
+    make_organization, make_user_for_organization, make_alert_receive_channel, make_alert_group, make_alert
+):
+    def _make(raw_request_data, **alert_group_kwargs):
+        organization = make_organization()
+        make_user_for_organization(organization, username="loks0n")
+        alert_receive_channel = make_alert_receive_channel(
+            organization, integration=AlertReceiveChannel.INTEGRATION_ALERTMANAGER
+        )
+        alert_group = make_alert_group(alert_receive_channel=alert_receive_channel, **alert_group_kwargs)
+        make_alert(alert_group=alert_group, raw_request_data=raw_request_data)
+        return DiscordMessageRenderer(alert_group).render_alert_group_message()
+
+    return _make
+
+
+PROXYSQL_PAYLOAD = {
+    "status": "firing",
+    "groupLabels": {"alertname": "ProxySQL cannot reach its databases", "grafana_folder": "Infrastructure"},
+    "commonLabels": {
+        "alertname": "ProxySQL cannot reach its databases",
+        "grafana_folder": "Infrastructure",
+        "cluster": "cloud-fra1-prod",
+        "proxysql_cluster": "db-fra1-self-hosted-17",
+    },
+    "commonAnnotations": {"grafana_state_reason": "NoData", "datasource_uid": "PBFA97CFB590B2093"},
+    "alerts": [{"status": "firing", "labels": {"pod": "proxysql-7bb9574496-6tmmz"}}],
+}
+
+
+@pytest.mark.django_db
+def test_no_ask_ai_button_unless_the_deployment_sets_one_up(settings, make_alertmanager_message):
+    settings.DISCORD_ASK_AI_URL = None
+
+    assert "Ask AI" not in all_buttons(make_alertmanager_message(PROXYSQL_PAYLOAD))
+
+
+@pytest.mark.django_db
+def test_ask_ai_carries_what_identifies_the_alert(settings, make_alertmanager_message):
+    settings.DISCORD_ASK_AI_URL = ASK_AI_URL
+
+    payload = make_alertmanager_message(PROXYSQL_PAYLOAD, resolved=True, resolved_at=timezone.now())
+    url = all_buttons(payload)["Ask AI"]
+    prompt = ask_ai_prompt(url)
+    lines = prompt.splitlines()
+
+    assert len(url) <= 512
+    assert lines[0].startswith("Investigate this production alert.")
+    # The same title the card leads with, less the status emoji.
+    assert f"Alert: {payload['embeds'][0]['title'].split(' ', 1)[1]}" in lines
+    assert "Status: resolved" in lines
+    assert any(line.startswith("Fired: ") and line.endswith(" UTC (OnCall #1)") for line in lines)
+    assert "State reason: NoData" in lines
+    assert "Labels: cluster=cloud-fra1-prod, proxysql_cluster=db-fra1-self-hosted-17" in lines
+    # The title names the alert, and the folder only files the rule.
+    assert "alertname=" not in prompt
+    assert "grafana_folder=" not in prompt
+
+
+@pytest.mark.django_db
+def test_ask_ai_takes_a_row_of_its_own_on_a_full_resolved_card(settings, make_alertmanager_message):
+    """The card in the channel today: Unresolve, Source, Dashboard, Add note and OnCall fill a row."""
+    settings.DISCORD_ASK_AI_URL = ASK_AI_URL
+
+    payload = make_alertmanager_message(
+        {
+            **PROXYSQL_PAYLOAD,
+            "commonAnnotations": {"dashboard_url": "https://grafana.example/d/proxysql"},
+            "alerts": [{"status": "firing", "generatorURL": "https://grafana.example/alerting/grafana/abc/view"}],
+        },
+        resolved=True,
+        resolved_at=timezone.now(),
+    )
+
+    rows = [[component.get("label") for component in row["components"]] for row in payload["components"]]
+    assert rows == [["Unresolve", "Source", "Dashboard", "Add note", "OnCall"], ["Ask AI"]]
+
+
+@pytest.mark.django_db
+def test_ask_ai_drops_a_label_that_does_not_fit_and_keeps_the_ones_that_do(settings, make_alertmanager_message):
+    settings.DISCORD_ASK_AI_URL = ASK_AI_URL
+
+    payload = make_alertmanager_message(
+        {
+            "status": "firing",
+            "groupLabels": {"alertname": "Something broke"},
+            "commonLabels": {"cluster": "cloud-fra1-prod", "query": "x" * 600, "service_name": "worker-builds"},
+        }
+    )
+    url = all_buttons(payload)["Ask AI"]
+    prompt = ask_ai_prompt(url)
+
+    assert len(url) <= 512
+    assert "Labels: cluster=cloud-fra1-prod, service_name=worker-builds" in prompt.splitlines()
+    assert "query=" not in prompt
+
+
+@pytest.mark.django_db
+def test_ask_ai_encodes_what_would_break_the_link(settings, make_alertmanager_message):
+    settings.DISCORD_ASK_AI_URL = ASK_AI_URL
+
+    payload = make_alertmanager_message(
+        {"status": "firing", "groupLabels": {"alertname": "A"}, "commonLabels": {"route": "/v1/a?b=1&c=2#d+e"}}
+    )
+    url = all_buttons(payload)["Ask AI"]
+
+    assert "&" not in url and "+" not in url and url.count("#") == 1 and " " not in url and "\n" not in url
+    assert "Labels: route=/v1/a?b=1&c=2#d+e" in ask_ai_prompt(url).splitlines()
+
+
+@pytest.mark.django_db
+def test_ask_ai_needs_an_http_link(settings, make_alertmanager_message):
+    """Discord refuses a link button that is not http(s), so a desktop app's own scheme would fail the whole message."""
+    settings.DISCORD_ASK_AI_URL = "claude://claude.ai/new?q="
+
+    assert "Ask AI" not in all_buttons(make_alertmanager_message(PROXYSQL_PAYLOAD))
+
+
+@pytest.mark.django_db
+def test_ask_ai_trims_a_title_by_what_it_costs_once_encoded(
+    settings, make_organization, make_user_for_organization, make_alert_receive_channel, make_alert_group, make_alert
+):
+    """A CJK character takes nine characters of the link and an emoji twelve, so a title that is short to read can
+    still be too long for the button. The title gives way, not the button."""
+    from unittest.mock import patch
+
+    settings.DISCORD_ASK_AI_URL = ASK_AI_URL
+    organization = make_organization()
+    make_user_for_organization(organization, username="loks0n")
+    alert_receive_channel = make_alert_receive_channel(
+        organization, integration=AlertReceiveChannel.INTEGRATION_ALERTMANAGER
+    )
+    alert_group = make_alert_group(alert_receive_channel=alert_receive_channel)
+    make_alert(alert_group=alert_group, raw_request_data=PROXYSQL_PAYLOAD)
+    title = "数据库连接失败🔥" * 20
+
+    renderer = DiscordMessageRenderer(alert_group)
+    with patch(
+        "apps.discord.alert_rendering.AlertDiscordTemplater._postformat", lambda _, alert: _set_title(alert, title)
+    ):
+        payload = renderer.render_alert_group_message()
+    url = all_buttons(payload)["Ask AI"]
+    prompt = ask_ai_prompt(url)
+    alert_line = next(line for line in prompt.splitlines() if line.startswith("Alert: "))
+
+    assert len(url) <= 512
+    assert alert_line.endswith("…")
+    assert title.startswith(alert_line[len("Alert: ") : -1])
+    assert "Status: firing" in prompt.splitlines()
+
+
+def _set_title(templated_alert, title):
+    templated_alert.title = title
+    return templated_alert

@@ -1,7 +1,9 @@
+import datetime
 import re
 import typing
-from urllib.parse import urlparse
+from urllib.parse import quote, urlparse
 
+from django.conf import settings
 from emoji import emojize
 
 from apps.alerts.incident_appearance.renderers.base_renderer import AlertBaseRenderer, AlertGroupBaseRenderer
@@ -45,6 +47,18 @@ BUTTON_URL_LIMIT = 512
 # to a panel, and a rule can set `dashboard_url` itself; neither is the alert's source link, which for a
 # Grafana-managed rule is the rule's own page.
 DASHBOARD_ANNOTATIONS = ("dashboard_url", "dashboardURL")
+
+# The "Ask AI" prompt. It opens with what to do, then carries what identifies the alert, and leaves the rest for the
+# assistant to look up: a link button holds 512 characters, and the alert's metrics, logs and rule are all one query
+# away for an assistant that can reach them. The title already names the alert and the folder only files the rule, so
+# neither is worth a label's room.
+ASK_AI_LEAD = "Investigate this production alert. Find out what broke and why."
+ASK_AI_SKIPPED_LABELS = ("alertname", "grafana_folder")
+# A title shorter than this is not worth a button: it no longer says which alert this is.
+ASK_AI_TITLE_MINIMUM = 16
+# Characters a URL can carry in a query or fragment value as they are. Everything else, `&`, `#` and `+` among it,
+# is percent-encoded, and keeping these few readable is what leaves room for another label.
+ASK_AI_SAFE = ",=:/"
 
 # The status an alert group is in, named the way OnCall names it everywhere else.
 FIRING, ACKNOWLEDGED, SILENCED, RESOLVED = "firing", "acknowledged", "silenced", "resolved"
@@ -324,16 +338,93 @@ class AlertGroupDiscordRenderer(AlertGroupBaseRenderer):
         A raw URL in the body is a line to read and then copy; a button is one press. Taken from the payload
         rather than a template because it is a link, not prose — the templates leave it out for this reason.
         """
-        alert = self.alert_group.alerts.last()
-        payload = getattr(alert, "raw_request_data", None) or {}
         # Both places the templates read: a legacy alertmanager payload puts its annotations at the top level, and
         # leaving it out here would take the link off the card entirely, since the body leaves it to this button.
-        for annotations in (payload.get("commonAnnotations"), payload.get("annotations")):
+        for annotations in self._payload_sections("commonAnnotations", "annotations"):
             for name in DASHBOARD_ANNOTATIONS:
-                candidate = (annotations or {}).get(name)
+                candidate = annotations.get(name)
                 if valid_link(candidate):
                     return candidate
         return None
+
+    def _payload_sections(self, *names: str) -> list:
+        """The named mappings of the last alert's payload, in the order asked, skipping any that are absent or are
+        not a mapping. A payload is whatever the sender posted, so nothing about its shape is taken on trust."""
+        alert = self.alert_group.alerts.last()
+        payload = getattr(alert, "raw_request_data", None)
+        if not isinstance(payload, dict):
+            return []
+        return [payload[name] for name in names if isinstance(payload.get(name), dict)]
+
+    def _ask_ai_link(self) -> typing.Optional[str]:
+        """A link that opens an AI assistant with a prompt about this alert group, when the deployment set one up.
+
+        `DISCORD_ASK_AI_URL` is the start of the link, and the encoded prompt is appended to it. It can open one
+        assistant directly, or a page of the deployment's own that offers several, desktop apps included. Discord
+        takes only http(s) on a link button, so a desktop app's own scheme always needs such a page in between.
+
+        The whole link has to fit Discord's 512 characters, counted after encoding, where one CJK character or emoji
+        takes nine or twelve. The lead, title, status and start time always go in, with the title trimmed to what
+        that leaves. Labels follow in payload order, each one only if it still fits, so a long label gives way to
+        shorter ones after it rather than taking the button off the card.
+        """
+        prefix = settings.DISCORD_ASK_AI_URL
+        if not prefix:
+            return None
+
+        alert_group = self.alert_group
+        started_at = alert_group.started_at.astimezone(datetime.timezone.utc)
+
+        def required(title: str) -> list:
+            lines = [
+                ASK_AI_LEAD,
+                "",
+                f"Alert: {title}",
+                f"Status: {card_status(alert_group)}",
+                f"Fired: {started_at:%Y-%m-%d %H:%M} UTC (OnCall #{alert_group.inside_organization_number})",
+            ]
+            if reason:
+                lines.append(f"State reason: {reason}")
+            return lines
+
+        def link(prompt_lines: list) -> str:
+            return prefix + quote("\n".join(prompt_lines), safe=ASK_AI_SAFE)
+
+        annotations = self._payload_sections("commonAnnotations", "annotations")
+        # Grafana's own reason for the state, `NoData` above all: an alert that fired because its series went
+        # missing points somewhere else entirely than one that fired on a value.
+        reason = next((a["grafana_state_reason"] for a in annotations if a.get("grafana_state_reason")), None)
+
+        # The longest title that still fits, found by halving: encoding makes its cost per character uneven.
+        title = str_or_backup(self.alert_renderer.templated_alert.title, "Alert")
+        if not valid_link(link(required(title))):
+            low, high = 0, len(title)
+            while low < high:
+                middle = (low + high + 1) // 2
+                if valid_link(link(required(truncate(title, middle)))):
+                    low = middle
+                else:
+                    high = middle - 1
+            if low < min(ASK_AI_TITLE_MINIMUM, len(title)):
+                return None
+            title = truncate(title, low)
+        lines = required(title)
+
+        labels = {}
+        for section in self._payload_sections("groupLabels", "commonLabels", "labels"):
+            for name, value in section.items():
+                if name in ASK_AI_SKIPPED_LABELS or str(name).startswith("__"):
+                    continue
+                labels.setdefault(name, value)
+
+        chosen = []
+        for name, value in labels.items():
+            candidate = chosen + [f"{name}={value}"]
+            if valid_link(link(lines + ["Labels: " + ", ".join(candidate)])):
+                chosen = candidate
+        if chosen:
+            lines.append("Labels: " + ", ".join(chosen))
+        return link(lines)
 
     def _buttons(self) -> list:
         from apps.discord.events import EventAction, custom_id
@@ -378,6 +469,10 @@ class AlertGroupDiscordRenderer(AlertGroupBaseRenderer):
             button(EventAction.RESOLUTION_NOTE, f"Resolution notes [{notes_count}]" if notes_count else "Add note")
         )
         buttons.append({"type": BUTTON, "style": BUTTON_LINK, "label": "OnCall", "url": self.alert_group.web_link})
+
+        ask_ai_link = self._ask_ai_link()
+        if ask_ai_link:
+            buttons.append(link_button("Ask AI", ask_ai_link))
         return buttons
 
 
