@@ -1,6 +1,5 @@
 import { AppEvents } from '@grafana/data';
 import { config } from '@grafana/runtime';
-import { AxiosError } from 'axios';
 import { sentenceCase } from 'change-case';
 // @ts-ignore
 import appEvents from 'grafana/app/core/app_events';
@@ -33,7 +32,7 @@ export function showApiError(error: any) {
   throw error;
 }
 
-export function refreshPageError(error: AxiosError) {
+export function refreshPageError(error: unknown) {
   if (isNetworkError(error) && error.response?.status === 502) {
     const payload = error.response.data;
     const text = `Try to refresh the page. ${payload}`;

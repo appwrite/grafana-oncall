@@ -8,7 +8,7 @@ import { UserActions } from 'helpers/authorization/authorization';
 import { PAGE, PLUGIN_ROOT, StackSize, TEXT_ELLIPSIS_CLASS } from 'helpers/consts';
 import { PropsWithRouter, withRouter } from 'helpers/hoc';
 import { observer } from 'mobx-react';
-import qs from 'query-string';
+import { stringifyQuery } from 'helpers/query';
 import { getUtilStyles } from 'styles/utils.styles';
 
 import { Avatar } from 'components/Avatar/Avatar';
@@ -165,7 +165,7 @@ class _SchedulesPage extends React.Component<SchedulesPageProps, SchedulesPageSt
       query,
     } = this.props;
 
-    navigate(`${PLUGIN_ROOT}/schedules/${data.id}?${qs.stringify(query)}`);
+    navigate(`${PLUGIN_ROOT}/schedules/${data.id}?${stringifyQuery(query)}`);
   };
 
   handleExpandRow = (expanded: boolean, data: Schedule) => {
@@ -211,7 +211,7 @@ class _SchedulesPage extends React.Component<SchedulesPageProps, SchedulesPageSt
       query,
     } = this.props;
 
-    return () => navigate(`${PLUGIN_ROOT}/schedules/${scheduleId}?${qs.stringify(query)}`);
+    return () => navigate(`${PLUGIN_ROOT}/schedules/${scheduleId}?${stringifyQuery(query)}`);
   };
 
   renderType = (value: number) => {

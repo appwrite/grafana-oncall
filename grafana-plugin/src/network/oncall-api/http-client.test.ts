@@ -1,4 +1,4 @@
-import { Request, Response } from 'node-fetch';
+/** @jest-environment ./scripts/jest-fetch-environment.cjs */
 
 import { FaroHelper } from 'helpers/faro';
 

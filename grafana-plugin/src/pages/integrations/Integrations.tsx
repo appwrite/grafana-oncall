@@ -11,7 +11,7 @@ import { PropsWithRouter, withRouter } from 'helpers/hoc';
 import { debounce } from 'lodash-es';
 import { runInAction } from 'mobx';
 import { observer } from 'mobx-react';
-import CopyToClipboard from 'react-copy-to-clipboard';
+import { CopyToClipboard } from 'components/CopyToClipboard/CopyToClipboard';
 import Emoji from 'react-emoji-render';
 import { getUtilStyles } from 'styles/utils.styles';
 

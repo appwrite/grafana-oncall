@@ -2,7 +2,7 @@ import { OnCallAppPluginMeta } from 'app-types';
 import { retryFailingPromises } from 'helpers/async';
 import { loadJs } from 'helpers/loadJs';
 import { action, makeObservable, observable, runInAction } from 'mobx';
-import qs from 'query-string';
+import { parseQuery } from 'helpers/query';
 
 import { AlertReceiveChannelStore } from 'models/alert_receive_channel/alert_receive_channel';
 import { AlertReceiveChannelConnectedChannelsStore } from 'models/alert_receive_channel_connected_channels/alert_receive_channel_connected_channels';
@@ -54,7 +54,7 @@ export class RootBaseStore {
   @observable
   isMobile = false;
 
-  initialQuery = qs.parse(window.location.search);
+  initialQuery = parseQuery(window.location.search);
 
   @observable
   selectedAlertReceiveChannel?: ApiSchemas['AlertReceiveChannel']['id'];

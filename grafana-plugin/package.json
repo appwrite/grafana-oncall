@@ -43,19 +43,6 @@
     "type": "git",
     "url": "git+https://github.com/grafana/oncall.git"
   },
-  "lint-staged": {
-    "*.{js,jsx,ts,tsx}": [
-      "oxlint --fix --no-error-on-unmatched-pattern",
-      "oxfmt --write --no-error-on-unmatched-pattern"
-    ],
-    "*.{css,scss}": [
-      "stylelint --fix",
-      "oxfmt --write --no-error-on-unmatched-pattern"
-    ],
-    "*.{json,jsonc}": [
-      "oxfmt --write --no-error-on-unmatched-pattern"
-    ]
-  },
   "author": "Grafana Labs",
   "license": "Apache-2.0",
   "devDependencies": {
@@ -77,9 +64,7 @@
     "@types/lodash-es": "^4.17.6",
     "@types/node": "^24.19.2",
     "@types/react": "18.3.31",
-    "@types/react-copy-to-clipboard": "^5.0.4",
     "@types/react-dom": "18.3.7",
-    "@types/react-responsive": "^8.0.5",
     "@types/react-test-renderer": "^18.0.5",
     "@types/throttle-debounce": "^5.0.0",
     "dompurify": "^3.4.17",
@@ -89,11 +74,9 @@
     "jest-environment-jsdom": "30.5.2",
     "jest-html-reporters": "^3.1.7",
     "knip": "^6.43.0",
-    "lint-staged": "^16.4.0",
     "lodash-es": "^4.17.21",
     "mailslurp-client": "^17.6.0",
     "moment-timezone": "0.6.6",
-    "node-fetch": "2.7.0",
     "openapi-typescript": "^7.13.0",
     "oxfmt": "0.78.0",
     "oxlint": "1.93.0",
@@ -102,8 +85,6 @@
     "serve": "^14.2.6",
     "stylelint": "17.16.0",
     "stylelint-config-standard": "^40.0.0",
-    "ts-node": "^10.9.1",
-    "tsconfig-paths": "^4.2.0",
     "typescript": "5.9.3"
   },
   "dependencies": {
@@ -121,28 +102,22 @@
     "@grafana/schema": "^11.6.16",
     "@grafana/ui": "^11.6.16",
     "@lifeomic/attempt": "^3.0.3",
-    "axios": "^1.20.0",
     "change-case": "^4.1.1",
     "classnames": "^2.3.2",
     "dayjs": "^1.11.23",
-    "immutability-helper": "^3.1.1",
     "linkify-react": "^4.4.0",
     "linkifyjs": "^4.4.0",
     "mobx": "6.16.1",
     "mobx-react": "9.2.2",
-    "object-hash": "^3.0.0",
     "openapi-fetch": "^0.17.0",
     "qrcode.react": "^3.1.0",
-    "query-string": "^9.5.1",
     "rc-table": "^7.55.1",
     "react": "18.3.1",
-    "react-copy-to-clipboard": "^5.1.1",
     "react-dom": "18.3.1",
     "react-draggable": "^4.7.2",
     "react-emoji-render": "^1.2.4",
     "react-hook-form": "^7.91.0",
     "react-modal": "^3.16.3",
-    "react-responsive": "^8.1.0",
     "react-router-v7": "npm:react-router@7.18.5",
     "react-string-replace": "^0.5.1",
     "react-use": "^17.6.1",

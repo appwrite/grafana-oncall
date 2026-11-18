@@ -34,15 +34,7 @@ module.exports = {
 
   testTimeout: 10000,
   testPathIgnorePatterns: ['/node_modules/', '/e2e-tests/'],
-  transformIgnorePatterns: [
-    nodeModulesToTransform([
-      ...grafanaESModules,
-      'query-string',
-      'decode-uri-component',
-      'filter-obj',
-      'split-on-first',
-    ]),
-  ],
+  transformIgnorePatterns: [nodeModulesToTransform([...grafanaESModules])],
   transform: {
     '^.+\\.(m?[jt]sx?)$': [
       '@swc/jest',

@@ -4,7 +4,7 @@ import { Button, Field, Input, Label, Modal, Stack, useStyles2 } from '@grafana/
 import { openNotification, openErrorNotification } from 'helpers/helpers';
 import { get } from 'lodash-es';
 import { observer } from 'mobx-react';
-import CopyToClipboard from 'react-copy-to-clipboard';
+import { CopyToClipboard } from 'components/CopyToClipboard/CopyToClipboard';
 import { Controller, FormProvider, useForm } from 'react-hook-form';
 
 import { RenderConditionally } from 'components/RenderConditionally/RenderConditionally';

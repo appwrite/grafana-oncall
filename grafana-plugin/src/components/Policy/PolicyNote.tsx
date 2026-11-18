@@ -2,7 +2,7 @@ import React, { FC } from 'react';
 
 import { cx } from '@emotion/css';
 import { Icon, Tooltip, useStyles2 } from '@grafana/ui';
-import MediaQuery from 'react-responsive';
+import { useMediaQuery } from 'helpers/useMediaQuery';
 import { bem } from 'styles/utils.styles';
 
 import { getPolicyStyles } from './Policy.styles';
@@ -30,24 +30,18 @@ export const PolicyNote: FC<PolicyNoteProps> = (props) => {
   const styles = useStyles2(getPolicyStyles);
 
   const icon = getIcon(type, styles);
+  const matches = useMediaQuery({ query: '(max-width: 0px)' });
 
-  return (
-    // TODO fix
-    <MediaQuery maxWidth={0}>
-      {(matches: boolean) =>
-        matches ? (
-          <>
-            {icon}
-            {children}
-          </>
-        ) : (
-          <>
-            <Tooltip placement="top" content={children as string}>
-              {icon}
-            </Tooltip>
-          </>
-        )
-      }
-    </MediaQuery>
+  return matches ? (
+    <>
+      {icon}
+      {children}
+    </>
+  ) : (
+    <>
+      <Tooltip placement="top" content={children as string}>
+        {icon}
+      </Tooltip>
+    </>
   );
 };

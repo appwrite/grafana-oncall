@@ -2,7 +2,7 @@ import React, { FC } from 'react';
 
 import { IconButton } from '@grafana/ui';
 import { openNotification } from 'helpers/helpers';
-import CopyToClipboard from 'react-copy-to-clipboard';
+import { CopyToClipboard } from 'components/CopyToClipboard/CopyToClipboard';
 
 interface CopyToClipboardProps {
   text: string;

@@ -6,7 +6,7 @@ import { UserActions } from 'helpers/authorization/authorization';
 import { StackSize } from 'helpers/consts';
 import { openNotification } from 'helpers/helpers';
 import { observer } from 'mobx-react';
-import CopyToClipboard from 'react-copy-to-clipboard';
+import { CopyToClipboard } from 'components/CopyToClipboard/CopyToClipboard';
 
 import { Block } from 'components/GBlock/Block';
 import { Text } from 'components/Text/Text';
