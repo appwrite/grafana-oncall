@@ -1,5 +1,5 @@
 import pytest
-from django.core.cache import cache
+from django.core.cache import caches
 
 from apps.metrics_exporter.constants import (
     ALERT_GROUPS_RESPONSE_TIME,
@@ -109,8 +109,8 @@ def mock_cache_get_metrics_for_collector(monkeypatch):
     def _mock_cache_get_many(keys, *args, **kwargs):
         return {key: _mock_cache_get(key) for key in keys if _mock_cache_get(key)}
 
-    monkeypatch.setattr(cache, "get", _mock_cache_get)
-    monkeypatch.setattr(cache, "get_many", _mock_cache_get_many)
+    monkeypatch.setattr(caches["default"], "get", _mock_cache_get)
+    monkeypatch.setattr(caches["default"], "get_many", _mock_cache_get_many)
 
 
 @pytest.fixture()
@@ -163,8 +163,8 @@ def mock_cache_get_old_metrics_for_collector(monkeypatch):
     def _mock_cache_get_many(keys, *args, **kwargs):
         return {key: _mock_cache_get(key) for key in keys if _mock_cache_get(key)}
 
-    monkeypatch.setattr(cache, "get", _mock_cache_get)
-    monkeypatch.setattr(cache, "get_many", _mock_cache_get_many)
+    monkeypatch.setattr(caches["default"], "get", _mock_cache_get)
+    monkeypatch.setattr(caches["default"], "get_many", _mock_cache_get_many)
 
 
 @pytest.fixture()
@@ -175,8 +175,8 @@ def mock_get_metrics_cache(monkeypatch):
     def _mock_cache_get_many(keys, *args, **kwargs):
         return {}
 
-    monkeypatch.setattr(cache, "get", _mock_cache_get)
-    monkeypatch.setattr(cache, "get_many", _mock_cache_get_many)
+    monkeypatch.setattr(caches["default"], "get", _mock_cache_get)
+    monkeypatch.setattr(caches["default"], "get_many", _mock_cache_get_many)
 
 
 @pytest.fixture

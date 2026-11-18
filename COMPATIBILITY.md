@@ -24,13 +24,13 @@ The pull request and scheduled compatibility workflows test these versions:
 | Component | Tested versions | Policy |
 | --- | --- | --- |
 | Grafana | 12.4.8 and 13.2.0 | The latest tested release in each listed Grafana minor line |
-| Python | 3.14.8 | The engine build and backend test runtime |
-| Node.js | 24.22.1 | The plugin build and test runtime |
-| MySQL | 8.4.11 | Backend migrations and tests, with RabbitMQ |
-| PostgreSQL | 18.6 | Backend migrations and tests, with RabbitMQ |
+| Python | 3.15.2 | The engine build and backend test runtime |
+| Node.js | 24.22.3 | The plugin build and test runtime |
+| MySQL | 8.4.13 | Backend migrations and tests, with RabbitMQ |
+| PostgreSQL | 18.7 | Backend migrations and tests, with RabbitMQ |
 | SQLite | Python runtime version | Backend migrations and tests, with Redis |
-| Redis | 8.2.9 | Broker tests and development deployment |
-| RabbitMQ | 4.3.5 | Broker tests with MySQL and PostgreSQL |
+| Redis | 8.10.3 | Broker tests and development deployment |
+| RabbitMQ | 4.4.1 | Broker tests with MySQL and PostgreSQL |
 | Container architecture | linux/amd64 and linux/arm64 | Published engine images and plugin backend binaries |
 
 A version is supported only after it passes the repository test suite. A newer patch or minor version is not assumed to

@@ -1,4 +1,4 @@
-FROM python:3.14.8-alpine3.23@sha256:e7cff362a12454395f8dc99607c21a602ea880cdce03538877b90c2ba932b16f AS base
+FROM python:3.15.2-alpine3.23@sha256:32f06114a111c2467804d06194c5584f16804a78cfaf427fb1fcbb0b3391d0f1 AS base
 ARG TARGETPLATFORM
 
 # Create a group and user to run an app
@@ -22,9 +22,6 @@ WORKDIR /etc/app
 COPY ./requirements.txt ./
 
 RUN pip install -U uv setuptools pip
-
-# make sure we are using the correct Python version
-RUN uv python pin 3.14.8
 
 # TODO: figure out how to get this to work.. see comment in .github/workflows/e2e-tests.yml
 # https://stackoverflow.com/a/71846527
@@ -74,7 +71,7 @@ FROM base AS prod
 
 # Remove build installers and their bundled dependencies from the runtime.
 RUN pip uninstall -y pip setuptools && \
-    rm -rf /root/.cache /usr/local/lib/python3.14/ensurepip
+    rm -rf /root/.cache /usr/local/lib/python3.15/ensurepip
 
 # Change to a non-root user (number is required by Kubernetes runAsNonRoot check)
 USER 1000
