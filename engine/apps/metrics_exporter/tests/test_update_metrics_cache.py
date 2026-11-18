@@ -1,7 +1,7 @@
 from unittest.mock import patch
 
 import pytest
-from django.core.cache import cache
+from django.core.cache import cache, caches
 from django.test import override_settings
 
 from apps.alerts.signals import alert_group_created_signal
@@ -115,7 +115,7 @@ def test_update_metric_alert_groups_total_cache_on_action(
     }
 
     metrics_cache = make_metrics_cache_params(alert_receive_channel.id, organization.id)
-    monkeypatch.setattr(cache, "get", metrics_cache)
+    monkeypatch.setattr(caches["default"], "get", metrics_cache)
 
     def get_called_arg_index_and_compare_results(update_expected_result, service_name=NO_SERVICE_VALUE):
         """find index for the metric argument, that was set in cache"""
@@ -218,7 +218,7 @@ def test_update_metric_alert_groups_response_time_cache_on_action(
     }
 
     metrics_cache = make_metrics_cache_params(alert_receive_channel.id, organization.id)
-    monkeypatch.setattr(cache, "get", metrics_cache)
+    monkeypatch.setattr(caches["default"], "get", metrics_cache)
 
     def get_called_arg_index_and_compare_results(service_name=NO_SERVICE_VALUE):
         """find index for related to the metric argument, that was set in cache"""
@@ -372,7 +372,7 @@ def test_update_metrics_cache_on_update_integration(
         arg_idx = get_called_arg_index_and_compare_results()
 
         metrics_cache = make_metrics_cache_params(alert_receive_channel.id, organization.id)
-        monkeypatch.setattr(cache, "get", metrics_cache)
+        monkeypatch.setattr(caches["default"], "get", metrics_cache)
 
         # check cache update on update integration's team
         alert_receive_channel.team = team
@@ -448,7 +448,7 @@ def test_update_metrics_cache_on_update_team(
         organization, verbal_name=METRICS_TEST_INTEGRATION_NAME, team=team
     )
     metrics_cache = make_metrics_cache_params(alert_receive_channel.id, organization.id, team.name, team.id)
-    monkeypatch.setattr(cache, "get", metrics_cache)
+    monkeypatch.setattr(caches["default"], "get", metrics_cache)
 
     metric_alert_groups_total_key = get_metric_alert_groups_total_key(organization.id)
     metric_alert_groups_response_time_key = get_metric_alert_groups_response_time_key(organization.id)
@@ -566,7 +566,7 @@ def test_update_metrics_cache_on_user_notification(
     )
 
     metrics_cache = make_user_was_notified_metrics_cache_params(user.id, organization.id)
-    monkeypatch.setattr(cache, "get", metrics_cache)
+    monkeypatch.setattr(caches["default"], "get", metrics_cache)
 
     metric_user_was_notified_key = get_metric_user_was_notified_of_alert_groups_key(organization.id)
 
@@ -646,7 +646,7 @@ def test_update_metric_if_needed(
             )
 
     metrics_cache = make_user_was_notified_metrics_cache_params(user.id, organization.id)
-    monkeypatch.setattr(cache, "get", metrics_cache)
+    monkeypatch.setattr(caches["default"], "get", metrics_cache)
 
     metric_user_was_notified_key = get_metric_user_was_notified_of_alert_groups_key(organization.id)
 

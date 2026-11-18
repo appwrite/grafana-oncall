@@ -23,9 +23,6 @@ COPY ./requirements.txt ./
 
 RUN pip install -U uv setuptools pip
 
-# make sure we are using the correct Python version
-RUN uv python pin 3.14.8
-
 # TODO: figure out how to get this to work.. see comment in .github/workflows/e2e-tests.yml
 # https://stackoverflow.com/a/71846527
 # RUN --mount=type=cache,target=/root/.cache/pip,from=pip_cache pip install -r requirements.txt
@@ -74,7 +71,7 @@ FROM base AS prod
 
 # Remove build installers and their bundled dependencies from the runtime.
 RUN pip uninstall -y pip setuptools && \
-    rm -rf /root/.cache /usr/local/lib/python3.14/ensurepip
+    rm -rf /root/.cache /usr/local/lib/python3.15/ensurepip
 
 # Change to a non-root user (number is required by Kubernetes runAsNonRoot check)
 USER 1000

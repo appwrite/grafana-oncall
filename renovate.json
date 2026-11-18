@@ -1,4 +1,21 @@
 {
   "$schema": "https://docs.renovatebot.com/renovate-schema.json",
-  "forkProcessing": "enabled"
+  "forkProcessing": "enabled",
+  "packageRules": [
+    {
+      "description": "Anymail 15.2 requires cryptography <49 through its SES encryption client.",
+      "matchPackageNames": ["django-anymail"],
+      "allowedVersions": "<=15.1"
+    },
+    {
+      "description": "Later Twilio 6.x pins PyJWT 1.7.1, incompatible with our authentication dependencies.",
+      "matchPackageNames": ["twilio"],
+      "allowedVersions": "<6.51"
+    },
+    {
+      "description": "Keep the tested OpenTelemetry 2.x override until the SDK dependencies migrate together.",
+      "matchPackageNames": ["@opentelemetry/core@<2.8.0"],
+      "allowedVersions": "<3"
+    }
+  ]
 }

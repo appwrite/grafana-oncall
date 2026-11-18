@@ -44,7 +44,7 @@ module.exports = {
     ]),
   ],
   transform: {
-    '^.+\\.(t|j)sx?$': [
+    '^.+\\.(m?[jt]sx?)$': [
       '@swc/jest',
       {
         sourceMaps: 'inline',
