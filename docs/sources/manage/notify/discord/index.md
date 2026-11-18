@@ -171,6 +171,24 @@ mentions that account. To link one:
 Until an account is linked, a button press gets an ephemeral reply saying so, and a Discord notification step is
 recorded as failed with "has not linked a Discord account".
 
+## Ask Claude about an alert
+
+Set `DISCORD_ASK_CLAUDE_URL` on the engine and the celery workers to give every card an **Ask Claude** button. The
+button opens a prompt about the alert group: what to do, the title, the status, when it fired, Grafana's state reason
+when there is one, and the alert's labels. The card appends the URL-encoded prompt to the value, so the value ends
+where the prompt goes:
+
+| Value | The button opens |
+| --- | --- |
+| `https://claude.ai/new?q=` | claude.ai, with the prompt in the message box |
+| `https://<your-host>/ask-claude.html#q=` | a page of your own, which can offer Claude Desktop (`claude://claude.ai/new?q=`) as well |
+
+Discord accepts only `http` and `https` links on a button, so Claude Desktop needs a page in between. A fragment
+(`#q=`) keeps the prompt out of that page's access logs.
+
+A button holds 512 characters, so the prompt identifies the alert and leaves the rest for Claude to look up. Labels
+that do not fit are left out. Unset, the card has no **Ask Claude** button.
+
 ## What the card cannot do
 
 A Discord menu holds 25 options and, unlike Slack's, cannot group them. **Page a responder** therefore lists the
