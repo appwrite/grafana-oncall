@@ -1,6 +1,7 @@
 import datetime
 
 import pytest
+from django.db import connection
 from django.utils import timezone
 
 from apps.api import permissions
@@ -230,10 +231,11 @@ def test_google_oauth2_token_is_missing_scopes(make_organization_and_user):
 
 
 @pytest.mark.django_db
-def test_save_google_oauth2_settings(make_organization_and_user):
+@pytest.mark.parametrize("access_length,refresh_length", [(6, 7), (253, 103), (2048, 512)])
+def test_save_google_oauth2_settings(make_organization_and_user, access_length, refresh_length):
     oauth_response = {
-        "access_token": "access",
-        "refresh_token": "refresh",
+        "access_token": "a" * access_length,
+        "refresh_token": "r" * refresh_length,
         "sub": "google_user_id",
         "scope": "scope",
     }
@@ -248,14 +250,14 @@ def test_save_google_oauth2_settings(make_organization_and_user):
 
     google_oauth_user = user.google_oauth2_user
     assert google_oauth_user.google_user_id == "google_user_id"
-    assert google_oauth_user.access_token == "access"
-    assert google_oauth_user.refresh_token == "refresh"
+    assert google_oauth_user.access_token == oauth_response["access_token"]
+    assert google_oauth_user.refresh_token == oauth_response["refresh_token"]
     assert google_oauth_user.oauth_scope == "scope"
     assert user.google_calendar_settings["oncall_schedules_to_consider_for_shift_swaps"] == []
 
     oauth_response2 = {
-        "access_token": "access2",
-        "refresh_token": "refresh2",
+        "access_token": "b" * access_length,
+        "refresh_token": "s" * refresh_length,
         "sub": "google_user_id2",
         "scope": "scope2",
     }
@@ -265,9 +267,17 @@ def test_save_google_oauth2_settings(make_organization_and_user):
 
     google_oauth_user = user.google_oauth2_user
     assert google_oauth_user.google_user_id == "google_user_id2"
-    assert google_oauth_user.access_token == "access2"
-    assert google_oauth_user.refresh_token == "refresh2"
+    assert google_oauth_user.access_token == oauth_response2["access_token"]
+    assert google_oauth_user.refresh_token == oauth_response2["refresh_token"]
     assert google_oauth_user.oauth_scope == "scope2"
+
+    with connection.cursor() as cursor:
+        cursor.execute(
+            "SELECT access_token, refresh_token FROM google_googleoauth2user WHERE id = %s", [google_oauth_user.pk]
+        )
+        encrypted_tokens = cursor.fetchone()
+    assert encrypted_tokens[0] != oauth_response2["access_token"]
+    assert encrypted_tokens[1] != oauth_response2["refresh_token"]
 
 
 @pytest.mark.django_db
