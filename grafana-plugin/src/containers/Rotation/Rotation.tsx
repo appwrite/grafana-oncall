@@ -167,6 +167,8 @@ export const Rotation: FC<RotationProps> = observer((props) => {
                       event.start,
                       event.end,
                       event.shiftSwapId,
+                      event.users.map(({ pk }) => pk),
+                      event.missing_users,
                     ])}
                     event={event}
                     color={propsColor || getColor(event)}
