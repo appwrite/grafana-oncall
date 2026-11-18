@@ -747,10 +747,11 @@ FEATURE_DISCORD_INTEGRATION_ENABLED = getenv_boolean("FEATURE_DISCORD_INTEGRATIO
 DISCORD_BOT_TOKEN = os.environ.get("DISCORD_BOT_TOKEN")
 # The application's Ed25519 public key, used to verify interactions Discord posts to the interactions endpoint.
 DISCORD_PUBLIC_KEY = os.environ.get("DISCORD_PUBLIC_KEY")
-# Where an alert card's "Ask Claude" button points. The card appends a URL-encoded prompt about the alert group to
-# this value, so it ends where the prompt goes: `https://claude.ai/new?q=` opens claude.ai directly, and a page of
-# your own (`https://example.com/ask-claude.html#q=`) can offer Claude Desktop too. Unset, the card has no such button.
-DISCORD_ASK_CLAUDE_URL = os.environ.get("DISCORD_ASK_CLAUDE_URL")
+# Where an alert card's "Ask AI" button points. The card appends a URL-encoded prompt about the alert group to this
+# value, so it ends where the prompt goes: `https://claude.ai/new?q=` or `https://chatgpt.com/?q=` opens one assistant
+# directly, and a page of your own (`https://example.com/ask-ai.html#q=`) can offer several, desktop apps included.
+# Unset, the card has no such button.
+DISCORD_ASK_AI_URL = os.environ.get("DISCORD_ASK_AI_URL")
 
 if FEATURE_DISCORD_INTEGRATION_ENABLED:
     INSTALLED_APPS += ["apps.discord"]
