@@ -358,8 +358,8 @@ jobs:
     strategy:
       matrix:
         grafana_version:
-          - 12.4.8
-          - 13.2.0
+          - 12.4.15
+          - 13.3.1
       fail-fast: false
     with:
       grafana_version: ${{ matrix.grafana_version }}

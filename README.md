@@ -16,10 +16,10 @@ New features:
 
 Kept working:
 
-- Runs on Grafana 13.2 and React 19. Upstream's plugin crashes on mount there.
+- Runs on Grafana 13.3 and React 19. Upstream's plugin crashes on mount there.
 - Runs on Django 5.2 LTS. Upstream is on 4.2, whose extended support has ended.
 - The Insights page renders again. Its alert group variable produced invalid PromQL on Grafana 13.
-- Dependencies are patched, and end-to-end tests run against Grafana 12.4 and 13.2.
+- Dependencies are patched, and end-to-end tests run against Grafana 12.4 and 13.3.
 - The tested runtimes and release lifecycle are defined in the
   [compatibility policy](COMPATIBILITY.md).
 
