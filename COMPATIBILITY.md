@@ -23,7 +23,7 @@ The pull request and scheduled compatibility workflows test these versions:
 
 | Component | Tested versions | Policy |
 | --- | --- | --- |
-| Grafana | 12.4.8 and 13.2.0 | The latest tested release in each listed Grafana minor line |
+| Grafana | 12.4.8 and 13.3.1 | The latest tested release in each listed Grafana minor line |
 | Python | 3.15.2 | The engine build and backend test runtime |
 | Node.js | 24.22.3 | The plugin build and test runtime |
 | MySQL | 8.4.13 | Backend migrations and tests, with RabbitMQ |
