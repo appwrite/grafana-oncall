@@ -1,3 +1,5 @@
+import { vi } from 'vitest';
+
 import React from 'react';
 
 import { render, screen } from '@testing-library/react';
@@ -14,7 +16,7 @@ describe('UserResponder', () => {
   } as ApiSchemas['UserIsCurrentlyOnCall'];
 
   test('it calls the delete callback', async () => {
-    const handleDelete = jest.fn();
+    const handleDelete = vi.fn();
 
     render(<UserResponder important data={user} onImportantChange={() => {}} handleDelete={handleDelete} />);
 

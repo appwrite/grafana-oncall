@@ -1,14 +1,16 @@
+import { vi } from 'vitest';
+
 import { makeRequest as makeRequestOriginal } from 'network/network';
 import { RootStore } from 'state/rootStore';
 
 import { DirectPagingStore } from './direct_paging';
 
-const makeRequest = makeRequestOriginal as jest.Mock<ReturnType<typeof makeRequestOriginal>>;
+const makeRequest = vi.mocked(makeRequestOriginal);
 
-jest.mock('network/network');
+vi.mock('network/network');
 
 afterEach(() => {
-  jest.resetAllMocks();
+  vi.resetAllMocks();
 });
 
 describe('DirectPagingStore', () => {

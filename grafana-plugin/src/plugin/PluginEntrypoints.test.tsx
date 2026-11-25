@@ -1,3 +1,5 @@
+import { vi } from 'vitest';
+
 import React from 'react';
 
 import { locationService } from '@grafana/runtime';
@@ -7,18 +9,18 @@ import { PLUGIN_CONFIG, PLUGIN_ROOT } from 'helpers/consts';
 import { DemoNotification } from 'components/IntegrationSendDemoAlertModal/IntegrationSendDemoAlertModal';
 import { MobileAppConnectionWrapper } from 'containers/MobileAppConnection/MobileAppConnection';
 
-jest.mock('@grafana/runtime', () => {
-  const { HistoryWrapper } = jest.requireActual('@grafana/runtime');
+vi.mock('@grafana/runtime', async (importOriginal) => {
+  const { HistoryWrapper } = await importOriginal<typeof import('@grafana/runtime')>();
   return { locationService: new HistoryWrapper() };
 });
 
-jest.mock('helpers/hooks', () => ({
-  ...jest.requireActual('helpers/hooks'),
+vi.mock('helpers/hooks', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('helpers/hooks')>()),
   useInitializePlugin: () => ({ isConnected: false, isCheckingConnectionStatus: false }),
 }));
 
-jest.mock('state/rootStore', () => ({ rootStore: { userStore: {} } }));
-jest.mock('components/MonacoEditor/MonacoEditor', () => ({ MonacoEditor: () => null }));
+vi.mock('state/rootStore', () => ({ rootStore: { userStore: {} } }));
+vi.mock('components/MonacoEditor/MonacoEditor', () => ({ MonacoEditor: () => null }));
 
 test('the disconnected profile extension renders and navigates without the plugin root', () => {
   window.grafanaBootData = { user: { orgRole: 'Admin' } } as typeof window.grafanaBootData;

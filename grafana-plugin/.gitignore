@@ -18,9 +18,8 @@ grafana-plugin.yml
 /playwright/.cache/
 /e2e-tests/storageState.json
 
-# Jest test report
-jest_html_reporters.html
-jest-html-reporters*
+# Vitest reports
+vitest-report-*.json
 
 .turbo
 tsconfig.tsbuildinfo

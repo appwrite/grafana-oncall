@@ -1,4 +1,5 @@
-import 'jest/matchMedia';
+import { vi, type Mock } from 'vitest';
+
 import React from 'react';
 
 import { fireEvent, render, screen } from '@testing-library/react';
@@ -6,7 +7,7 @@ import { fireEvent, render, screen } from '@testing-library/react';
 import { CardButton } from 'components/CardButton/CardButton';
 
 describe('CardButton', () => {
-  function getProps(onClickMock: jest.Mock = jest.fn()) {
+  function getProps(onClickMock: Mock = vi.fn()) {
     return {
       icon: <></>,
       description: 'Description',
@@ -17,7 +18,7 @@ describe('CardButton', () => {
   }
 
   test.skip('It updates class and calls onClick prop on click', () => {
-    const onClickMock = jest.fn();
+    const onClickMock = vi.fn();
     render(<CardButton {...getProps(onClickMock)} />);
 
     const rootEl = getRootBlockEl();

@@ -1,3 +1,5 @@
+import { vi } from 'vitest';
+
 import React from 'react';
 
 import { render, screen } from '@testing-library/react';
@@ -7,7 +9,7 @@ import { DisconnectButton } from './DisconnectButton';
 
 describe('DisconnectButton', () => {
   test('It calls the onClick handler when clicked', async () => {
-    const mockedOnClick = jest.fn();
+    const mockedOnClick = vi.fn();
 
     render(<DisconnectButton onClick={mockedOnClick} />);
 

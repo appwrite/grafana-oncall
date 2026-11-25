@@ -1,8 +1,10 @@
+import { vi } from 'vitest';
+
 import * as runtime from '@grafana/runtime';
 import { getGrafanaVersion } from 'helpers/helpers';
 
-jest.mock('@grafana/runtime', () => ({
-  config: jest.fn(),
+vi.mock('@grafana/runtime', () => ({
+  config: vi.fn(),
 }));
 
 describe('GrafanaPluginRootPage.helpers', () => {

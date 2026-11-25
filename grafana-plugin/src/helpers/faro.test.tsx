@@ -1,36 +1,37 @@
-import 'jest/matchMedia';
-import { describe, test } from '@jest/globals';
+import { vi } from 'vitest';
+
 import { FaroHelper } from 'helpers/faro';
 
-import '@testing-library/jest-dom';
 import { ONCALL_DEV, ONCALL_OPS, ONCALL_PROD } from './consts';
 
-const ErrorMock = jest.spyOn(window, 'Error');
+const ErrorMock = vi.spyOn(window, 'Error');
 
-jest.mock('@grafana/faro-web-sdk', () => ({
-  initializeFaro: jest.fn().mockReturnValue({
-    api: {
-      pushLog: jest.fn(),
-    },
-  }),
-  LogLevel: jest.requireActual('@grafana/faro-web-sdk').LogLevel,
-  InternalLoggerLevel: jest.requireActual('@grafana/faro-web-sdk').InternalLoggerLevel,
-  getWebInstrumentations: () => [],
+vi.mock('@grafana/faro-web-sdk', async (importOriginal) => {
+  const { LogLevel, InternalLoggerLevel } = await importOriginal<typeof import('@grafana/faro-web-sdk')>();
+  return {
+    initializeFaro: vi.fn().mockReturnValue({
+      api: {
+        pushLog: vi.fn(),
+      },
+    }),
+    LogLevel,
+    InternalLoggerLevel,
+    getWebInstrumentations: () => [],
+  };
+});
+
+vi.mock('@grafana/faro-web-tracing', () => ({
+  TracingInstrumentation: vi.fn(),
 }));
 
-jest.mock('@grafana/faro-web-tracing', () => ({
-  TracingInstrumentation: jest.fn(),
-}));
-
-jest.mock('./consts', () => ({
-  __esModule: true,
-  ...jest.requireActual('./consts'),
+vi.mock('./consts', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('./consts')>()),
   IS_CURRENT_ENV_CLOUD: true,
 }));
 
 describe('Faro', () => {
   beforeEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
 
     FaroHelper.faro = undefined;
   });

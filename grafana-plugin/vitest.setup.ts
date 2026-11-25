@@ -1,15 +1,10 @@
-/**
- * globally import this, avoids needing to import it in each file
- * https://stackoverflow.com/a/65871118
- */
-import '@testing-library/jest-dom';
+import '@testing-library/jest-dom/vitest';
+
+import { vi } from 'vitest';
 
 import 'plugin/dayjs';
 
-import { TextEncoder, TextDecoder } from 'util';
-
-jest.mock('@grafana/runtime', () => ({
-  __esModule: true,
+vi.mock('@grafana/runtime', () => ({
   config: {
     featureToggles: {},
     bootData: {
@@ -18,28 +13,24 @@ jest.mock('@grafana/runtime', () => ({
       },
     },
   },
-  getBackendSrv: jest.fn().mockImplementation(() => ({
-    get: jest.fn(),
-    post: jest.fn(),
+  getBackendSrv: vi.fn().mockImplementation(() => ({
+    get: vi.fn(),
+    post: vi.fn(),
   })),
-  getLocationSrv: jest.fn(),
+  getLocationSrv: vi.fn(),
 }));
 
-Object.assign(global, { TextDecoder, TextEncoder });
-
-// https://stackoverflow.com/a/66055672
-// https://jestjs.io/docs/manual-mocks#mocking-methods-which-are-not-implemented-in-jsdom
 Object.defineProperty(window, 'matchMedia', {
   writable: true,
-  value: jest.fn().mockImplementation((query) => ({
+  value: vi.fn().mockImplementation((query) => ({
     matches: false,
     media: query,
     onchange: null,
-    addListener: jest.fn(), // Deprecated
-    removeListener: jest.fn(), // Deprecated
-    addEventListener: jest.fn(),
-    removeEventListener: jest.fn(),
-    dispatchEvent: jest.fn(),
+    addListener: vi.fn(), // Deprecated
+    removeListener: vi.fn(), // Deprecated
+    addEventListener: vi.fn(),
+    removeEventListener: vi.fn(),
+    dispatchEvent: vi.fn(),
   })),
 });
 

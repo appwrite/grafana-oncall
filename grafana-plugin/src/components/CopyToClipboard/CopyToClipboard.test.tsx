@@ -1,26 +1,28 @@
+import { vi } from 'vitest';
+
 import React from 'react';
 import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { openErrorNotification } from 'helpers/helpers';
 import { CopyToClipboard, copyText } from './CopyToClipboard';
 
-jest.mock('helpers/helpers', () => ({ openErrorNotification: jest.fn() }));
+vi.mock('helpers/helpers', () => ({ openErrorNotification: vi.fn() }));
 const setClipboard = (value: unknown) => Object.defineProperty(navigator, 'clipboard', { configurable: true, value });
 afterEach(() => {
   setClipboard(undefined);
-  jest.clearAllMocks();
+  vi.clearAllMocks();
 });
 
 it('reports success only after the clipboard write and preserves the child click handler', async () => {
   let resolve: () => void;
-  const writeText = jest.fn(
+  const writeText = vi.fn(
     () =>
       new Promise<void>((done) => {
         resolve = done;
       })
   );
   setClipboard({ writeText });
-  const onCopy = jest.fn();
-  const onClick = jest.fn();
+  const onCopy = vi.fn();
+  const onClick = vi.fn();
   render(
     <CopyToClipboard text="token" onCopy={onCopy}>
       <button onClick={onClick}>Copy</button>
@@ -35,9 +37,9 @@ it('reports success only after the clipboard write and preserves the child click
 });
 
 it('reports permission errors without a false success notification', async () => {
-  setClipboard({ writeText: jest.fn().mockRejectedValue(new Error('Denied')) });
-  document.execCommand = jest.fn(() => false);
-  const onCopy = jest.fn();
+  setClipboard({ writeText: vi.fn().mockRejectedValue(new Error('Denied')) });
+  document.execCommand = vi.fn(() => false);
+  const onCopy = vi.fn();
   render(
     <CopyToClipboard text="token" onCopy={onCopy}>
       <button>Copy</button>
@@ -57,7 +59,7 @@ it('copies inside a modal on HTTP and restores focus without leaving the secret 
   );
   const button = screen.getByText('Original');
   button.focus();
-  document.execCommand = jest.fn(() => {
+  document.execCommand = vi.fn(() => {
     expect(screen.getByRole('dialog').contains(document.querySelector('textarea'))).toBe(true);
     return true;
   });
@@ -65,14 +67,14 @@ it('copies inside a modal on HTTP and restores focus without leaving the secret 
   expect(document.execCommand).toHaveBeenCalledWith('copy');
   expect(document.activeElement).toBe(button);
   expect(document.querySelector('textarea')).toBeNull();
-  document.execCommand = jest.fn(() => false);
+  document.execCommand = vi.fn(() => false);
   await expect(copyText('secret')).rejects.toThrow();
   expect(document.querySelector('textarea')).toBeNull();
 });
 
 it('uses the browser fallback when the Clipboard API is exposed but rejects writes', async () => {
-  setClipboard({ writeText: jest.fn().mockRejectedValue(new Error('Document is not focused')) });
-  document.execCommand = jest.fn(() => true);
+  setClipboard({ writeText: vi.fn().mockRejectedValue(new Error('Document is not focused')) });
+  document.execCommand = vi.fn(() => true);
   await expect(copyText('secret')).resolves.toBeUndefined();
   expect(document.execCommand).toHaveBeenCalledWith('copy');
   expect(document.querySelector('textarea')).toBeNull();

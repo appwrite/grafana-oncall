@@ -1,19 +1,20 @@
-/** @jest-environment ./scripts/jest-fetch-environment.cjs */
+import { vi } from 'vitest';
+
 import { FaroHelper } from 'helpers/faro';
 import { isNetworkError, makeRequest, makeRequestRaw } from './network';
 
-jest.mock('helpers/consts', () => ({ getOnCallApiPath: (path: string) => `/api/oncall${path}` }));
-jest.mock('helpers/faro', () => ({
+vi.mock('helpers/consts', () => ({ getOnCallApiPath: (path: string) => `/api/oncall${path}` }));
+vi.mock('helpers/faro', () => ({
   FaroHelper: {
-    pushNetworkRequestEvent: jest.fn(),
-    pushFetchNetworkResponseEvent: jest.fn(),
-    pushFetchNetworkError: jest.fn(),
-    pushNetworkTransportError: jest.fn(),
+    pushNetworkRequestEvent: vi.fn(),
+    pushFetchNetworkResponseEvent: vi.fn(),
+    pushFetchNetworkError: vi.fn(),
+    pushNetworkTransportError: vi.fn(),
   },
 }));
-const fetchMock = jest.fn();
+const fetchMock = vi.fn();
 beforeEach(() => {
-  jest.clearAllMocks();
+  vi.clearAllMocks();
   global.fetch = fetchMock;
 });
 

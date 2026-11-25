@@ -1,3 +1,5 @@
+import { vi } from 'vitest';
+
 import { OrgRole } from '@grafana/data';
 import { config } from '@grafana/runtime';
 import { contextSrv } from 'grafana/app/core/core';
@@ -5,7 +7,7 @@ import { getPluginId } from 'helpers/consts';
 
 import * as auth from './authorization';
 
-jest.mock('grafana/app/core/core', () => ({
+vi.mock('grafana/app/core/core', () => ({
   contextSrv: {
     user: {
       orgRole: null,
@@ -14,7 +16,7 @@ jest.mock('grafana/app/core/core', () => ({
   },
 }));
 
-jest.mock('@grafana/runtime', () => ({
+vi.mock('@grafana/runtime', () => ({
   config: {
     featureToggles: {
       accessControlOnCall: true,

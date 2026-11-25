@@ -1,3 +1,5 @@
+import { vi } from 'vitest';
+
 import React from 'react';
 
 import { locationService } from '@grafana/runtime';
@@ -6,8 +8,8 @@ import { Link, Route, Routes, useLocation, useNavigate, useParams } from 'react-
 
 import { PluginRouter } from './PluginRouter';
 
-jest.mock('@grafana/runtime', () => {
-  const { HistoryWrapper } = jest.requireActual('@grafana/runtime');
+vi.mock('@grafana/runtime', async (importOriginal) => {
+  const { HistoryWrapper } = await importOriginal<typeof import('@grafana/runtime')>();
   return { locationService: new HistoryWrapper() };
 });
 

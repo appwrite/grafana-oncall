@@ -1,12 +1,12 @@
 {
   "extends": "./.config/tsconfig.json",
-  "include": ["src", "e2e-tests", "playwright.config.ts", "rsbuild.config.ts"],
-  "types": ["node", "@emotion/core"],
+  "include": ["src", "e2e-tests", "playwright.config.ts", "rsbuild.config.ts", "vitest.config.mts", "vitest.setup.ts"],
   "compilerOptions": {
+    "types": ["node", "vitest/globals"],
     "composite": true,
     "declaration": true,
     "rootDir": "",
-    "typeRoots": ["./node_modules/@types"],
+    "typeRoots": ["./node_modules/@types", "./node_modules"],
     "noUnusedLocals": false,
     "noUnusedParameters": false,
     "strict": false,

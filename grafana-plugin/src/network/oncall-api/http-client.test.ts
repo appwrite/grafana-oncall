@@ -1,32 +1,26 @@
-/** @jest-environment ./scripts/jest-fetch-environment.cjs */
+import { vi } from 'vitest';
 
 import { FaroHelper } from 'helpers/faro';
+import createClient from 'openapi-fetch';
 
 import { getCustomFetchFn } from './http-client';
 
-jest.mock('helpers/faro', () => ({
-  __esModule: true,
-
+vi.mock('helpers/faro', () => ({
   FaroHelper: {
-    initializeFaro: jest.fn(),
+    initializeFaro: vi.fn(),
     faro: {
       api: {
-        pushEvent: jest.fn(),
-        pushError: jest.fn(),
+        pushEvent: vi.fn(),
+        pushError: vi.fn(),
       },
     },
-    pushFetchNetworkError: jest.fn(),
-    pushNetworkRequestEvent: jest.fn(),
-    pushFetchNetworkResponseEvent: jest.fn(),
+    pushFetchNetworkError: vi.fn(),
+    pushNetworkRequestEvent: vi.fn(),
+    pushFetchNetworkResponseEvent: vi.fn(),
   },
 }));
 
-jest.mock('openapi-fetch', () => ({
-  __esModule: true,
-  default: () => {},
-}));
-
-const fetchMock = jest.fn().mockResolvedValue(true);
+const fetchMock = vi.fn().mockResolvedValue(true);
 
 const HEADERS = new Headers();
 HEADERS.set('Content-Type', 'application/json');
@@ -56,11 +50,17 @@ describe('customFetch', () => {
       value: fetchMock,
     });
   });
-  afterEach(jest.resetAllMocks);
+  afterEach(vi.resetAllMocks);
 
   it('passes a Request from openapi-fetch without consuming its body', async () => {
-    const createClient = jest.requireActual('../../../node_modules/openapi-fetch/dist/index.cjs').default;
-    const client = createClient({ baseUrl: URL, Request, fetch: customFetch });
+    const client = createClient<{
+      '/test': {
+        post: {
+          requestBody: { content: { 'application/json': { a: string } } };
+          responses: { 200: { content: { 'application/json': { id: string } } } };
+        };
+      };
+    }>({ baseUrl: URL, Request, fetch: customFetch });
     fetchMock.mockImplementationOnce(async (request) => {
       expect(request.headers.get('X-Idempotency-Key')).toBeTruthy();
       expect(request.headers.get('Content-Type')).toBe('application/json');
@@ -69,7 +69,7 @@ describe('customFetch', () => {
         headers: { 'Content-Type': 'application/json' },
       });
     });
-    const { data } = await client.POST('/alert_receive_channels/', { body: { a: 'a' } });
+    const { data } = await client.POST('/test', { body: { a: 'a' } });
     expect(data).toEqual({ id: 'integration' });
   });
 

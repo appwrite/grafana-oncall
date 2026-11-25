@@ -1,3 +1,5 @@
+import { vi } from 'vitest';
+
 import React from 'react';
 
 import { render, screen, waitFor } from '@testing-library/react';
@@ -9,15 +11,15 @@ import { rootStore } from 'state/rootStore';
 
 import { MobileAppConnection } from './MobileAppConnection';
 
-jest.mock('helpers/authorization/authorization', () => ({
-  ...jest.requireActual('helpers/authorization/authorization'),
-  isUserActionAllowed: jest.fn().mockReturnValue(true),
+vi.mock('helpers/authorization/authorization', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('helpers/authorization/authorization')>()),
+  isUserActionAllowed: vi.fn().mockReturnValue(true),
 }));
 
-const loadUserMock = jest.fn().mockReturnValue(undefined);
+const loadUserMock = vi.fn().mockReturnValue(undefined);
 
-jest.mock('state/rootStore', () => ({
-  rootStore: jest.fn(),
+vi.mock('state/rootStore', () => ({
+  rootStore: vi.fn(),
 }));
 
 const mockRootStore = (rest?: any, connected = false, cloud_connected = true) => {
@@ -32,13 +34,13 @@ const mockRootStore = (rest?: any, connected = false, cloud_connected = true) =>
   };
 
   rootStore.cloudStore = {
-    getCloudConnectionStatus: jest.fn().mockReturnValue({ cloud_connection_status: cloud_connected }),
+    getCloudConnectionStatus: vi.fn().mockReturnValue({ cloud_connection_status: cloud_connected }),
     cloudConnectionStatus: { cloud_connection_status: cloud_connected },
   } as any;
 
   // @ts-ignore
-  rootStore.isOpenSource = jest.fn().mockReturnValue(true);
-  rootStore.hasFeature = jest.fn().mockReturnValue(true);
+  rootStore.isOpenSource = vi.fn().mockReturnValue(true);
+  rootStore.hasFeature = vi.fn().mockReturnValue(true);
 };
 
 const USER_PK = '8585';
@@ -55,7 +57,7 @@ describe('MobileAppConnection', () => {
     loadUserMock.mockClear();
     (rootStore as any).mockClear();
     mockRootStore();
-    UserHelper.fetchBackendConfirmationCode = jest.fn().mockResolvedValueOnce('dfd');
+    UserHelper.fetchBackendConfirmationCode = vi.fn().mockResolvedValueOnce('dfd');
   });
 
   test('it shows a loading message if it is currently fetching the QR code', async () => {
@@ -68,7 +70,7 @@ describe('MobileAppConnection', () => {
   });
 
   test('it shows an error message if there was an error fetching the QR code', async () => {
-    UserHelper.fetchBackendConfirmationCode = jest.fn().mockRejectedValueOnce('dfd');
+    UserHelper.fetchBackendConfirmationCode = vi.fn().mockRejectedValueOnce('dfd');
     render(<MobileAppConnection userPk={USER_PK} />);
     await screen.findByText(/.*error fetching your QR code.*/);
 
@@ -90,7 +92,7 @@ describe('MobileAppConnection', () => {
   test('if we disconnect the app, it disconnects and fetches a new QR code', async () => {
     mockRootStore(
       {
-        unlinkBackend: jest.fn().mockResolvedValueOnce('asdfadsfafds'),
+        unlinkBackend: vi.fn().mockResolvedValueOnce('asdfadsfafds'),
       },
       true
     );
@@ -116,7 +118,7 @@ describe('MobileAppConnection', () => {
   test('it shows a loading message if it is currently disconnecting', async () => {
     mockRootStore(
       {
-        unlinkBackend: jest.fn().mockResolvedValueOnce(new Promise((resolve) => setTimeout(resolve, 500))),
+        unlinkBackend: vi.fn().mockResolvedValueOnce(new Promise((resolve) => setTimeout(resolve, 500))),
       },
       true
     );
@@ -144,7 +146,7 @@ describe('MobileAppConnection', () => {
   test('it shows an error message if there was an error disconnecting the mobile app', async () => {
     mockRootStore(
       {
-        unlinkBackend: jest.fn().mockRejectedValueOnce('asdfadsfafds'),
+        unlinkBackend: vi.fn().mockRejectedValueOnce('asdfadsfafds'),
       },
       true
     );
@@ -170,7 +172,7 @@ describe('MobileAppConnection', () => {
   test('it polls loadUser on first render if not connected', async () => {
     mockRootStore(
       {
-        unlinkBackend: jest.fn().mockRejectedValueOnce('asdfadsfafds'),
+        unlinkBackend: vi.fn().mockRejectedValueOnce('asdfadsfafds'),
       },
       false
     );
@@ -188,7 +190,7 @@ describe('MobileAppConnection', () => {
   test('it polls loadUser after disconnect', async () => {
     mockRootStore(
       {
-        unlinkBackend: jest.fn().mockRejectedValueOnce('asdff'),
+        unlinkBackend: vi.fn().mockRejectedValueOnce('asdff'),
       },
       true
     );

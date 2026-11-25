@@ -1,4 +1,5 @@
-import 'jest/matchMedia';
+import { vi, type Mock } from 'vitest';
+
 import React from 'react';
 
 import { render, fireEvent, screen } from '@testing-library/react';
@@ -6,7 +7,7 @@ import { render, fireEvent, screen } from '@testing-library/react';
 import { Collapse, CollapseProps } from 'components/Collapse/Collapse';
 
 describe('Collapse', () => {
-  function getProps(isOpen: boolean, onClick: jest.Mock = jest.fn()) {
+  function getProps(isOpen: boolean, onClick: Mock = vi.fn()) {
     return {
       label: 'Toggle',
       isOpen: isOpen,
