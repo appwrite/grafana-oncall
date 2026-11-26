@@ -30,9 +30,15 @@ export const ChatOpsConnectors = (props: ChatOpsConnectorsProps) => {
     store.hasFeature(AppFeature.Telegram) && telegramChannelStore.currentTeamToTelegramChannel?.length > 0;
 
   useEffect(() => {
-    msteamsChannelStore.updateMSTeamsChannels();
-    mattermostChannelStore.updateMattermostChannels();
-    discordChannelStore.updateItems();
+    if (store.hasFeature(AppFeature.MsTeams)) {
+      msteamsChannelStore.updateMSTeamsChannels();
+    }
+    if (store.hasFeature(AppFeature.Mattermost)) {
+      mattermostChannelStore.updateMattermostChannels();
+    }
+    if (store.hasFeature(AppFeature.Discord)) {
+      discordChannelStore.updateItems();
+    }
   }, []);
 
   const isMSTeamsInstalled = msteamsChannelStore.currentTeamToMSTeamsChannel?.length > 0;
