@@ -21,17 +21,17 @@ beautifulsoup4==4.15.0
     # via -r requirements.in
 billiard==4.3.2
     # via celery
-boto3==1.44.0
+boto3==1.44.9
     # via django-anymail
-botocore==1.44.0
+botocore==1.44.9
     # via
     #   boto3
     #   s3transfer
-cachecontrol==0.14.4
+cachecontrol==0.15.0
     # via firebase-admin
 celery[redis]==5.7.0
     # via -r requirements.in
-certifi==2026.10.23
+certifi==2026.11.20
     # via
     #   httpcore
     #   httpx
@@ -133,11 +133,11 @@ emoji==2.16.0
     # via -r requirements.in
 factory-boy==2.12.0
     # via -r requirements.in
-faker==40.54.0
+faker==40.63.0
     # via factory-boy
 fcm-django==3.2.1
     # via -r requirements.in
-firebase-admin==7.7.0
+firebase-admin==7.8.0
     # via fcm-django
 google-api-core==2.44.0
     # via
@@ -152,7 +152,7 @@ google-api-core[grpc]==2.44.0
     #   google-cloud-firestore
 google-api-python-client==2.202.0
     # via -r requirements.in
-google-auth==2.62.2
+google-auth==2.63.0
     # via
     #   google-api-core
     #   google-api-python-client
@@ -188,14 +188,14 @@ googleapis-common-protos==1.76.0
     #   opentelemetry-exporter-otlp-proto-grpc
 gprof2dot==2025.4.14
     # via django-silk
-grpcio==1.85.1
+grpcio==1.85.3
     # via
     #   -r requirements.in
     #   google-api-core
     #   google-cloud-firestore
     #   grpcio-status
     #   opentelemetry-exporter-otlp-proto-grpc
-grpcio-status==1.85.1
+grpcio-status==1.85.3
     # via google-api-core
 h11==0.16.0
     # via httpcore
@@ -217,7 +217,7 @@ httpx[http2]==0.28.1
     # via
     #   firebase-admin
     #   python-telegram-bot
-humanize==4.16.0
+humanize==4.17.0
     # via -r requirements.in
 hyperframe==6.1.0
     # via h2
@@ -381,7 +381,7 @@ pytz==2026.6
     #   icalendar
     #   twilio
     #   x-wr-timezone
-pyyaml==6.0.3
+pyyaml==6.0.4
     # via
     #   drf-spectacular
     #   pymdown-extensions
@@ -424,13 +424,13 @@ six==1.17.0
     #   django-rest-polymorphic
     #   python-dateutil
     #   twilio
-slack-sdk==3.46.0
+slack-sdk==3.48.0
     # via -r requirements.in
 social-auth-app-django==7.2.0
     # via -r requirements.in
 social-auth-core==6.2.0
     # via social-auth-app-django
-soupsieve==4.1
+soupsieve==4.1.3
     # via beautifulsoup4
 sqlparse==0.6.1
     # via
